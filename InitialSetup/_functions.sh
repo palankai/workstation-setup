@@ -59,6 +59,9 @@ function ensure_essentials {
 
     pip_install Jinja2
     brew_install mas
+    log_info "Installing xcode-select"
+    xcode-select --install || true
+    log_result "xcode-selected: installed"
 }
 
 function ensure_gpg {

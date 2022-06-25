@@ -1,17 +1,28 @@
 .DEFAULT_GOAL := all
-.PHONY: all compile
+.PHONY: all compile update Essentials
 
 export PYTHONPATH := ${PWD}/src/pythonlibs
 
 include ~/.workstation-setup-config
 export $(shell sed 's/=.*//' ~/.workstation-setup-config)
 
-all:
-	@echo "Hi all"
+all: update Essentials
+	@echo "System is up-to-date"
+
+update:
+	brew update
+	brew upgrade
+	$(SYSTEM_PYTHON) -m pip install --upgrade pip
+
+Essentials:
+	@echo "Ensuring essentials..."
+	cd Essentials; brew bundle
+	cd Essentials; $(SYSTEM_PIP) install -r requirements.txt
+	sh Essentials/dotfiles.sh
+	sh Essentials/folders.sh
 
 python:
 	env
-
 
 compile:
 	@echo "Compiling initial-setup.sh"

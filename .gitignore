@@ -1,3 +1,4 @@
 .env
 _initial-setup.sh
 workstation-setup-log.txt
+Brewfile.lock.json
