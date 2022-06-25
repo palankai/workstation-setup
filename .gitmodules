@@ -1,0 +1,3 @@
+[submodule "src/sensitive"]
+	path = src/sensitive
+	url = git@github.com:palankai/workstation-sensitive.git
