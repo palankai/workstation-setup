@@ -1,10 +1,13 @@
-# https://apple.stackexchange.com/questions/69223/how-to-replace-mac-os-x-utilities-with-gnu-core-utilities
-
 #!/bin/sh
+
+# https://apple.stackexchange.com/questions/69223/how-to-replace-mac-os-x-utilities-with-gnu-core-utilities
+# https://dev.to/dnsmichi/use-homebrew-bundle-to-manage-software-installation-on-macos-1223
+
 set -e
 
 source _config.sh
-source src/shell/_functions.sh
+source $HOME/.workstation-setup-config
+source src/shell/_setup_functions.sh
 
 mkdir -p $HOME/opt
 mkdir -p $HOME/Projects

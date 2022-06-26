@@ -1,4 +1,5 @@
 brew "ykman"
+
 cask "yubico-yubikey-manager"
 cask "telegram"
 cask "signal"
@@ -8,17 +9,3 @@ cask "obsidian"
 cask "Grammarly"
 cask "microsoft-teams"
 cask "vlc"
-
-# cask "google-drive"
-# cask "zoom"
-# cask "slack"
-
-# cask "wacom-tablet"
-# cask "loupedeck"
-
-# brew "ledger-live"
-# brew "keepassxc"
-
-# LIBS
-
-

@@ -70,6 +70,40 @@ function brew_install {
     fi
 }
 
+function homebrew_install {
+    brew install $@
+}
+function homebrew_tap {
+    brew tap $@
+}
+function homebrew_cask {
+    brew install --cask $@
+}
+
+function mas_install {
+    local $package_id
+    mas install $package_id
+}
+
+function is_brew_installed {
+    local package=$1
+    local res
+    res=$(brew info --days 0 $package)
+    local ret=$?
+
+    if [ "$ret" -ne "0" ]; then
+        echo "Not even exists"
+        return 1
+    fi
+
+    if $(echo $res | grep "Not installed"); then
+        echo "Not installed found"
+        return 1
+    else
+        echo "Not installed not found"
+        return 0
+    fi
+}
 
 function is_installed {
     local program=$1

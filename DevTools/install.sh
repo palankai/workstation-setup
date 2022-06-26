@@ -1,7 +1,8 @@
 set -e
 
 source _config.sh
-source src/shell/_functions.sh
+source $HOME/.workstation-setup-config
+source src/shell/_setup_functions.sh
 
 ln -sf $PWD/src/dotfiles/condarc.yaml $HOME/.condarc
 
