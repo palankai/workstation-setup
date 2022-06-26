@@ -1,0 +1,16 @@
+tap "aws/tap"
+tap "xen0l/homebrew-taps"
+
+brew "docker"
+brew "anaconda"
+brew "awscli"
+brew "docker-credential-helper-ecr"
+brew "aws-gate"
+brew "heroku/brew/heroku"
+brew "watchman"
+
+cask "session-manager-plugin"
+cask "visual-studio-code"
+cask "sublime-text"
+cask "ngrok"
+
