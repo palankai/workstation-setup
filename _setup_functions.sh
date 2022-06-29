@@ -116,11 +116,11 @@ function gpg_post_setup {
     mkdir -p $HOME/Library/LaunchAgents/
 
     local escaped=$(echo $GPGCONF_EXEC | sed 's/\//\\\//g')
-    sed "s/{{ GPGCONF_EXEC }}/$escaped/g" src/templates/homebrew.gpg.gpg-agent.plist >$HOME/Library/LaunchAgents/homebrew.gpg.gpg-agent.plist
+    sed "s/{{ GPGCONF_EXEC }}/$escaped/g" $WORKSTATION_INSTALLATION_PATH/templates/homebrew.gpg.gpg-agent.plist >$HOME/Library/LaunchAgents/homebrew.gpg.gpg-agent.plist
     launchctl load -F $HOME/Library/LaunchAgents/homebrew.gpg.gpg-agent.plist 2>/dev/null
     log_result "Homebrew GPG LaunchAgent: installed & started"
 
-    cp src/templates/link-ssh-auth-sock.plist $HOME/Library/LaunchAgents/link-ssh-auth-sock.plist
+    cp $WORKSTATION_INSTALLATION_PATH/templates/link-ssh-auth-sock.plist $HOME/Library/LaunchAgents/link-ssh-auth-sock.plist
 
     launchctl load -F $HOME/Library/LaunchAgents/link-ssh-auth-sock.plist 2>/dev/null
     log_result "SSH Auth Sock LaunchAgent: installed & started"
