@@ -1,8 +1,3 @@
-# Ensure BREW environment variables
-eval "$(brew shellenv)"
-source ~/.workstation-setup-config
-
-
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 SHOW_AWS_PROMPT=false
@@ -68,7 +63,7 @@ ZSH_THEME="ys"
 # HIST_STAMPS="mm/dd/yyyy"
 
 # Would you like to use another custom folder than $ZSH/custom?
-ZSH_CUSTOM="$HOME/opt/workstation-setup/dotfiles/zsh_custom"
+ZSH_CUSTOM="$HOME/opt/workstation-setup/src/dotfiles/zsh_custom"
 
 # Which plugins would you like to load?
 # Standard plugins can be found in ~/.oh-my-zsh/plugins/*
@@ -105,111 +100,12 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-export PATH=/usr/local/bin:$PATH
-export PATH="$HOMEBREW_PREFIX/opt/curl/bin:$PATH"
-
-# Docker
-if [ -f /Applications/Docker.app/Contents/Resources/etc/docker.zsh-completion ]; then
-    . /Applications/Docker.app/Contents/Resources/etc/docker.zsh-completion
-fi
-if [ -f /Applications/Docker.app/Contents/Resources/etc/docker-compose.zsh-completion ]; then
-    . /Applications/Docker.app/Contents/Resources/etc/docker-compose.zsh-completion
-fi
-
-set -o notify
-set -o histexpand
-
-# Don't use ^D to exit
-#set -o ignoreeof
-if [ $TERM != 'dumb' ]; then
-    #allow CTRL-s to go trough
-    stty -ixon
-fi
-
-# Use case-insensitive filename globbing
-# shopt -s nocaseglob
-
-# prevent redirected output from overwriting existing files
-# set -o noclobber
-
-# Other env variables ######################
-export EDITOR=vim
-
-export HISTSIZE=100000 # bash history will save this many commands
-export HISTFILESIZE=${HISTSIZE} # bash will remember this many commands
-export HISTCONTROL=ignoredups # ignore duplicate commands
-export HISTIGNORE="[   ]*:&:bg:fg:exit" # Ignore some controlling instructions
-export HISTTIMEFORMAT="[%Y-%m-%d - %H:%M:%S] " # timestamps
-
-# This for installed openssl by brew; being able to use for compile/build
-
-# TODO Need to check this on M1
-export LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib"
-#export LDFLAGS="-L/usr/local/opt/curl/lib"
-export CPPFLAGS="-I/usr/local/opt/curl/include"
-export PKG_CONFIG_PATH="/usr/local/opt/curl/lib/pkgconfig"
-
-export LESS=-R
-
-if [ $TERM != 'dumb' ]; then
-    export LESS_TERMCAP_md=$'\E[01;36m'
-fi
-
-# figure out supported ls options
-
-# nice modern GNU 'ls'
-if [ "$TERM" != "dumb" ] && [ ls --color >/dev/null 2>&1 ] ; then
-    LS_OPTIONS='--color=auto'
-
-# old shitty OSX 'ls'
-elif ls --G >/dev/null 2>&1; then
-    LS_OPTIONS='-G'
-
-# no known color options supported, use trailing filetype chars instead
-else
-    LS_OPTIONS='-F'
-fi
-
-if ls --group-directories-first >/dev/null 2>&1; then
-    LS_OPTIONS="$LS_OPTIONS --group-directories-first"
-fi
-export LS_OPTIONS
-
-if [ "$TERM" != "dumb" ] && [ hash dircolors 2>/dev/null ]; then
-    eval `dircolors -b $HOME/.dircolors`
-fi
-
-export PAGER=less
-# This option make gpg ask password on terminal
-#export GPG_TTY=$(tty)
-
-# GPG Based SSH setup
-#gpgconf --launch gpg-agent
-#export SSH_AUTH_SOCK=$HOME/.gnupg/S.gpg-agent.ssh
-
-export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
-
-#export PATH="$PATH:$HOME/opt/anaconda3/bin"
-
-# BEGIN gnu-tools
-# TODO make a common directory a move everything there - or link them where they belong
-export PATH="$HOME/opt/bin:$HOME/opt/gnubin:$PATH"
-export MANPATH="$HOME/opt/gnuman:$MANPATH"
-export PATH="$PATH:$HOME/.rvm/bin"
-# END gnu-tools
-
-
-export AWS_FUZZ_USER="csaba.palankai"
-export AWS_FUZZ_PRIVATE_IP='True'
-export AWS_MIN_TTL=72000
-export AWS_VAULT_PROMPT=osascript
-export AWS_VAULT_KEYCHAIN_NAME=login
-
-# BEGIN aliases
-
+# if [ -f /Applications/Docker.app/Contents/Resources/etc/docker.zsh-completion ]; then
+#     . /Applications/Docker.app/Contents/Resources/etc/docker.zsh-completion
+# fi
+# if [ -f /Applications/Docker.app/Contents/Resources/etc/docker-compose.zsh-completion ]; then
+#     . /Applications/Docker.app/Contents/Resources/etc/docker-compose.zsh-completion
+# fi
 
 source $HOME/opt/workstation-setup/src/shell/_functions.sh
 source $HOME/opt/workstation-setup/src/sensitive/profiles/$WORKSTATION.sh
-
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-

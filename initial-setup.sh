@@ -1,4 +1,11 @@
 #!/bin/sh
+
+#################################################################
+##                                                             ##
+##           DO NOT EDIT BY HAND - GENERATED FILE              ##
+##                                                             ##
+#################################################################
+
 export KEYID=0x4C4A8C7E5C4575B7
 
 PROFILE_FILE="$HOME/.workstation-setup-config"
@@ -14,8 +21,163 @@ REPOSITORY_NAME=workstation-setup
 REPOSITORY=git@github.com:palankai/$REPOSITORY_NAME.git
 REPOSITORY_PATH=$INSTALLATION_BASE_PATH/$REPOSITORY_NAME
 
-
 set -e
+
+function ensure_repository {
+    local url=$1
+    local repo_path=$2
+
+    if [ ! -d $repo_path ] ; then
+        log_info "Cloning $url into $repo_path..."
+        git clone $url $repo_path
+        log_result "Repository $url cloned into $repo_path"
+    else
+        log_info "Updating $url..."
+        (cd $repo_path; git pull)
+        log_result "Repository $url ($repo_path) updated"
+    fi
+
+    log_info "$url Updating submodules..."
+    (cd $repo_path; git submodule update --init --recursive)
+    log_result "$url submodules: Updated"
+}
+
+function menu {
+    PS3="$1: "
+    local opts="${@:2}"
+    local profile
+
+    select profile in ${opts[@]};
+    do
+        if [[ ! -z "$profile" && $opts == *"$profile"* ]]; then
+            echo $profile
+            return 0
+        else
+            echo "Incorrect selection" >&2
+        fi
+    done
+}
+
+function ensure_line {
+    local filename=$1
+    local linetest=$2
+    local line=$3
+
+    if ! test_line_exists $filename $linetest; then
+        echo $line >> $filename
+    fi
+}
+
+function test_line_exists {
+    local fn=$1
+    local name=$2
+    local res
+    local ret
+
+    if test ! -f $fn ; then
+        return 1
+    fi
+    set +e
+    res=$(cat $fn | grep "$name" )
+    ret=$?
+    set -e
+    return $ret
+}
+
+function brew_install {
+    local package=$1
+    if ! is_installed $package; then
+        log_info "Installing $package"
+        brew install $package
+        log_result "$package: installed"
+    else
+        log_result "$package: nochange"
+    fi
+}
+
+function homebrew_install {
+    brew install $@
+}
+function homebrew_tap {
+    brew tap $@
+}
+function homebrew_cask {
+    brew install --cask $@
+}
+
+function mas_install {
+    local $package_id
+    mas install $package_id
+}
+
+function is_brew_installed {
+    local package=$1
+    local res
+    res=$(brew info --days 0 $package)
+    local ret=$?
+
+    if [ "$ret" -ne "0" ]; then
+        echo "Not even exists"
+        return 1
+    fi
+
+    if $(echo $res | grep "Not installed"); then
+        echo "Not installed found"
+        return 1
+    else
+        echo "Not installed not found"
+        return 0
+    fi
+}
+
+function is_installed {
+    local program=$1
+    local res
+    local ret
+
+    set +e
+    res=$(which $program)
+    ret=$?
+    set -e
+    return $ret
+}
+
+function pip_install {
+    local package=$1
+    if ! is_pip_installed $package; then
+        log_info "Installing $package"
+        $SYSTEM_PIP install $package
+        log_result "$package: installed"
+    else
+        log_result "$package: nochange"
+    fi
+}
+
+function is_pip_installed {
+    local package=$1
+    local ret
+    local version
+    set +e
+    version=$($SYSTEM_PIP freeze | grep $package)
+    ret=$?
+    set -e
+    return $ret
+}
+
+function log_info {
+    echo "$1" >> $LOG_INFO_OUTPUT
+}
+function log_br {
+    echo "" >> $LOG_INFO_OUTPUT
+}
+
+function log_result {
+    echo "$(date '+%Y-%m-%d %H:%M') - $0: $1" >> $LOG_RESULT_OUTPUT
+    echo "$1" >> $LOG_INFO_OUTPUT
+}
+
+# High level functions
+
 function ensure_local_file {
     log_info "Ensure local profile file"
     # SELECT workstation profile
@@ -77,6 +239,9 @@ function ensure_essentials {
 
     pip_install Jinja2
     brew_install mas
+    log_info "Installing xcode-select"
+    xcode-select --install || true
+    log_result "xcode-selected: installed"
 }
 
 function ensure_gpg {
@@ -106,20 +271,7 @@ function ensure_gpg {
 
 function clone_repository {
     mkdir -p $INSTALLATION_BASE_PATH
-
-    if [ ! -d $REPOSITORY_PATH ] ; then
-        log_info "Cloning $REPOSITORY into $REPOSITORY_PATH..."
-        git clone $REPOSITORY $REPOSITORY_PATH
-        log_result "Repository $REPOSITORY cloned into $REPOSITORY_PATH"
-    else
-        log_info "Updating $REPOSITORY..."
-        (cd $REPOSITORY_PATH; git pull)
-        log_result "Repository $REPOSITORY ($REPOSITORY_PATH) updated"
-    fi
-
-    log_info "Updating submodules..."
-    (cd $REPOSITORY_PATH; git submodule update --init --recursive)
-    log_result "Submodules: Updated"
+    ensure_repository $REPOSITORY $REPOSITORY_PATH
 }
 
 function gpg_post_setup {
@@ -151,93 +303,6 @@ function next_step_instructions {
     log_info "make"
 }
 
-function menu {
-    PS3="$1: "
-    local opts="${@:2}"
-    local profile
-
-    select profile in ${opts[@]};
-    do
-        if [[ ! -z "$profile" && $opts == *"$profile"* ]]; then
-            echo $profile
-            return 0
-        else
-            echo "Incorrect selection" >&2
-        fi
-    done
-}
-
-function ensure_line {
-    local filename=$1
-    local linetest=$2
-    local line=$3
-
-    if ! test_line_exists $filename $linetest; then
-        echo $line >> $filename
-    fi
-}
-
-function test_line_exists {
-    local fn=$1
-    local name=$2
-    local res
-    local ret
-
-    if test ! -f $fn ; then
-        return 1
-    fi
-    set +e
-    res=$(cat $fn | grep "$name" )
-    ret=$?
-    set -e
-    return $ret
-}
-
-function brew_install {
-    local package=$1
-    if ! is_installed $package; then
-        log_info "Installing $package"
-        brew install $package
-        log_result "$package: installed"
-    else
-        log_result "$package: nochange"
-    fi
-}
-
-
-function is_installed {
-    local program=$1
-    local res
-    local ret
-
-    set +e
-    res=$(which $program)
-    ret=$?
-    set -e
-    return $ret
-}
-
-function pip_install {
-    local package=$1
-    if ! is_pip_installed $package; then
-        log_info "Installing $package"
-        $SYSTEM_PIP install $package
-        log_result "$package: installed"
-    else
-        log_result "$package: nochange"
-    fi
-}
-
-function is_pip_installed {
-    local package=$1
-    local ret
-    local version
-    set +e
-    version=$($SYSTEM_PIP freeze | grep $package)
-    ret=$?
-    set -e
-    return $ret
-}
 function restart_gpg {
     log_info "Restarting GPG..."
     killall gpg-agent || true
@@ -246,26 +311,16 @@ function restart_gpg {
     log_result "GPG restarted"
 }
 
-function log_info {
-    echo "$1" >> $LOG_INFO_OUTPUT
+
+function initial_setup {
+    log_info "Initialisation"
+    ensure_local_file
+    ensure_essentials
+    ensure_gpg
+    clone_repository
+    gpg_post_setup
+
+    next_step_instructions
 }
-function log_br {
-    echo "" >> $LOG_INFO_OUTPUT
-}
 
-function log_result {
-    echo "$(date '+%Y-%m-%d %H:%M') - $0: $1" >> $LOG_RESULT_OUTPUT
-    echo "$1" >> $LOG_INFO_OUTPUT
-}
-
-log_info "Initialisation"
-ensure_local_file
-ensure_essentials
-ensure_gpg
-clone_repository
-gpg_post_setup
-
-
-next_step_instructions
-
-
+initial_setup
