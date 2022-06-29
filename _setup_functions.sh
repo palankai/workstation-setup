@@ -160,6 +160,7 @@ function ensure_repository {
     log_info "$url Updating submodules..."
     (cd $repo_path; git submodule update --init --recursive)
     (cd $repo_path; git submodule foreach git checkout master)
+    (cd $repo_path; git submodule foreach git pull)
     log_result "$url submodules: Updated"
 }
 
