@@ -46,6 +46,11 @@ ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/condarc.yaml $HOME/.condarc
 ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/dotfiles/aws.conf $HOME/.aws/config
 ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/dotfiles/docker-config.json $HOME/.docker/config.json
 
+ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gpg-agent.conf $HOME/.gnupg/gpg-agent.conf
+ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gpg.conf $HOME/.gnupg/gpg.conf
+ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/scdaemon.conf $HOME/.gnupg/scdaemon.conf
+
+
 # https://apple.stackexchange.com/questions/69223/how-to-replace-mac-os-x-utilities-with-gnu-core-utilities
 # https://dev.to/dnsmichi/use-homebrew-bundle-to-manage-software-installation-on-macos-1223
 
