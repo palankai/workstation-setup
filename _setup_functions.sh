@@ -108,7 +108,7 @@ function clone_repository {
 
 function gpg_post_setup {
     ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gpg-agent.conf $HOME/.gnupg/gpg-agent.conf
-    ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gnupg/gpg.conf $HOME/.gnupg/gpg.conf
+    ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gpg.conf $HOME/.gnupg/gpg.conf
     ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/scdaemon.conf $HOME/.gnupg/scdaemon.conf
     log_result "GPG Config files: linked"
 
