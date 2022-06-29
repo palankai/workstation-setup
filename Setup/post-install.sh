@@ -30,21 +30,21 @@ mkdir -p $HOME/.vim-tmp
 
 ensure_repository https://github.com/robbyrussell/oh-my-zsh ~/.oh-my-zsh
 
-ln -sf $PWD/src/sensitive/dotfiles/ssh_config $HOME/.ssh/config
+ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/dotfiles/ssh_config $HOME/.ssh/config
 
-ln -sf $PWD/dotfiles/gitignore_global $HOME/.gitignore_global
-ln -sf $PWD/sensitive/dotfiles/gitconfig $HOME/.gitconfig
+ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gitignore_global $HOME/.gitignore_global
+ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/dotfiles/gitconfig $HOME/.gitconfig
 
-ln -sf $PWD/dotfiles/tmux.conf $HOME/.tmux.conf
-ln -sf $PWD/dotfiles/vimrc.vim $HOME/.vimrc
+ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/tmux.conf $HOME/.tmux.conf
+ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/vimrc.vim $HOME/.vimrc
 
-ln -sf $PWD/dotfiles/zprofile $HOME/.zprofile
-ln -sf $PWD/dotfiles/zshrc $HOME/.zshrc
+ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/zprofile $HOME/.zprofile
+ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/zshrc $HOME/.zshrc
 
-ln -sf $PWD/dotfiles/condarc.yaml $HOME/.condarc
+ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/condarc.yaml $HOME/.condarc
 
-ln -sf $PWD/sensitive/dotfiles/aws.conf $HOME/.aws/config
-ln -sf $PWD/sensitive/dotfiles/docker-config.json $HOME/.docker/config.json
+ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/dotfiles/aws.conf $HOME/.aws/config
+ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/dotfiles/docker-config.json $HOME/.docker/config.json
 
 # https://apple.stackexchange.com/questions/69223/how-to-replace-mac-os-x-utilities-with-gnu-core-utilities
 # https://dev.to/dnsmichi/use-homebrew-bundle-to-manage-software-installation-on-macos-1223

@@ -63,7 +63,7 @@ ZSH_THEME="ys"
 # HIST_STAMPS="mm/dd/yyyy"
 
 # Would you like to use another custom folder than $ZSH/custom?
-ZSH_CUSTOM="$HOME/opt/workstation-setup/dotfiles/zsh_custom"
+ZSH_CUSTOM="$WORKSTATION_INSTALLATION_PATH/dotfiles/zsh_custom"
 
 # Which plugins would you like to load?
 # Standard plugins can be found in ~/.oh-my-zsh/plugins/*
@@ -107,5 +107,5 @@ source $ZSH/oh-my-zsh.sh
 #     . /Applications/Docker.app/Contents/Resources/etc/docker-compose.zsh-completion
 # fi
 
-source $HOME/opt/workstation-setup/src/shell/_functions.sh
-source $HOME/opt/workstation-setup/src/sensitive/profiles/$WORKSTATION.sh
+source $WORKSTATION_INSTALLATION_PATH/src/shell/_functions.sh
+source $WORKSTATION_INSTALLATION_PATH/sensitive/profiles/$WORKSTATION.sh
