@@ -59,6 +59,7 @@ brew "docker-credential-helper-ecr"
 brew "aws-gate"
 brew "heroku/brew/heroku"
 brew "watchman"
+cask "aws-vault"
 
 cask "anaconda"
 cask "session-manager-plugin"
