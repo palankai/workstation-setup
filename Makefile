@@ -17,7 +17,7 @@ update:
 	$(SYSTEM_PYTHON) -m pip install --upgrade pip
 
 brew:
-	cd Setup; $(_brew) bundle
+	eval "$($BREW_HOME/bin/brew shellenv)"; cd Setup; $(_brew) bundle
 
 pip:
 	$(SYSTEM_PIP) install -r Setup/requirements.txt
