@@ -12,12 +12,12 @@ all: update brew pip setup
 	@echo "System is up-to-date"
 
 update:
-	_brew update
-	_brew upgrade
+	$(_brew) update
+	$(_brew) upgrade
 	$(SYSTEM_PYTHON) -m pip install --upgrade pip
 
 brew:
-	cd Setup; _brew bundle
+	cd Setup; $(_brew) bundle
 
 pip:
 	$(SYSTEM_PIP) install -r Setup/requirements.txt
