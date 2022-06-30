@@ -6,16 +6,18 @@ export PYTHONPATH := ${PWD}/src/pythonlibs
 include ~/.workstation-setup-config
 export $(shell sed 's/=.*//' ~/.workstation-setup-config)
 
+_brew := ${BREW_HOME}/bin/brew
+
 all: update brew pip setup
 	@echo "System is up-to-date"
 
 update:
-	brew update
-	brew upgrade
+	_brew update
+	_brew upgrade
 	$(SYSTEM_PYTHON) -m pip install --upgrade pip
 
 brew:
-	cd Setup; brew bundle
+	cd Setup; _brew bundle
 
 pip:
 	$(SYSTEM_PIP) install -r Setup/requirements.txt
