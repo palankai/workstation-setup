@@ -21,13 +21,14 @@ REPOSITORY=git@github.com:palankai/$REPOSITORY_NAME.git
 REPOSITORY_PATH=$INSTALLATION_BASE_PATH/$REPOSITORY_NAME
 
 WORKSTATION_INSTALLATION_PATH=$INSTALLATION_BASE_PATH/$REPOSITORY_NAME
-LOG_RESULT_OUTPUT="$WORKSTATION_INSTALLATION_PATH/workstation-setup-log.txt"
+LOG_RESULT_OUTPUT="workstation-setup-log.txt"
 
 
 set -e
 
 function initial_setup {
     log_info "Initialisation"
+    ensure_xcode
     ensure_local_file
     ensure_essentials
     ensure_gpg
@@ -99,6 +100,9 @@ function ensure_essentials {
     log_info "Homebrew paths setup in this environment"
 
     brew_install mas
+}
+
+function ensure_xcode {
     log_info "Installing xcode-select"
     xcode-select --install || true
     log_result "xcode-selected: installed"
@@ -188,6 +192,7 @@ function ensure_repository {
     log_info "$url Updating submodules..."
     (cd $repo_path; git submodule update --init --recursive)
     (cd $repo_path; git submodule foreach git checkout master)
+    (cd $repo_path; git submodule foreach git pull)
     log_result "$url submodules: Updated"
 }
 
