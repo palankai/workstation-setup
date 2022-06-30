@@ -125,8 +125,8 @@ function ensure_gpg {
         brew install pinentry-mac
     fi
     gpg -k
-    ln -sf $(which pinentry-mac) $HOME/opt/bin/pinentry-mac
-    local pinentry_path=$HOME/opt/bin/pinentry-mac
+    ln -sf $(which pinentry-mac) /usr/local/sbin/pinentry-mac
+    local pinentry_path=/usr/local/sbin/pinentry-mac
     local target_file=.local_profile
     mkdir -p ~/.gnupg/
 
@@ -149,10 +149,6 @@ function clone_repository {
 }
 
 function gpg_post_setup {
-    diff $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gpg-agent.conf $HOME/.gnupg/gpg-agent.conf || true
-    diff $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gpg.conf $HOME/.gnupg/gpg.conf || true
-    diff $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/scdaemon.conf $HOME/.gnupg/scdaemon.conf || true
-
     ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gpg-agent.conf $HOME/.gnupg/gpg-agent.conf
     ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gpg.conf $HOME/.gnupg/gpg.conf
     ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/scdaemon.conf $HOME/.gnupg/scdaemon.conf

@@ -32,7 +32,7 @@ mkdir -p $HOME/.vim-tmp
 
 ensure_repository https://github.com/robbyrussell/oh-my-zsh ~/.oh-my-zsh
 
-ln -sf $(which pinentry-mac) $HOME/opt/bin/pinentry-mac
+ln -sf $(which pinentry-mac) /usr/local/sbin/pinentry-mac
 
 ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/dotfiles/ssh_config $HOME/.ssh/config
 
