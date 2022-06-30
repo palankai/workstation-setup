@@ -31,9 +31,9 @@ function ensure_local_file {
     # STORE Brew Home
     if ! test_line_exists $PROFILE_FILE "BREW_HOME="; then
         if [ $(uname -m) = "x86_64" ]; then
-            echo "BREW_HOME=/usr/local" >> $PROFILE_FILE
+            echo "export BREW_HOME=/usr/local" >> $PROFILE_FILE
         else
-            echo "BREW_HOME=/opt/homebrew" >> $PROFILE_FILE
+            echo "export BREW_HOME=/opt/homebrew" >> $PROFILE_FILE
         fi
     fi
 
