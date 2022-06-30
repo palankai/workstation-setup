@@ -96,7 +96,7 @@ function ensure_essentials {
         brew upgrade
         log_result "Brew updated"
     fi
-    eval $($(brew --prefix)/bin/brew shellenv)
+    eval "$($BREW_HOME/bin/brew shellenv)"
     log_info "Homebrew paths setup in this environment"
 
     brew_install mas

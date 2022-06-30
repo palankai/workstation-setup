@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := all
-.PHONY: all compile update brew pip setup
+.PHONY: all build update brew pip setup
 
 export PYTHONPATH := ${PWD}/src/pythonlibs
 
@@ -23,7 +23,7 @@ pip:
 setup:
 	sh Setup/post-install.sh
 
-compile:
+build:
 	@rm -f initial-setup.sh
 
 	@echo "#!/bin/sh"                                                         >> initial-setup.sh
