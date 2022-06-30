@@ -121,12 +121,9 @@ function ensure_gpg {
     if ! is_installed gpg; then
         brew install gnupg
     fi
-    if ! is_installed pinentry-mac; then
-        brew install pinentry-mac
-    fi
+    ensure_pinentry_mac
     gpg -k
-    ln -sf $(which pinentry-mac) /usr/local/sbin/pinentry-mac
-    local pinentry_path=/usr/local/sbin/pinentry-mac
+    local pinentry_path=/usr/local/bin/pinentry-mac
     local target_file=.local_profile
     mkdir -p ~/.gnupg/
 
@@ -204,6 +201,13 @@ function ensure_repository {
     (cd $repo_path; git submodule foreach git checkout master)
     (cd $repo_path; git submodule foreach git pull)
     log_result "$url submodules: Updated"
+}
+
+function ensure_pinentry_mac {
+    if ! is_installed pinentry-mac; then
+        brew install pinentry-mac
+    fi
+    ln -s $(which pinentry-mac) /usr/local/bin/pinentry-mac || true
 }
 
 function menu {
