@@ -207,7 +207,9 @@ function ensure_pinentry_mac {
     if ! is_installed pinentry-mac; then
         brew install pinentry-mac
     fi
-    sudo ln -s $(which pinentry-mac) /usr/local/bin/pinentry-mac || true
+    if [ ! -f /usr/local/bin/pinentry-mac ]; then
+        sudo ln -s $(which pinentry-mac) /usr/local/bin/pinentry-mac || true
+    fi
 }
 
 function menu {
