@@ -30,7 +30,7 @@ function ensure_local_file {
     log_info "Ensure BREW_HOME in local profile"
     # STORE Brew Home
     if ! test_line_exists $PROFILE_FILE "BREW_HOME="; then
-        if [[ $(uname -m) -eq "x86_64" ]]; then
+        if [ $(uname -m) = "x86_64" ]; then
             echo "BREW_HOME=/usr/local" >> $PROFILE_FILE
         else
             echo "BREW_HOME=/opt/homebrew" >> $PROFILE_FILE
@@ -75,9 +75,17 @@ function ensure_essentials {
 }
 
 function ensure_xcode {
-    log_info "Installing xcode-select"
-    xcode-select --install || true
-    log_result "xcode-selected: installed"
+    if type xcode-select >&- && xpath=$( xcode-select --print-path ) && test -d "${xpath}" && test -x "${xpath}" ; then
+        log_result "xcode-selected: installed"
+    else
+        log_info "Installing xcode-select"
+        set +e
+        xcode-select --install
+        set -e
+        sleep 3
+        read -p "Press [Enter] once the xcode installation is finished..."
+        log_result "xcode-selected: installed"
+    fi
 }
 
 function ensure_gpg {
