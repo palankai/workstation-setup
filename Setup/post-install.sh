@@ -5,6 +5,8 @@ set -e
 source _config.sh
 source _setup_functions.sh
 source $HOME/.workstation-setup-config
+eval "$($BREW_HOME/bin/brew shellenv)"
+
 
 mkdir -p $HOME/opt/bin
 mkdir -p $HOME/opt/gnubin
