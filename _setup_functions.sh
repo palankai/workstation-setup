@@ -1,5 +1,6 @@
 function initial_setup {
     log_info "Initialisation"
+    ensure_xcode
     ensure_local_file
     ensure_essentials
     ensure_gpg
@@ -71,6 +72,9 @@ function ensure_essentials {
     log_info "Homebrew paths setup in this environment"
 
     brew_install mas
+}
+
+function ensure_xcode {
     log_info "Installing xcode-select"
     xcode-select --install || true
     log_result "xcode-selected: installed"
