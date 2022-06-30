@@ -72,6 +72,8 @@ function ensure_essentials {
     log_info "Homebrew paths setup in this environment"
 
     brew_install mas
+
+    mkdir -p $HOME/opt/bin
 }
 
 function ensure_xcode {
@@ -96,7 +98,8 @@ function ensure_gpg {
         brew install pinentry-mac
     fi
     gpg -k
-    local pinentry_path=$(which pinentry-mac)
+    ln -sf $(which pinentry-mac) $HOME/opt/bin/pinentry-mac
+    local pinentry_path=$HOME/opt/bin/pinentry-mac
     local target_file=.local_profile
     mkdir -p ~/.gnupg/
 
