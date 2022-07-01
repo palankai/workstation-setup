@@ -63,6 +63,7 @@ cask "aws-vault"
 
 cask "anaconda"
 brew "nvm"
+brew "yarn"
 cask "session-manager-plugin"
 cask "visual-studio-code"
 cask "sublime-text"
