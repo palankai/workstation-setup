@@ -6,7 +6,7 @@ function initial_setup {
     ensure_gpg
     ensure_workstation_repository
 
-    sh $WORKSTATION_INSTALLATION_PATH/Setup/0*.sh
+    sh $WORKSTATION_INSTALLATION_PATH/setup.d/0*.sh
 
     restart_gpg
     next_step_instructions
@@ -56,7 +56,6 @@ function ensure_local_file {
     log_result "Env: SYSTEM_PYTHON=$SYSTEM_PYTHON"
     log_result "Env: SYSTEM_PIP=$SYSTEM_PIP"
     log_result "Env: SYSTEM_PYTHON_INSTALL_PATH=$SYSTEM_PYTHON_INSTALL_PATH"
-    log_result "Env: PYTHONPATH=$PYTHONPATH"
 }
 
 function ensure_essentials {
@@ -119,7 +118,7 @@ function next_step_instructions {
     log_info "Next Steps:"
     log_br
     log_info "cd $WORKSTATION_INSTALLATION_PATH"
-    log_info "make"
+    log_info "sh setup.sh"
 }
 
 function restart_gpg {

@@ -12,8 +12,6 @@ It also helps me to keep more or less the same environment both on my personal a
 
 I don't recommend using it as it is. Get inspired, copy part of it.
 
-I spend about 2-3 years to get to this stage, I only install apps and tools that I need.
-
 This repository is kept up-to-date with my current needs; it includes workarounds. I update them if necessary when I find an obstacle.
 
 The repository doesn't contain any secrets.
