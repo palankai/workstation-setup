@@ -62,13 +62,14 @@ brew "watchman"
 cask "aws-vault"
 
 cask "anaconda"
+brew "nvm"
 cask "session-manager-plugin"
 cask "visual-studio-code"
 cask "sublime-text"
 cask "ngrok"
 
 brew "vault" if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'work' ]"
-
+# brew "aws-fuzzy" unless system "source $HOME/.workstation-setup-config; [ $ARCH = 'arm64' ]"
 brew "ykman"
 
 cask "yubico-yubikey-manager"

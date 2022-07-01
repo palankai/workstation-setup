@@ -92,17 +92,23 @@ flush-dns-cache-50 () {
 
 }
 
+function swap-yubikey {
+    gpg-connect-agent "scd serialno" "learn --force" /bye
+}
+
 #export NVM_DIR="$HOME/.nvm"
 #[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" --no-use  # This loads nvm
 
 function init-conda() {
-    local conda_path
-    if [[ $(uname -m) -eq "x86_64" ]]; then
+    local conda_base
+    if [ "$(uname -m)" = "x86_64" ]; then
         conda_base=/usr/local/anaconda3
     else
         conda_base=/opt/homebrew/anaconda3
     fi
-    __conda_setup="$($conda_base/bin/conda 'shell.zsh' 'hook' 2> /dev/null)"
+
+    local __conda_setup="$($conda_base/bin/conda 'shell.zsh' 'hook' 2> /dev/null)"
+
     if [ $? -eq 0 ]; then
         eval "$__conda_setup"
     else
@@ -112,16 +118,13 @@ function init-conda() {
             export PATH="$conda_base/anaconda3/bin:$PATH"
         fi
     fi
-    unset __conda_setup
 }
-
 
 function init-virtualenvwrapper {
     export WORKON_HOME=$HOME/.virtualenvs
     export PROJECT_HOME=$HOME/work
     source /usr/local/bin/virtualenvwrapper.sh
 }
-
 
 function init-nvm {
     export NVM_DIR="$HOME/.nvm"

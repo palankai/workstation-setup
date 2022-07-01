@@ -107,9 +107,11 @@ source $ZSH/oh-my-zsh.sh
 #     . /Applications/Docker.app/Contents/Resources/etc/docker-compose.zsh-completion
 # fi
 
+GPG_TTY=$(tty)
 gpgconf --launch gpg-agent
 export SSH_AUTH_SOCK=$HOME/.gnupg/S.gpg-agent.ssh
 
 
 source $WORKSTATION_INSTALLATION_PATH/dotfiles/functions.sh
 source $WORKSTATION_INSTALLATION_PATH/sensitive/profiles/$WORKSTATION.sh
+
