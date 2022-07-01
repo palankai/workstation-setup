@@ -1,8 +1,8 @@
 source ~/.workstation-setup-config
 eval "$($BREW_HOME/bin/brew shellenv)"
 
-export PATH="$HOMEBREW_PREFIX/bin:$HOMEBREW_PREFIX/opt/curl/bin:$HOME/opt/bin:$HOME/opt/gnubin${PATH+:$PATH}"
-export MANPATH="$HOMEBREW_PREFIX/man:$HOME/opt/gnuman${MANPATH+:$MANPATH}";
+export PATH="$HOMEBREW_PREFIX/opt/curl/bin:$HOME/opt/bin:$HOME/opt/gnubin${PATH+:$PATH}"
+export MANPATH="$HOME/opt/gnuman:$HOMEBREW_PREFIX/man${MANPATH+:$MANPATH}";
 export PATH="$PATH:$HOME/.rvm/bin:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
 
 export AWS_FUZZ_USER="csaba.palankai"

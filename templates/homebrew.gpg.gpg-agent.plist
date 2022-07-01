@@ -8,7 +8,7 @@
   <!-- Sets a command to run and its options -->
   <key>ProgramArguments</key>
   <array>
-    <string>{{ GPGCONF_EXEC }}</string>
+    <string>/opt/homebrew/bin/gpgconf</string>
     <string>--launch</string>
     <string>gpg-agent</string>
   </array>

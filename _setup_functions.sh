@@ -4,14 +4,19 @@ function initial_setup {
     ensure_local_file
     ensure_essentials
     ensure_gpg
-    clone_repository
-    gpg_post_setup
+    ensure_workstation_repository
 
+    sh $WORKSTATION_INSTALLATION_PATH/Setup/0*.sh
+
+    restart_gpg
     next_step_instructions
 }
 
 function ensure_local_file {
     log_info "Ensure local profile file"
+    touch $PROFILE_FILE
+    source $PROFILE_FILE
+
     # SELECT workstation profile
     if ! test_line_exists $PROFILE_FILE "WORKSTATION="; then
         local WORKSTATION=$(menu "Select installation profile" personal work quit)
@@ -23,10 +28,8 @@ function ensure_local_file {
         echo "Selected profile: $WORKSTATION"
     fi
     log_info "Ensure ARCH in local profile"
-    # STORE Arch
-    if ! test_line_exists $PROFILE_FILE "ARCH="; then
-        echo "ARCH=$(uname -m)" >> $PROFILE_FILE
-    fi
+    ensure_line $PROFILE_FILE "ARCH=" "export ARCH=$(uname -m)"
+
     log_info "Ensure BREW_HOME in local profile"
     # STORE Brew Home
     if ! test_line_exists $PROFILE_FILE "BREW_HOME="; then
@@ -38,10 +41,10 @@ function ensure_local_file {
     fi
 
     # STORE System Python Path
-    ensure_line $PROFILE_FILE "SYSTEM_PYTHON=" "SYSTEM_PYTHON=/usr/bin/python3"
-    ensure_line $PROFILE_FILE "SYSTEM_PIP=" "SYSTEM_PIP=/usr/bin/pip3"
-    ensure_line $PROFILE_FILE "SYSTEM_PYTHON_INSTALL_PATH=" "SYSTEM_PYTHON_INSTALL_PATH=$(/usr/bin/python3 -m site --user-base)/bin"
-    ensure_line $PROFILE_FILE "WORKSTATION_INSTALLATION_PATH=" "WORKSTATION_INSTALLATION_PATH=$WORKSTATION_INSTALLATION_PATH"
+    ensure_line $PROFILE_FILE "SYSTEM_PYTHON=" "export SYSTEM_PYTHON=/usr/bin/python3"
+    ensure_line $PROFILE_FILE "SYSTEM_PIP=" "export SYSTEM_PIP=/usr/bin/pip3"
+    ensure_line $PROFILE_FILE "SYSTEM_PYTHON_INSTALL_PATH=" "export SYSTEM_PYTHON_INSTALL_PATH=$(/usr/bin/python3 -m site --user-base)/bin"
+    ensure_line $PROFILE_FILE "WORKSTATION_INSTALLATION_PATH=" "export WORKSTATION_INSTALLATION_PATH=$WORKSTATION_INSTALLATION_PATH"
 
     # LOAD what we have
     source $PROFILE_FILE
@@ -94,48 +97,20 @@ function ensure_gpg {
     if ! is_installed gpg; then
         brew install gnupg
     fi
-    ensure_pinentry_mac
+    if ! is_installed pinentry-mac; then
+        brew install pinentry-mac
+    fi
     gpg -k
-    local pinentry_path=/usr/local/bin/pinentry-mac
-    local target_file=.local_profile
     mkdir -p ~/.gnupg/
-
-    ensure_line $GPG_AGENT_FILE pinentry-program "pinentry-program $pinentry_path"
-
-    ensure_line $PROFILE_FILE "PINENTRY_PATH=" "PINENTRY_PATH=$pinentry_path"
-    ensure_line $PROFILE_FILE "GPGCONF_EXEC=" "GPGCONF_EXEC=$(which gpgconf)"
-
-    source $PROFILE_FILE
-    log_result "Env: PINENTRY_PATH=$pinentry_path"
-    log_result "Env: GPGCONF_EXEC=$GPGCONF_EXEC"
+    ensure_line $HOME/.gnupg/gpg-agent.conf pinentry-program "pinentry-program /opt/homebrew/bin/pinentry-mac"
 
     restart_gpg
     log_result "Initial GPG Setup complete"
 }
 
-function clone_repository {
+function ensure_workstation_repository {
     mkdir -p $INSTALLATION_BASE_PATH
     ensure_repository $REPOSITORY $WORKSTATION_INSTALLATION_PATH
-}
-
-function gpg_post_setup {
-    ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gpg-agent.conf $HOME/.gnupg/gpg-agent.conf
-    ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gpg.conf $HOME/.gnupg/gpg.conf
-    ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/scdaemon.conf $HOME/.gnupg/scdaemon.conf
-    log_result "GPG Config files: linked"
-
-    restart_gpg
-    mkdir -p $HOME/Library/LaunchAgents/
-
-    local escaped=$(echo $GPGCONF_EXEC | sed 's/\//\\\//g')
-    sed "s/{{ GPGCONF_EXEC }}/$escaped/g" $WORKSTATION_INSTALLATION_PATH/templates/homebrew.gpg.gpg-agent.plist >$HOME/Library/LaunchAgents/homebrew.gpg.gpg-agent.plist
-    launchctl load -F $HOME/Library/LaunchAgents/homebrew.gpg.gpg-agent.plist 2>/dev/null
-    log_result "Homebrew GPG LaunchAgent: installed & started"
-
-    cp $WORKSTATION_INSTALLATION_PATH/templates/link-ssh-auth-sock.plist $HOME/Library/LaunchAgents/link-ssh-auth-sock.plist
-
-    launchctl load -F $HOME/Library/LaunchAgents/link-ssh-auth-sock.plist 2>/dev/null
-    log_result "SSH Auth Sock LaunchAgent: installed & started"
 }
 
 function next_step_instructions {
@@ -154,6 +129,7 @@ function restart_gpg {
     export SSH_AUTH_SOCK=$HOME/.gnupg/S.gpg-agent.ssh
     log_result "GPG restarted"
 }
+export -f restart_gpg
 
 function ensure_repository {
     local url=$1
@@ -175,15 +151,7 @@ function ensure_repository {
     (cd $repo_path; git submodule foreach git pull)
     log_result "$url submodules: Updated"
 }
-
-function ensure_pinentry_mac {
-    if ! is_installed pinentry-mac; then
-        brew install pinentry-mac
-    fi
-    if [ ! -f /usr/local/bin/pinentry-mac ]; then
-        sudo ln -s $(which pinentry-mac) /usr/local/bin/pinentry-mac || true
-    fi
-}
+export -f ensure_repository
 
 function menu {
     PS3="$1: "
@@ -200,6 +168,7 @@ function menu {
         fi
     done
 }
+export -f menu
 
 function ensure_line {
     local filename=$1
@@ -210,6 +179,7 @@ function ensure_line {
         echo $line >> $filename
     fi
 }
+export -f ensure_line
 
 function test_line_exists {
     local fn=$1
@@ -226,6 +196,7 @@ function test_line_exists {
     set -e
     return $ret
 }
+export -f test_line_exists
 
 function brew_install {
     local package=$1
@@ -237,21 +208,7 @@ function brew_install {
         log_result "$package: nochange"
     fi
 }
-
-function homebrew_install {
-    brew install $@
-}
-function homebrew_tap {
-    brew tap $@
-}
-function homebrew_cask {
-    brew install --cask $@
-}
-
-function mas_install {
-    local $package_id
-    mas install $package_id
-}
+export -f brew_install
 
 function is_brew_installed {
     local package=$1
@@ -272,6 +229,7 @@ function is_brew_installed {
         return 0
     fi
 }
+export -f is_brew_installed
 
 function is_installed {
     local program=$1
@@ -284,6 +242,7 @@ function is_installed {
     set -e
     return $ret
 }
+export -f is_installed
 
 function pip_install {
     local package=$1
@@ -295,6 +254,7 @@ function pip_install {
         log_result "$package: nochange"
     fi
 }
+export -f pip_install
 
 function is_pip_installed {
     local package=$1
@@ -306,16 +266,20 @@ function is_pip_installed {
     set -e
     return $ret
 }
+export -f is_pip_installed
 
 function log_info {
     echo "$1" >> $LOG_INFO_OUTPUT
 }
+export -f log_info
+
 function log_br {
     echo "" >> $LOG_INFO_OUTPUT
 }
+export -f log_br
 
 function log_result {
     echo "$(date '+%Y-%m-%d %H:%M') - $0: $1" >> $LOG_RESULT_OUTPUT
     echo "$1" >> $LOG_INFO_OUTPUT
 }
-
+export -f log_result

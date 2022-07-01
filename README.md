@@ -46,7 +46,7 @@ This can and should be repeated frequently
 In the `~/opt/workstation-setup` exectue:
 
 ```
-make
+sh setup.sh
 ```
 
 ### 3. Manual steps
