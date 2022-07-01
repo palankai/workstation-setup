@@ -3,7 +3,7 @@ eval "$($BREW_HOME/bin/brew shellenv)"
 
 export PATH="$HOMEBREW_PREFIX/opt/curl/bin:$HOME/opt/bin:$HOME/opt/gnubin${PATH+:$PATH}"
 export MANPATH="$HOME/opt/gnuman:$HOMEBREW_PREFIX/man${MANPATH+:$MANPATH}";
-export PATH="$PATH:$HOME/.rvm/bin:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+export PATH="$PATH:$SYSTEM_PYTHON_INSTALL_PATH:$HOME/.rvm/bin:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
 
 export AWS_FUZZ_USER="csaba.palankai"
 export AWS_FUZZ_PRIVATE_IP='True'

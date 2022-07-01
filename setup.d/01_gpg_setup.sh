@@ -2,6 +2,8 @@ ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gpg-agent.conf $HOME/.gnupg
 ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gpg.conf $HOME/.gnupg/gpg.conf
 ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/scdaemon.conf $HOME/.gnupg/scdaemon.conf
 
+gpg --recv $KEYID
+
 mkdir -p $HOME/Library/LaunchAgents/
 
 cp $WORKSTATION_INSTALLATION_PATH/templates/homebrew.gpg.gpg-agent.plist $HOME/Library/LaunchAgents/homebrew.gpg.gpg-agent.plist
@@ -13,3 +15,4 @@ cp $WORKSTATION_INSTALLATION_PATH/templates/link-ssh-auth-sock.plist $HOME/Libra
 
 launchctl load -F $HOME/Library/LaunchAgents/link-ssh-auth-sock.plist 2>/dev/null
 log_result "SSH Auth Sock LaunchAgent: installed & started"
+

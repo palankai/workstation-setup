@@ -81,7 +81,7 @@ cask "grammarly"
 cask "grammarly-desktop"
 cask "microsoft-teams"
 cask "vlc"
-cask "wacom-tablet"
+# cask "wacom-tablet"
 
 cask "google-drive" if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "zoom"         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
