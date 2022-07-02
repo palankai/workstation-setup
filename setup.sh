@@ -11,7 +11,7 @@ if [ "$1" = "ls" ]; then
     exit 0
 fi
 
-filter=${1}*.sh
+filter=*${1}*.sh
 echo "Filter steps: $filter"
 
 for step in setup.d/$filter; do

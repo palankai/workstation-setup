@@ -4,3 +4,5 @@ ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/dotfiles/ssh_config $HOME/.ssh/c
 
 ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gitignore_global $HOME/.gitignore_global
 ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/dotfiles/gitconfig $HOME/.gitconfig
+
+mkdir -p $HOME/opt/src

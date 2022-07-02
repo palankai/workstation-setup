@@ -1,0 +1,3 @@
+defaults:
+  profile: sso-login
+  region: eu-west-1

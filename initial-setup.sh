@@ -172,12 +172,40 @@ function ensure_repository {
     fi
 
     log_info "$url Updating submodules..."
-    (cd $repo_path; git submodule update --init --recursive)
-    (cd $repo_path; git submodule foreach git checkout master)
-    (cd $repo_path; git submodule foreach git pull)
+    init_submodules $repo_path
     log_result "$url submodules: Updated"
 }
 export -f ensure_repository
+
+function clone_repository {
+    local url=$1
+    local repo_path=$2
+    local branch=$3
+
+    if [ ! -d $repo_path ] ; then
+        log_info "Cloning $url into $repo_path..."
+        git clone $url $repo_path
+        if [[ -ne "$branch" ]]; then
+            git checkout $branch
+        fi
+        log_result "Repository $url cloned into $repo_path"
+    else
+        log_info "Updating $url..."
+        if [[ -ne "$branch" ]]; then
+            git checkout $branch
+        fi
+        (cd $repo_path; git pull)
+        log_result "Repository $url ($repo_path) updated"
+    fi
+}
+
+function init_submodules {
+    local repo_path=${1:-.}
+    (cd $repo_path; git submodule update --init --recursive)
+    (cd $repo_path; git submodule foreach git checkout master)
+    (cd $repo_path; git submodule foreach git pull)
+}
+export -f init_submodules
 
 function menu {
     PS3="$1: "
