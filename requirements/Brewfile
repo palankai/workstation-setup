@@ -3,6 +3,8 @@ tap "homebrew/cask"
 tap "homebrew/cask-drivers"
 tap "homebrew/core"
 
+# General Packages
+
 brew "ack"
 brew "autoconf"
 brew "bat"
@@ -41,13 +43,29 @@ brew "watch"
 brew "wdiff"
 brew "wget"
 
+# Applications
 cask "iterm2"
-cask "keepassxc"
 cask "karabiner-elements"
 cask "brave-browser"
+cask "visual-studio-code"
+cask "sublime-text"
+cask "telegram"
+cask "signal"
+cask "keybase"
+cask "discord"
+cask "obsidian"
+cask "grammarly"
+cask "grammarly-desktop"
+cask "microsoft-teams"
+cask "vlc"
+cask "kindle"
+cask "spotify"
+cask "duet"
 
-mas "1Password 7", id: 1333542190
-mas "iStat Menus", id: 1319778037
+# Drivers
+cask "wacom-tablet"
+
+# Development
 
 tap "aws/tap"
 tap "xen0l/homebrew-taps"
@@ -60,34 +78,50 @@ brew "aws-gate"
 brew "heroku/brew/heroku"
 brew "watchman"
 cask "aws-vault"
-
 cask "anaconda"
 brew "nvm"
 brew "yarn"
 cask "session-manager-plugin"
-cask "visual-studio-code"
-cask "sublime-text"
 cask "ngrok"
-
-brew "vault" if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'work' ]"
 brew "ykman"
-
 cask "yubico-yubikey-manager"
-cask "telegram"
-cask "signal"
-# cask "keybase"
-cask "discord"
-cask "obsidian"
-cask "grammarly"
-cask "grammarly-desktop"
-cask "microsoft-teams"
-cask "vlc"
-cask "wacom-tablet"
 
-cask "google-drive" if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-cask "zoom"         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-cask "slack"        if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-cask "loupedeck"    if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-cask "ledger-live"  if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-cask "keepassxc"    if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+brew "vault"                            if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'work' ]"
+
+cask "google-drive"                     if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "zoom"                             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "slack"                            if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "loupedeck"                        if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "ledger-live"                      if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "keepassxc"                        if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "synology-drive"                   if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "adobe-creative-cloud"             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "google-drive"                     if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "loupedeck"                        if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "raspberry-pi-imager"              if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "ultimaker-cura"                   if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "arduino"                          if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "audacity"                         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "blender"                          if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+
+mas "Final Cut Pro", id: 424389933      if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+mas "Motion", id: 434290957             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+mas "Compressor", id: 424390742         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+
+mas "Logic Pro", id: 634148309          if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+mas "GarageBand", id: 682658836         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+
+# mas "Xcode", id: 497799835              if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+
+mas "1Password 7", id: 1333542190
+mas "iStat Menus", id: 1319778037
+mas "The Unarchiver", id: 425424353
+mas "FruitJuice", id: 671736912
+
+mas "Affinity Photo", id: 824183456
+# mas "Affinity Designer", id: 824171161  if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+
+mas "Pages", id: 409201541
+# mas "Numbers", id: 409203825
+mas "Keynote", id: 409183694
 
