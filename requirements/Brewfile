@@ -86,6 +86,8 @@ cask "ngrok"
 brew "ykman"
 cask "yubico-yubikey-manager"
 
+cask "obs"
+
 brew "vault"                            if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'work' ]"
 
 cask "google-drive"                     if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
