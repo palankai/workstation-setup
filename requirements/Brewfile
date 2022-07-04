@@ -71,7 +71,7 @@ tap "aws/tap"
 tap "xen0l/homebrew-taps"
 tap "heroku/brew"
 
-brew "docker", overwrite: true, link: true
+cask "docker", overwrite: true, link: true
 brew "awscli"
 brew "docker-credential-helper-ecr"
 brew "aws-gate"
