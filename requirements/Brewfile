@@ -124,6 +124,6 @@ mas "Affinity Photo", id: 824183456
 # mas "Affinity Designer", id: 824171161  if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 
 mas "Pages", id: 409201541
-# mas "Numbers", id: 409203825
+mas "Numbers", id: 409203825
 mas "Keynote", id: 409183694
 
