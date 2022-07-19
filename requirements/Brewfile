@@ -106,6 +106,9 @@ cask "ultimaker-cura"                   if system "source $HOME/.workstation-set
 cask "arduino"                          if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "audacity"                         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "blender"                          if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+# cask "inkscape"                         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "anki"                             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+# cask "ankiapp-anki"                     if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 
 mas "Final Cut Pro", id: 424389933      if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 mas "Motion", id: 434290957             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
@@ -122,7 +125,7 @@ mas "The Unarchiver", id: 425424353
 mas "FruitJuice", id: 671736912
 
 mas "Affinity Photo", id: 824183456
-# mas "Affinity Designer", id: 824171161  if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+mas "Affinity Designer", id: 824171161
 
 mas "Pages", id: 409201541
 mas "Numbers", id: 409203825
