@@ -42,6 +42,7 @@ brew "vim"
 brew "watch"
 brew "wdiff"
 brew "wget"
+brew "imagemagick"
 
 # Applications
 cask "iterm2"
