@@ -73,6 +73,7 @@ tap "aws/tap"
 tap "xen0l/homebrew-taps"
 tap "heroku/brew"
 
+brew "postgresql"
 cask "docker", overwrite: true, link: true
 brew "awscli"
 brew "docker-credential-helper-ecr"
@@ -87,6 +88,9 @@ cask "session-manager-plugin"
 cask "ngrok"
 brew "ykman"
 cask "yubico-yubikey-manager"
+brew "pyenv"
+brew "pyenv-virtualenv"
+brew "pyenv-virtualenvwrapper"
 
 cask "obs"
 
@@ -132,3 +136,5 @@ mas "Pages", id: 409201541
 mas "Numbers", id: 409203825
 mas "Keynote", id: 409183694
 
+# Libraries for development
+brew "libffi"
