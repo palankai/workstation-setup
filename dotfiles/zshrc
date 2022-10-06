@@ -112,6 +112,7 @@ gpgconf --launch gpg-agent
 #gpg-agent --daemon --homedir $HOME/.gnupg
 export SSH_AUTH_SOCK=$HOME/.gnupg/S.gpg-agent.ssh
 
+autoload zmv
 
 source $WORKSTATION_INSTALLATION_PATH/dotfiles/functions.sh
 source $WORKSTATION_INSTALLATION_PATH/sensitive/profiles/$WORKSTATION.sh
