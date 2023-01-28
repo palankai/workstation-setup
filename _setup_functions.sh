@@ -1,6 +1,7 @@
 function initial_setup {
     log_info "Initialisation"
     ensure_xcode
+    ensure_rosetta
     ensure_local_file
     ensure_essentials
     ensure_gpg
@@ -90,6 +91,10 @@ function ensure_xcode {
         read -p "Press [Enter] once the xcode installation is finished..."
         log_result "xcode-selected: installed"
     fi
+}
+
+function ensure_rosetta {
+    sudo softwareupdate --install-rosetta
 }
 
 function ensure_gpg {
