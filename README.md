@@ -51,3 +51,11 @@ sh setup.sh
 
 Most of these steps need to be done once.
 
+
+### 4. Manual applications
+
+- [Surfshark](https://surfshark.com/)
+- [Freecad Realthunder](https://github.com/realthunder/FreeCAD)
+- [Blender](https://www.blender.org/)
+- [SuperSlicer](https://github.com/supermerill/SuperSlicer)
+- [Bartender](https://www.macbartender.com/)
