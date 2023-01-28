@@ -123,7 +123,7 @@ function next_step_instructions {
     log_info "Next Steps:"
     log_br
     log_info "cd $WORKSTATION_INSTALLATION_PATH"
-    log_info "sh setup.sh"
+    log_info "sh upgrade.sh"
 }
 
 function restart_gpg {
