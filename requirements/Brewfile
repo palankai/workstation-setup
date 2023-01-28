@@ -96,6 +96,7 @@ brew "pyenv-virtualenvwrapper"
 brew "go"
 brew "gopls"
 brew "rust"
+brew "openjdk"
 
 cask "obs"
 
