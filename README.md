@@ -59,3 +59,4 @@ Most of these steps need to be done once.
 - [Blender](https://www.blender.org/)
 - [SuperSlicer](https://github.com/supermerill/SuperSlicer)
 - [Bartender](https://www.macbartender.com/)
+- [Etcher](https://www.balena.io/etcher)
