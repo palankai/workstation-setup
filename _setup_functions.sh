@@ -20,7 +20,7 @@ function ensure_local_file {
 
     # SELECT workstation profile
     if ! test_line_exists $PROFILE_FILE "WORKSTATION="; then
-        local WORKSTATION=$(menu "Select installation profile" personal work quit)
+        local WORKSTATION=$(menu "Select installation profile" personal maxilux quit)
         if [[ $WORKSTATION == "quit" ]]; then
             echo "bye"
             exit 1

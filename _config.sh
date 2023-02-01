@@ -13,6 +13,6 @@ export REPOSITORY=git@github.com:palankai/$REPOSITORY_NAME.git
 export REPOSITORY_PATH=$INSTALLATION_BASE_PATH/$REPOSITORY_NAME
 
 export WORKSTATION_INSTALLATION_PATH=$INSTALLATION_BASE_PATH/$REPOSITORY_NAME
-export LOG_RESULT_OUTPUT="workstation-setup-log.txt"
+export LOG_RESULT_OUTPUT=".workstation-setup-log.txt"
 
 set -e

@@ -3,6 +3,13 @@ tap "homebrew/cask"
 tap "homebrew/cask-drivers"
 tap "homebrew/core"
 
+
+# Drivers
+
+brew "libffi"
+cask "wacom-tablet"
+
+
 # General Packages
 
 brew "ack"
@@ -65,9 +72,10 @@ cask "kindle"
 cask "spotify"
 cask "duet"
 cask "surfshark"
+cask "bartender"
+cask "slack"
+cask "google-drive"
 
-# Drivers
-cask "wacom-tablet"
 
 # Development
 
@@ -97,36 +105,27 @@ brew "go"
 brew "gopls"
 brew "rust"
 brew "openjdk"
+brew "dotnet@6"                         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'work' ]"
 
-cask "obs"
+cask "arduino"
+cask "raspberry-pi-imager"
+cask "balenaetcher"
 
-brew "vault"                            if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'work' ]"
+#brew "vault"                            if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'work' ]"
 
-cask "google-drive"                     if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "obs"                              if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "zoom"                             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-cask "slack"                            if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 #cask "loupedeck"                        if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "ledger-live"                      if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "keepassxc"                        if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "synology-drive"                   if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "adobe-creative-cloud"             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-cask "raspberry-pi-imager"              if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "ultimaker-cura"                   if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-cask "arduino"                          if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "audacity"                         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "blender"                          if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 # cask "inkscape"                         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "anki"                             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 # cask "ankiapp-anki"                     if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-
-mas "Final Cut Pro", id: 424389933      if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-mas "Motion", id: 434290957             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-mas "Compressor", id: 424390742         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-
-mas "Logic Pro", id: 634148309          if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-mas "GarageBand", id: 682658836         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-
-# mas "Xcode", id: 497799835              if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 
 mas "1Password 7", id: 1333542190
 mas "iStat Menus", id: 1319778037
@@ -140,5 +139,14 @@ mas "Pages", id: 409201541
 mas "Numbers", id: 409203825
 mas "Keynote", id: 409183694
 
+mas "Final Cut Pro", id: 424389933      if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+mas "Motion", id: 434290957             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+mas "Compressor", id: 424390742         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+
+mas "Logic Pro", id: 634148309          if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+mas "GarageBand", id: 682658836         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+
+# mas "Xcode", id: 497799835              if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+
+
 # Libraries for development
-brew "libffi"
