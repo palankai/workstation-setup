@@ -1,3 +1,4 @@
 .env
 workstation-setup-log.txt
+.workstation-setup-log.txt
 Brewfile.lock.json

@@ -21,7 +21,7 @@ export REPOSITORY=git@github.com:palankai/$REPOSITORY_NAME.git
 export REPOSITORY_PATH=$INSTALLATION_BASE_PATH/$REPOSITORY_NAME
 
 export WORKSTATION_INSTALLATION_PATH=$INSTALLATION_BASE_PATH/$REPOSITORY_NAME
-export LOG_RESULT_OUTPUT="workstation-setup-log.txt"
+export LOG_RESULT_OUTPUT=".workstation-setup-log.txt"
 
 set -e
 
@@ -47,7 +47,7 @@ function ensure_local_file {
 
     # SELECT workstation profile
     if ! test_line_exists $PROFILE_FILE "WORKSTATION="; then
-        local WORKSTATION=$(menu "Select installation profile" personal work quit)
+        local WORKSTATION=$(menu "Select installation profile" personal maxilux quit)
         if [[ $WORKSTATION == "quit" ]]; then
             echo "bye"
             exit 1
