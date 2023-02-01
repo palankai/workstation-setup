@@ -110,6 +110,8 @@ brew "dotnet@6"                         if system "source $HOME/.workstation-set
 cask "arduino"
 cask "raspberry-pi-imager"
 cask "balenaetcher"
+cask "kicad"
+
 
 #brew "vault"                            if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'work' ]"
 
