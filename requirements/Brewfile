@@ -141,6 +141,8 @@ mas "Pages", id: 409201541
 mas "Numbers", id: 409203825
 mas "Keynote", id: 409183694
 
+mas "Yubikey Authenticator", id: 1497506650
+
 mas "Final Cut Pro", id: 424389933      if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 mas "Motion", id: 434290957             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 mas "Compressor", id: 424390742         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
