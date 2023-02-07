@@ -2,13 +2,14 @@ tap "homebrew/bundle"
 tap "homebrew/cask"
 tap "homebrew/cask-drivers"
 tap "homebrew/core"
-
+tap "aws/tap"
+tap "xen0l/homebrew-taps"
+tap "heroku/brew"
 
 # Drivers
 
 brew "libffi"
 cask "wacom-tablet"
-
 
 # General Packages
 
@@ -79,10 +80,6 @@ cask "google-drive"
 
 # Development
 
-tap "aws/tap"
-tap "xen0l/homebrew-taps"
-tap "heroku/brew"
-
 brew "postgresql@14"
 cask "docker", overwrite: true, link: true
 brew "awscli"
@@ -105,13 +102,16 @@ brew "go"
 brew "gopls"
 brew "rust"
 brew "openjdk"
-brew "dotnet@6"                         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'work' ]"
+brew "dotnet"                           if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'maxilux' ]"
+
+brew "aws-sam-cli"
+
 
 cask "arduino"
 cask "raspberry-pi-imager"
 cask "balenaetcher"
 cask "kicad"
-
+cask "amazon-chime"                     if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'maxilux' ]"
 
 #brew "vault"                            if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'work' ]"
 

@@ -63,6 +63,14 @@ aws-personal-cli () {
     aws-vault exec personal -- aws "$@"
 }
 
+aws-maxilux-cli () {
+    aws-vault exec maxilux -- aws "$@"
+}
+aws-maxilux () {
+    aws-vault exec maxilux -- "$@"
+}
+
+
 aws-foodbarcodescanner () {
     aws-vault exec foodbarcodescanner -- "$@"
 }
