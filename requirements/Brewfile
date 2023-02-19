@@ -103,13 +103,12 @@ brew "go"
 brew "gopls"
 brew "rust"
 brew "rustup-init"
+brew "rustfmt"
 brew "openjdk"
 brew "qemu"
 cask "dotnet-sdk"
 
 brew "aws-sam-cli"
-
-brew "qemu"
 
 
 cask "arduino"
