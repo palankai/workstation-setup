@@ -63,11 +63,25 @@ aws-personal-cli () {
     aws-vault exec personal -- aws "$@"
 }
 
-aws-maxilux-cli () {
-    aws-vault exec maxilux -- aws "$@"
+aws-maxilux-prod-cli () {
+    aws-vault exec maxilux-prod -- aws "$@"
 }
-aws-maxilux () {
-    aws-vault exec maxilux -- "$@"
+aws-maxilux-prod () {
+    aws-vault exec maxilux-prod -- "$@"
+}
+
+aws-maxilux-uat-cli () {
+    aws-vault exec maxilux-uat -- aws "$@"
+}
+aws-maxilux-uat () {
+    aws-vault exec maxilux-uat -- "$@"
+}
+
+aws-maxilux-mgmt-cli () {
+    aws-vault exec maxilux-mgmt -- aws "$@"
+}
+aws-maxilux-mgmt () {
+    aws-vault exec maxilux-mgmt -- "$@"
 }
 
 

@@ -98,13 +98,18 @@ cask "yubico-yubikey-manager"
 brew "pyenv"
 brew "pyenv-virtualenv"
 brew "pyenv-virtualenvwrapper"
+cask "cmake"
 brew "go"
 brew "gopls"
 brew "rust"
+brew "rustup-init"
 brew "openjdk"
-brew "dotnet"                           if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'maxilux' ]"
+brew "qemu"
+cask "dotnet-sdk"
 
 brew "aws-sam-cli"
+
+brew "qemu"
 
 
 cask "arduino"
