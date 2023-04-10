@@ -1,0 +1,4 @@
+brew "git"
+brew "git-extras"
+brew "git-lfs"      # git large file support
+brew "gh"           # github cli

@@ -17,3 +17,4 @@ test-reports
 .#*
 .vscode
 .mypy_cache/
+.venv

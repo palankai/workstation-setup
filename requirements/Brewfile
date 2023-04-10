@@ -6,6 +6,10 @@ tap "aws/tap"
 tap "xen0l/homebrew-taps"
 tap "heroku/brew"
 
+# Fundamentals
+
+brew "pipx"
+
 # Drivers
 
 brew "libffi"
@@ -53,6 +57,10 @@ brew "watch"
 brew "wdiff"
 brew "wget"
 
+# Toolbelt
+cask "licecap"
+
+
 # Applications
 cask "iterm2"
 cask "karabiner-elements"
@@ -76,6 +84,7 @@ cask "surfshark"
 cask "bartender"
 cask "slack"
 cask "google-drive"
+cask "microsoft-edge"
 
 
 # Development
@@ -84,7 +93,6 @@ brew "postgresql@14"
 cask "docker", overwrite: true, link: true
 brew "awscli"
 brew "docker-credential-helper-ecr"
-brew "aws-gate"
 brew "heroku/brew/heroku"
 brew "watchman"
 cask "aws-vault"
@@ -101,12 +109,21 @@ brew "pyenv-virtualenvwrapper"
 cask "cmake"
 brew "go"
 brew "gopls"
-brew "rust"
-brew "rustup-init"
-brew "rustfmt"
+# # brew "rust"
+#brew "rustup-init"
+# # brew "rustfmt"
 brew "openjdk"
 brew "qemu"
 cask "dotnet-sdk"
+
+brew "terraform"
+
+
+# Programming apps
+cask "nosql-workbench"
+brew "gh"           # github
+brew "git-lfs"      # github large file support
+
 
 brew "aws-sam-cli"
 
@@ -115,6 +132,7 @@ cask "arduino"
 cask "raspberry-pi-imager"
 cask "balenaetcher"
 cask "kicad"
+cask "autodesk-fusion360"               if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "amazon-chime"                     if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'maxilux' ]"
 
 #brew "vault"                            if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'work' ]"
@@ -123,13 +141,13 @@ cask "obs"                              if system "source $HOME/.workstation-set
 cask "zoom"                             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 #cask "loupedeck"                        if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "ledger-live"                      if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-cask "keepassxc"                        if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "keepassxc"
 cask "synology-drive"                   if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-cask "adobe-creative-cloud"             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "adobe-creative-cloud"
 cask "ultimaker-cura"                   if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "audacity"                         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-cask "blender"                          if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-# cask "inkscape"                         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "blender"
+cask "inkscape"
 cask "anki"                             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 # cask "ankiapp-anki"                     if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 
@@ -138,18 +156,18 @@ mas "iStat Menus", id: 1319778037
 mas "The Unarchiver", id: 425424353
 mas "FruitJuice", id: 671736912
 
-mas "Affinity Photo", id: 824183456
-mas "Affinity Designer", id: 824171161
+# mas "Affinity Photo", id: 824183456
+# mas "Affinity Designer", id: 824171161
 
-mas "Pages", id: 409201541
-mas "Numbers", id: 409203825
+# mas "Pages", id: 409201541
+# mas "Numbers", id: 409203825
 mas "Keynote", id: 409183694
 
 mas "Yubikey Authenticator", id: 1497506650
 
-mas "Final Cut Pro", id: 424389933      if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-mas "Motion", id: 434290957             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-mas "Compressor", id: 424390742         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+mas "Final Cut Pro", id: 424389933
+mas "Motion", id: 434290957
+mas "Compressor", id: 424390742
 
 mas "Logic Pro", id: 634148309          if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 mas "GarageBand", id: 682658836         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"

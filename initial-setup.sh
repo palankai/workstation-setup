@@ -12,7 +12,9 @@ export PROFILE_FILE="$HOME/.workstation-setup-config"
 export GPG_AGENT_FILE="$HOME/.gnupg/gpg-agent.conf"
 
 export LOG_INFO_OUTPUT="/dev/stderr"
+export LOG_ERROR_OUTPUT="/dev/stderr"
 export LOG_DEBUG_OUTPUT="/dev/stderr"
+export LOG_RESULT_OUTPUT="${PWD}/.workstation-setup-log.txt"
 
 export INSTALLATION_BASE_PATH=$HOME/opt
 
@@ -21,7 +23,6 @@ export REPOSITORY=git@github.com:palankai/$REPOSITORY_NAME.git
 export REPOSITORY_PATH=$INSTALLATION_BASE_PATH/$REPOSITORY_NAME
 
 export WORKSTATION_INSTALLATION_PATH=$INSTALLATION_BASE_PATH/$REPOSITORY_NAME
-export LOG_RESULT_OUTPUT=".workstation-setup-log.txt"
 
 set -e
 
@@ -34,7 +35,8 @@ function initial_setup {
     ensure_gpg
     ensure_workstation_repository
 
-    sh $WORKSTATION_INSTALLATION_PATH/setup.d/0*.sh
+    # sh $WORKSTATION_INSTALLATION_PATH/setup.d/0*.sh
+    ensure_prerequisites
 
     restart_gpg
     next_step_instructions
@@ -332,6 +334,12 @@ function log_info {
 }
 export -f log_info
 
+function log_step {
+    echo " [*] $1" >> $LOG_INFO_OUTPUT
+}
+export -f log_step
+
+
 function log_br {
     echo "" >> $LOG_INFO_OUTPUT
 }
@@ -342,5 +350,61 @@ function log_result {
     echo "$1" >> $LOG_INFO_OUTPUT
 }
 export -f log_result
+
+function log_warn {
+    echo "$(date '+%Y-%m-%d %H:%M') - $0 [[WARN]] : $1" >> $LOG_RESULT_OUTPUT
+    echo " [!] $1" >> $LOG_ERROR_OUTPUT
+}
+export -f log_warn
+
+
+function ensure_prerequisites {
+    log_step "Installing prerequisites (steps/0*)"
+    STEP_FILTER="0*" run_steps
+}
+export -f ensure_prerequisites
+
+function run_steps {
+    filter=${STEP_FILTER:-*}
+    log_step "Running steps: '${filter}'"
+    for step in steps/$filter; do
+        for action in $step/*; do
+            if [ -f $action/prerun.sh ]
+            then
+                log_step "Running prestep script: $action/prerun.sh"
+                (cd $action && sh ./prerun.sh)
+            fi
+            if [ -f $action/requirements.txt ]
+            then
+                log_step "Install python requirements $action/requirements.txt"
+                (cd $action && $SYSTEM_PIP install -r requirements.txt)
+            fi
+            if [ -f $action/Brewfile ]
+            then
+                log_step "Install Brew requirements $action/Brewfile"
+                (cd $action && brew bundle --no-lock)
+            fi
+            if [ -f $action/run.sh ]
+            then
+                log_step "Running step script: $action/run.sh"
+                (cd $action && sh ./run.sh)
+            fi
+        done
+    done
+}
+export -f run_steps
+
+function list_steps {
+    for step in steps/*; do
+        for action in $step/*; do
+            if [ -f $action/run.sh ]
+            then
+                echo "$action/run.sh"
+            fi
+        done
+
+    done
+}
+export -f list_steps
 
 initial_setup

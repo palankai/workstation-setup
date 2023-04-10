@@ -111,7 +111,10 @@ flush-dns-cache-50 () {
         flush-dns-cache
         sleep 0.1
     done
+}
 
+sync-time () {
+    sudo sntp -sS pool.ntp.org
 }
 
 function swap-yubikey {
@@ -140,6 +143,11 @@ function init-conda() {
             export PATH="$conda_base/anaconda3/bin:$PATH"
         fi
     fi
+}
+
+function init-rust() {
+    source ~/.cargo/env
+    export RUST_BACKTRACE=1
 }
 
 function init-virtualenvwrapper {
