@@ -1,2 +1,2 @@
 cask "macfuse"
-brew "ext4fuse"
+#brew "ext4fuse"

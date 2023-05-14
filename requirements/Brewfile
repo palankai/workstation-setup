@@ -107,6 +107,7 @@ brew "pyenv"
 brew "pyenv-virtualenv"
 brew "pyenv-virtualenvwrapper"
 cask "cmake"
+brew "cmake"
 brew "go"
 brew "gopls"
 # # brew "rust"
@@ -117,6 +118,14 @@ brew "qemu"
 cask "dotnet-sdk"
 
 brew "terraform"
+
+# for Rust Gaminng
+brew "glfw"
+brew "sdl2"
+brew "sdl2_image"
+brew "sdl2_ttf"
+brew "sdl2_mixer"
+brew "sdl2_image"
 
 
 # Programming apps

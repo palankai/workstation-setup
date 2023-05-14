@@ -7,6 +7,7 @@ export PATH="$PATH:$SYSTEM_PYTHON_INSTALL_PATH:$HOME/.rvm/bin:/Applications/Visu
 export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
 
+export LIBRARY_PATH="/opt/homebrew/lib${LIBRARY_PATH+:$LIBRARY_PATH}"
 
 export AWS_FUZZ_USER="csaba.palankai"
 export AWS_FUZZ_PRIVATE_IP='True'
@@ -80,11 +81,11 @@ if [ "$TERM" != "dumb" ] && [ hash dircolors 2>/dev/null ]; then
 fi
 
 # This option make gpg ask password on terminal
-#export GPG_TTY=$(tty)
+export GPG_TTY=$(tty)
 
 # GPG Based SSH setup
-#gpgconf --launch gpg-agent
-#export SSH_AUTH_SOCK=$HOME/.gnupg/S.gpg-agent.ssh
+gpgconf --launch gpg-agent
+export SSH_AUTH_SOCK=$HOME/.gnupg/S.gpg-agent.ssh
 
 #export PATH="$PATH:$HOME/opt/anaconda3/bin"
 # END gnu-tools

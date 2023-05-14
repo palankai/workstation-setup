@@ -183,6 +183,14 @@ function glog {
     echo
 }
 
+function restart-gpg {
+    gpgconf --kill gpg-agent
+    export GPG_TTY=$(tty)
+    # GPG Based SSH setup
+    gpgconf --launch gpg-agent
+    export SSH_AUTH_SOCK=$HOME/.gnupg/S.gpg-agent.ssh
+}
+
 alias ll='ls -lAFhG --color=always'
 alias emacs='open -a /Applications/Emacs.app'
 # END aliases
