@@ -150,6 +150,16 @@ function init-rust() {
     export RUST_BACKTRACE=1
 }
 
+function init-ruby {
+    export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+    export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"
+    export CPPFLAGS="-I/opt/homebrew/opt/ruby/include"
+    export PKG_CONFIG_PATH="/opt/homebrew/opt/ruby/lib/pkgconfig"
+    export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
+    eval "$(rbenv init - zsh)"
+}
+
+
 function init-virtualenvwrapper {
     export WORKON_HOME=$HOME/.virtualenvs
     export PROJECT_HOME=$HOME/work

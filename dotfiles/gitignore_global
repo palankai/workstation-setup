@@ -18,3 +18,4 @@ test-reports
 .vscode
 .mypy_cache/
 .venv
+_local_*.rs
