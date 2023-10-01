@@ -470,6 +470,8 @@ function run_stages {
     popd > /dev/null
 }
 
+export -f run_stages
+
 function run_stage {
     stage=$1
     substages=$(ls -d */ 2>/dev/null || true)
@@ -484,8 +486,6 @@ function run_stage {
         popd > /dev/null
     done
 }
-export -f run_stage
-
 
 function run_substage {
     substage=$1
@@ -504,5 +504,3 @@ function run_substage {
         fi
     done
 }
-
-export -f list_steps

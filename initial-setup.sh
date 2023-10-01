@@ -360,57 +360,54 @@ export -f log_warn
 
 function ensure_prerequisites {
     log_step "Installing prerequisites (steps/0*)"
-    STEP_FILTER="0*" run_steps
+    # STEP_FILTER="0*" run_steps
+    sh $WORKSTATION_INSTALLATION_PATH/prerequisites.sh
 }
 export -f ensure_prerequisites
 
-function run_steps {
-    filter=${STEP_FILTER:-*}
-    log_step "Running steps: '${filter}'"
-    for step in steps/$filter; do
-        for action in $step/*; do
-            if [ -f $action/prerun.sh ]
-            then
-                log_step "Running prestep script: $action/prerun.sh"
-                (cd $action && sh ./prerun.sh)
-            fi
-            if [ -f $action/requirements.txt ]
-            then
-                log_step "Install python requirements $action/requirements.txt"
-                (cd $action && $SYSTEM_PIP install -r requirements.txt)
-            fi
-            if [ -f $action/Brewfile ]
-            then
-                log_step "Install Brew requirements $action/Brewfile"
-                (cd $action && brew bundle --no-lock)
-            fi
-            if [ -f $action/run.sh ]
-            then
-                log_step "Running step script: $action/run.sh"
-                (cd $action && sh ./run.sh)
-            fi
-        done
-    done
-}
-export -f run_steps
+# function run_steps {
+#     filter=${STEP_FILTER:-*}
+#     log_step "Running steps: '${filter}'"
+#     for step in steps/$filter; do
+#         for action in $step/*; do
+#             if [ -f $action/prerun.sh ]
+#             then
+#                 log_step "Running prestep script: $action/prerun.sh"
+#                 (cd $action && sh ./prerun.sh)
+#             fi
+#             if [ -f $action/requirements.txt ]
+#             then
+#                 log_step "Install python requirements $action/requirements.txt"
+#                 (cd $action && $SYSTEM_PIP install -r requirements.txt)
+#             fi
+#             if [ -f $action/Brewfile ]
+#             then
+#                 log_step "Install Brew requirements $action/Brewfile"
+#                 (cd $action && brew bundle --no-lock)
+#             fi
+#             if [ -f $action/run.sh ]
+#             then
+#                 log_step "Running step script: $action/run.sh"
+#                 (cd $action && sh ./run.sh)
+#             fi
+#         done
+#     done
+# }
+# export -f run_steps
 
-function list_steps {
-    for step in steps/*; do
-        for action in $step/*; do
-            if [ -f $action/run.sh ]
-            then
+# function list_steps {
+#     for step in steps/*; do
+#         for action in $step/*; do
+#             if [ -f $action/run.sh ]
+#             then
 
-                echo "$action/run.sh"
-            fi
-        done
+#                 echo "$action/run.sh"
+#             fi
+#         done
 
-    done
-}
+#     done
+# }
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-WHITE='\033[0;37m'
 NC='\033[0m' # No Color
 
 STAGE_DIR="stages"
@@ -501,6 +498,8 @@ function run_stages {
     popd > /dev/null
 }
 
+export -f run_stages
+
 function run_stage {
     stage=$1
     substages=$(ls -d */ 2>/dev/null || true)
@@ -515,8 +514,6 @@ function run_stage {
         popd > /dev/null
     done
 }
-export -f run_stage
-
 
 function run_substage {
     substage=$1
@@ -535,7 +532,5 @@ function run_substage {
         fi
     done
 }
-
-export -f list_steps
 
 initial_setup
