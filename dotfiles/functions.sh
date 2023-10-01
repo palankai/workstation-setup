@@ -150,6 +150,8 @@ function init-rust() {
     export RUST_BACKTRACE=1
 }
 
+alias rust_repl=evcxr
+
 function init-ruby {
     export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
     export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"

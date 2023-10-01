@@ -1,4 +1,0 @@
-brew "rustup-init"
-brew "ruby"
-brew "ruby-build"
-brew "rbenv"
