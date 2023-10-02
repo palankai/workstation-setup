@@ -1,0 +1,1 @@
+cask "steam"                    if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
