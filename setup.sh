@@ -10,6 +10,8 @@ export STAGES_ROOT=$PWD/stages
 #     exit 0
 # fi
 
+brew update
+
 run_stages
 
 # STEP_FILTER="$1"
