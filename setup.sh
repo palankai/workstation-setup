@@ -11,6 +11,7 @@ export STAGES_ROOT=$PWD/stages
 # fi
 
 brew update
+brew upgrade
 
 run_stages
 
