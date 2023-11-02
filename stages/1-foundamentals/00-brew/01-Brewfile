@@ -64,7 +64,6 @@ brew "gopls"
 #brew "rustup-init"
 # # brew "rustfmt"
 brew "openjdk"
-brew "qemu"
 cask "dotnet-sdk"
 
 brew "terraform"

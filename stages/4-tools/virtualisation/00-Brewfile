@@ -1,0 +1,2 @@
+brew "qemu"
+brew "utm"
