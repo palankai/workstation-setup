@@ -5,3 +5,8 @@ brew "rbenv"
 
 # for Rust Gaminng
 brew "glfw"
+
+tap "osx-cross/avr"
+brew "avr-binutils"
+brew "avr-gcc"
+brew "avrdude"
