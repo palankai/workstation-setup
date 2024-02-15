@@ -15,7 +15,8 @@ test-reports
 .vimrc_local
 .dir-locals.el
 .#*
-.vscode
 .mypy_cache/
 .venv
 _local_*.rs
+.vscode/settings.json
+
