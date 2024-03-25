@@ -1,0 +1,5 @@
+brew "consul"
+brew "vault"
+brew "consul-template"
+brew "envconsul"
+brew "redis"
