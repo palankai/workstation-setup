@@ -1,12 +1,14 @@
-# for Rust Gaminng
-brew "glfw"
 
+# Arduino related
 tap "osx-cross/avr"
 brew "avr-binutils"
 brew "avr-gcc"
 brew "avrdude"
 
-
+# ESP 32 related
+brew "ccache"
 brew "cmake"
 brew "ninja"
 brew "dfu-util"
+
+

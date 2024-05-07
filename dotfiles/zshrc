@@ -125,3 +125,11 @@ source $WORKSTATION_INSTALLATION_PATH/sensitive/profiles/$WORKSTATION.sh
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+
+# Rust ESP
+export LIBCLANG_PATH="/Users/csaba/.rustup/toolchains/esp/xtensa-esp32-elf-clang/esp-16.0.4-20231113/esp-clang/lib"
+export PATH="/Users/csaba/.rustup/toolchains/esp/xtensa-esp-elf/esp-13.2.0_20230928/xtensa-esp-elf/bin:$PATH"
+
+#. $HOME/esp/esp-idf/export.sh
+alias get_idf='. $HOME/esp/esp-idf/export.sh'
