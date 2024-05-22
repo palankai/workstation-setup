@@ -143,4 +143,4 @@ alias get_idf='. $HOME/esp/esp-idf/export.sh'
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-POWERLEVEL9K_APPLE_ICON="🍏"
+# POWERLEVEL9K_APPLE_ICON="🍏"
