@@ -1,3 +1,6 @@
 [submodule "src/sensitive"]
 	path = sensitive
 	url = git@github.com:palankai/workstation-sensitive.git
+[submodule "dotfiles/zsh_custom/themes/powerlevel10k"]
+	path = dotfiles/zsh_custom/themes/powerlevel10k
+	url = https://github.com/romkatv/powerlevel10k.git
