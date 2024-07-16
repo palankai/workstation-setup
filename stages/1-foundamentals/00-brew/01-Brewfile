@@ -78,20 +78,20 @@ cask "arduino"
 cask "raspberry-pi-imager"
 cask "balenaetcher"
 cask "kicad"
-cask "autodesk-fusion360"               if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "autodesk-fusion360"
 cask "amazon-chime"                     if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'maxilux' ]"
 
 #brew "vault"                            if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'work' ]"
 
-cask "obs"                              if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "obs"
 cask "zoom"                             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 #cask "loupedeck"                        if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-cask "ledger-live"                      if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "ledger-live"
 cask "keepassxc"
 cask "synology-drive"                   if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "adobe-creative-cloud"
-cask "ultimaker-cura"                   if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
-cask "audacity"                         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+cask "ultimaker-cura"
+cask "audacity"
 cask "blender"
 cask "inkscape"
 cask "anki"                             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
@@ -115,7 +115,7 @@ mas "Final Cut Pro", id: 424389933
 mas "Motion", id: 434290957
 mas "Compressor", id: 424390742
 
-mas "Logic Pro", id: 634148309          if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+mas "Logic Pro", id: 634148309
 mas "GarageBand", id: 682658836         if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 
 # mas "Xcode", id: 497799835              if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
