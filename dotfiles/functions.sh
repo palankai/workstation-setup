@@ -209,3 +209,5 @@ alias emacs='open -a /Applications/Emacs.app'
 
 alias uuid="uuidgen | tr -d '\n' | tr '[:upper:]' '[:lower:]' | pbcopy && pbpaste && echo"
 alias UUID="uuidgen | tr -d '\n' | pbcopy && pbpaste && echo"
+
+
