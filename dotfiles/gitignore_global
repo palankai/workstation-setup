@@ -18,6 +18,4 @@ test-reports
 .mypy_cache/
 .venv
 _local_*.rs
-.vscode/settings.json
-**/.vscode/settings.json
 

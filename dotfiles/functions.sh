@@ -69,6 +69,10 @@ aws-maxilux-prod-cli () {
 aws-maxilux-prod () {
     aws-vault exec maxilux-prod -- "$@"
 }
+aws-maxilux-login () {
+    aws-vault login maxilux-prod
+}
+
 
 aws-maxilux-uat-cli () {
     aws-vault exec maxilux-uat -- aws "$@"
