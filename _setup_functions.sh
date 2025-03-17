@@ -492,7 +492,7 @@ function run_substage {
     for i in $(seq -f "%02g" 0 99); do
         if [ -f "${i}-Brewfile" ]; then
             log_info "     ${BIWhite}-${NC} ${BIPurple}${i}-Brewfile${NC}"
-            brew bundle -q --file ${i}-Brewfile --no-lock
+            brew bundle -q --file ${i}-Brewfile
         fi
         if [ -f "${i}-requirements.txt" ]; then
             log_info "     ${BIWhite}-${NC} ${BIPurple}${i}-requirements.txt${NC}"
