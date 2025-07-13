@@ -90,6 +90,9 @@ export GPG_TTY=$(tty)
 gpgconf --launch gpg-agent
 export SSH_AUTH_SOCK=$HOME/.gnupg/S.gpg-agent.ssh
 
+if [ -f ~/.zprofile.local ]; then
+      source ~/.zprofile.local
+fi
 #export PATH="$PATH:$HOME/opt/anaconda3/bin"
 # END gnu-tools
 
