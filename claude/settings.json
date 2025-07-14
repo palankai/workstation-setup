@@ -7,12 +7,13 @@
       "Bash(mv:*)",
       "Bash(grep:*)",
       "Bash(npm:*)",
+      "Bash(cargo:*)",
+      "Bash(pytest:*)",
       "Bash(ls:*)",
       "Bash(cp:*)",
-      "Write",
-      "Edit",
       "Bash(chmod:*)",
       "Bash(touch:*)"
+      "Edit",
     ],
     "deny": []
   },
