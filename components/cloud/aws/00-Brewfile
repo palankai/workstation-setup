@@ -1,0 +1,7 @@
+tap "aws/tap"
+
+tap "xen0l/homebrew-taps" # for aws-gate
+
+cask "aws-vault-binary"
+# cask "aws-gate"
+cask "session-manager-plugin"
