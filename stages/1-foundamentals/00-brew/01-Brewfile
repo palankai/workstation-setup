@@ -41,7 +41,7 @@ cask "microsoft-edge"
 
 # Development
 
-brew "postgresql@14"
+brew "postgresql"
 #brew "awscli"
 brew "heroku/brew/heroku"
 brew "watchman"
@@ -74,27 +74,27 @@ cask "nosql-workbench"
 #brew "aws-sam-cli"
 
 
-cask "arduino"
+#cask "arduino"
 cask "raspberry-pi-imager"
 cask "balenaetcher"
-cask "kicad"
-cask "autodesk-fusion360"
-cask "amazon-chime"                     if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'maxilux' ]"
+#cask "kicad"
+#cask "autodesk-fusion360"
+#cask "amazon-chime"                     if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'maxilux' ]"
 
 #brew "vault"                            if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'work' ]"
 
 cask "obs"
-cask "zoom"                             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+# cask "zoom"                             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 #cask "loupedeck"                        if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "ledger-live"
 cask "keepassxc"
-cask "synology-drive"                   if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+# cask "synology-drive"                   if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 cask "adobe-creative-cloud"
 cask "ultimaker-cura"
 cask "audacity"
 cask "blender"
 cask "inkscape"
-cask "anki"                             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
+# cask "anki"                             if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 # cask "ankiapp-anki"                     if system "source $HOME/.workstation-setup-config; [ $WORKSTATION = 'personal' ]"
 
 mas "1Password 7", id: 1333542190

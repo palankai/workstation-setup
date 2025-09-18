@@ -96,4 +96,7 @@ fi
 #export PATH="$PATH:$HOME/opt/anaconda3/bin"
 # END gnu-tools
 
+export locize_INSTALL="/Users/csaba/.locize-cli"
+export PATH="$locize_INSTALL/bin:$PATH"
+
 # BEGIN aliases

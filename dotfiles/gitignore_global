@@ -18,4 +18,4 @@ test-reports
 .mypy_cache/
 .venv
 _local_*.rs
-
+.claude/settings.local.json
