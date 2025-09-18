@@ -104,6 +104,7 @@ function ensure_essentials {
     log_info "Homebrew paths setup in this environment"
 
     brew_install mas
+    brew_install git
 
     mkdir -p $HOME/opt/bin
 }
@@ -170,7 +171,7 @@ function ensure_repository {
 
     if [ ! -d $repo_path ] ; then
         log_info "Cloning $url into $repo_path..."
-        git clone $url $repo_path
+        git clone --recurse-submodules -j8 $url $repo_path
         log_result "Repository $url cloned into $repo_path"
     else
         log_info "Updating $url..."
