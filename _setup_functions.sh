@@ -76,6 +76,7 @@ function ensure_essentials {
     log_info "Homebrew paths setup in this environment"
 
     brew_install mas
+    brew_install git
 
     mkdir -p $HOME/opt/bin
 }
