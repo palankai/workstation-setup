@@ -5,13 +5,13 @@
 from argparse import ArgumentParser
 from dataclasses import dataclass
 import os
+import os.path
 import glob
-import pprint
 import re
 import curses
 from itertools import groupby
 import sys
-from typing import NamedTuple, Sequence, Union
+from typing import Union
 
 FEATURE_FILES = [
     "Brewfile",
@@ -24,8 +24,8 @@ FEATURE_NAME_REGEX = re.compile(f"(.?..-)?(.*)$")
 
 def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
     targets = glob.glob("*", root_dir="targets")
-    args = get_parser(prog, targets).parse_args()
-    target = args.target
+    args = get_parser(prog, targets).parse_args(argv)
+    target: str = str(args.target)
 
     broken_links = discover_broken_links(target)
     if len(broken_links):
@@ -38,9 +38,12 @@ def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
 
     components = FeatureTree.build(discover("components", selected))
 
-    unchecked, newly_selected = selector_ui(
+    unchecked, newly_selected, to_update = selector_ui(
         components, f"Component Selector [{target}]"
     )
+    if not to_update:
+        print(f"Abort updating {target}")
+        sys.exit(0)
 
     print(f"\nResults:")
     print(f"Unchecked items ({len(unchecked)}):")
@@ -49,10 +52,24 @@ def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
     print(f"Newly selected items ({len(newly_selected)}):")
     make_links(target, newly_selected)
 
+    instructions = InstructionSet()
+    for feature in discover(os.path.join("fundamentals")):
+        instructions.extend(feature)
+
+    for feature in discover(os.path.join("targets", target)):
+        instructions.extend(feature)
+
+    script_lines = instructions.compile_single_upgrader()
+    script_path = os.path.join("targets", target, "upgrade.sh")
+    with open(script_path, "w") as f:
+        _ = f.write("\n".join(script_lines))
+        _ = f.write("\n")
+    os.chmod(script_path, 0o755)
+
 
 def get_parser(prog: str, targets: list[str]) -> ArgumentParser:
     parser = ArgumentParser(prog)
-    parser.add_argument("target", choices=targets)
+    _ = parser.add_argument("target", choices=targets)
     return parser
 
 
@@ -60,8 +77,17 @@ def discover(root_dir: str, selected: list[str] | None = None) -> list["FeatureF
     if selected is None:
         selected = []
     return [
-        FeatureFolder.parse(
-            root_dir, feature_folder, os.path.join(root_dir, feature_folder) in selected
+        FeatureFolder.make(
+            root=root_dir,
+            feature_folder=feature_folder,
+            selected=os.path.join(root_dir, feature_folder) in selected,
+            contents=tuple(
+                glob.glob(
+                    "**",
+                    root_dir=os.path.join(root_dir, feature_folder),
+                    include_hidden=True,
+                )
+            ),
         )
         for feature_folder, g in groupby(
             [
@@ -98,12 +124,6 @@ def make_links(target: str, feature_folders: list["FeatureFolder"]):
 
 def remove_links(target: str, feature_folders: list["FeatureFolder"]):
     for feature_folder in feature_folders:
-        source = os.path.join(
-            os.path.join(*[".."] * (feature_folder.relative_path_count + 2)),
-            feature_folder.root,
-            feature_folder.folder,
-        )
-
         destination_folder = os.path.join(
             "targets", target, feature_folder.category_folder
         )
@@ -129,13 +149,13 @@ def remove_links(target: str, feature_folders: list["FeatureFolder"]):
 
 def discover_existing_links(target: str) -> list[str]:
     target_path = os.path.join("targets", target)
-    existing_links = []
+    existing_links: list[str] = []
     for root, dirs, files in os.walk(target_path):
         for name in dirs + files:
             full_path = os.path.join(root, name)
             if os.path.islink(full_path):
                 existing_links.append(os.readlink(full_path))
-    cleaned_links = []
+    cleaned_links: list[str] = []
     for link in existing_links:
         parts = link.split(os.path.sep)
         cleaned_parts = [part for part in parts if part != ".."]
@@ -178,23 +198,137 @@ class BrokenLink:
     destination: str
 
 
+class InstructionSet:
+    before: list[str]
+    after: list[str]
+    brewfile: list[str]
+    run: list[str]
+
+    def __init__(self):
+        self.brewfile = []
+        self.run = []
+        self.before = []
+        self.after = []
+
+    def extend(self, feature_folder: "FeatureFolder"):
+        for content in feature_folder.contents:
+            full_path = os.path.join(
+                feature_folder.root, feature_folder.folder, content
+            )
+            if os.path.isfile(full_path):
+
+                if content.endswith("Brewfile"):
+                    self.brewfile.extend(self.read_content(full_path))
+                elif content.endswith(".sh"):
+                    name = self.make_unique_function_name(feature_folder, content)
+                    function = self.make_shell_function(full_path, name)
+                    if content.endswith("runonce.sh"):
+                        self.run.extend(function)
+                        self.run.append(f"if [ ! -f .once/installed-{name}-once ]; then")
+                        self.run.append(f"    {name}\n")
+                        self.run.append(f"    touch .once/installed-{name}-once")
+                        self.run.append(f"fi\n")
+                    elif content.endswith("afteronce.sh"):
+                        self.after.extend(function)
+                        self.after.append(f"if [ ! -f .once/installed-{name}-once ]; then")
+                        self.after.append(f"    {name}")
+                        self.after.append(f"    touch .once/installed-{name}-once")
+                        self.after.append(f"fi\n")
+                    elif content.endswith("beforeonce.sh"):
+                        self.before.extend(function)
+                        self.before.append(f"if [ ! -f .once/installed-{name}-once ]; then")
+                        self.before.append(f"    {name}")
+                        self.before.append(f"    touch .once/installed-{name}-once")
+                        self.before.append(f"fi\n")
+                    elif content.endswith("before.sh"):
+                        self.before.extend(function)
+                        self.before.append(f"{name}\n")
+                    elif content.endswith("after.sh"):
+                        self.after.extend(function)
+                        self.after.append(f"{name}\n")
+                    elif content.endswith("run.sh"):
+                        self.run.extend(function)
+                        self.run.append(f"{name}\n")
+
+    def read_content(self, fn: str, indent: str = "") -> list[str]:
+        with open(fn, "r") as f:
+            return [indent + line.rstrip() for line in f.readlines() if line.strip()]
+
+    def make_unique_function_name(self, feature_folder: "FeatureFolder", fn: str) -> str:
+        return "_".join(
+            ["run"] + [cat.replace("-", "_") for cat in feature_folder.categories] +
+            [feature_folder.name.replace("-", "_")] +
+            [os.path.splitext(os.path.basename(fn))[0].replace("-", "_")]
+        )
+    def make_shell_function(self, fn: str, name: str) -> list[str]:
+        lines = [
+            f"function {name}() {{",
+        ]
+        lines.extend(self.read_content(fn, indent="    "))
+        lines.append("}")
+        return lines
+
+    def compile_single_upgrader(self) -> list[str]:
+        lines = [
+            "#!/bin/bash",
+            "",
+            "set -e",
+            "",
+        ]
+        lines.append('if [ "$(pwd)" != "$(dirname "$0")" ]; then')
+        lines.append('    echo "Please run this script from its own directory: $(dirname "$0")"')
+        lines.append("    exit 1")
+        lines.append("fi")
+        lines.append("")
+        lines.append("mkdir -p .once")
+        lines.append("")
+        lines.append("# Before scripts")
+        lines.extend(self.before)
+        lines.append("")
+        lines.append("# Brewfile")
+        lines.append("echo 'Updating Homebrew and installing packages...'")
+        lines.append("brew update")
+        lines.append("brew upgrade")
+        if self.brewfile:
+            lines.append("brew bundle -q --no-lock --file=- <<EOF")
+            lines.extend(self.brewfile)
+            lines.append("EOF")
+        else:
+            lines.append("echo 'No Brewfile instructions to process.'")
+        lines.append("")
+        lines.append("# Run scripts")
+        lines.extend(self.run)
+        lines.append("")
+        lines.append("# After scripts")
+        lines.extend(self.after)
+        return lines
+
+
+
 @dataclass
 class FeatureFolder:
     root: str
     folder: str
     name: str
     categories: tuple[str, ...]
+    contents: tuple[str, ...]
     selected: bool
 
     @classmethod
-    def parse(
-        cls, root: str, feature_folder: str, selected: bool = False
+    def make(
+        cls,
+        *,
+        root: str,
+        feature_folder: str,
+        contents: tuple[str, ...],
+        selected: bool = False,
     ) -> "FeatureFolder":
         categories, name = os.path.split(feature_folder)
         return cls(
             root=root,
             folder=feature_folder,
             name=denumbered_name(name),
+            contents=contents,
             categories=tuple(
                 [
                     denumbered_name(category)
@@ -266,7 +400,7 @@ def denumbered_name(name: str):
 
 def selector_ui(
     components: FeatureTree, title: str = "Configuration"
-) -> tuple[list[FeatureFolder], list[FeatureFolder]]:
+) -> tuple[list[FeatureFolder], list[FeatureFolder], bool]:
     """
     Display a cursive UI for selecting components.
     Returns (unchecked_items, newly_selected_items)
@@ -667,10 +801,10 @@ def selector_ui(
                             collect_changes(item)
 
                 collect_changes(components)
-                return unchecked, newly_selected
+                return unchecked, newly_selected, True
             elif key == ord("q") or key == ord("Q"):
                 # Cancel
-                return [], []
+                return [], [], False
 
     def count_changes(
         tree: Union[FeatureTree, FeatureFolder], original: dict, current: dict
