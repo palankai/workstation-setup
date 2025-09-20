@@ -27,13 +27,16 @@ def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
     args = get_parser(prog, targets).parse_args()
     target = args.target
 
+    broken_links = discover_broken_links(target)
+    if len(broken_links):
+        print(f"🚨 {len(broken_links)} Broken links found")
+        for broken_link in broken_links:
+            print(f" - {broken_link}")
+        sys.exit(1)
+
     selected = discover_existing_links(target)
 
     components = FeatureTree.build(discover("components", selected))
-
-    print("Component tree:")
-    pprint.pprint(components)
-    print("\nLaunching selector UI... (Press 'u' to update, 'q' to quit)")
 
     unchecked, newly_selected = selector_ui(
         components, f"Component Selector [{target}]"
@@ -140,6 +143,39 @@ def discover_existing_links(target: str) -> list[str]:
             cleaned_links.append(os.path.sep.join(cleaned_parts))
     existing_links = cleaned_links
     return existing_links
+
+
+def discover_broken_links(target: str) -> list["BrokenLink"]:
+    target_path = os.path.join("targets", target)
+    broken_links = []
+    for root, dirs, files in os.walk(target_path):
+        for name in dirs + files:
+            full_path = os.path.join(root, name)
+            if os.path.islink(full_path):
+                link_target = os.readlink(full_path)
+                # Check if the link target exists
+                if os.path.isabs(link_target):
+                    # Absolute path
+                    if not os.path.exists(link_target):
+                        broken_links.append(
+                            BrokenLink(path=full_path, destination=link_target)
+                        )
+                else:
+                    # Relative path - resolve relative to the link's directory
+                    resolved_target = os.path.join(
+                        os.path.dirname(full_path), link_target
+                    )
+                    if not os.path.exists(resolved_target):
+                        broken_links.append(
+                            BrokenLink(path=full_path, destination=link_target)
+                        )
+    return broken_links
+
+
+@dataclass(frozen=True)
+class BrokenLink:
+    path: str
+    destination: str
 
 
 @dataclass
