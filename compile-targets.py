@@ -2,6 +2,7 @@
 # requires-python = ">=3.11"
 # dependencies = []
 # ///
+from argparse import ArgumentParser
 from dataclasses import dataclass
 import os
 import glob
@@ -9,6 +10,7 @@ import pprint
 import re
 import curses
 from itertools import groupby
+import sys
 from typing import NamedTuple, Sequence, Union
 
 FEATURE_FILES = [
@@ -20,29 +22,44 @@ FEATURE_FILES_RE = re.compile(f".*({'|'.join(FEATURE_FILES)})$")
 FEATURE_NAME_REGEX = re.compile(f"(.?..-)?(.*)$")
 
 
-def main() -> None:
+def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
     targets = glob.glob("*", root_dir="targets")
-    components = FeatureTree.build(discover("components"))
+    args = get_parser(prog, targets).parse_args()
+    target = args.target
+
+    selected = discover_existing_links(target)
+
+    components = FeatureTree.build(discover("components", selected))
 
     print("Component tree:")
     pprint.pprint(components)
-    print("\nLaunching selector UI... (Press 'u' to update, 'c' to cancel)")
+    print("\nLaunching selector UI... (Press 'u' to update, 'q' to quit)")
 
-    unchecked, newly_selected = selector_ui(components, "Component Selector")
+    unchecked, newly_selected = selector_ui(
+        components, f"Component Selector [{target}]"
+    )
 
     print(f"\nResults:")
     print(f"Unchecked items ({len(unchecked)}):")
-    for item in unchecked:
-        print(f"  - {item.name} ({item.folder})")
+    remove_links(target, unchecked)
 
     print(f"Newly selected items ({len(newly_selected)}):")
-    for item in newly_selected:
-        print(f"  - {item.name} ({item.folder})")
+    make_links(target, newly_selected)
 
 
-def discover(root_dir: str) -> list["FeatureFolder"]:
+def get_parser(prog: str, targets: list[str]) -> ArgumentParser:
+    parser = ArgumentParser(prog)
+    parser.add_argument("target", choices=targets)
+    return parser
+
+
+def discover(root_dir: str, selected: list[str] | None = None) -> list["FeatureFolder"]:
+    if selected is None:
+        selected = []
     return [
-        FeatureFolder.parse(feature_folder)
+        FeatureFolder.parse(
+            root_dir, feature_folder, os.path.join(root_dir, feature_folder) in selected
+        )
         for feature_folder, g in groupby(
             [
                 os.path.dirname(setupfile)
@@ -57,17 +74,89 @@ def discover(root_dir: str) -> list["FeatureFolder"]:
     ]
 
 
+def make_links(target: str, feature_folders: list["FeatureFolder"]):
+    for feature_folder in feature_folders:
+        source = os.path.join(
+            os.path.join(*[".."] * (feature_folder.relative_path_count + 2)),
+            feature_folder.root,
+            feature_folder.folder,
+        )
+
+        destination_folder = os.path.join(
+            "targets", target, feature_folder.category_folder
+        )
+        destination = os.path.join(destination_folder, feature_folder.container_folder)
+
+        os.makedirs(destination_folder, exist_ok=True)
+        if os.path.lexists(destination):
+            os.unlink(destination)
+        os.symlink(source, destination)
+
+
+def remove_links(target: str, feature_folders: list["FeatureFolder"]):
+    for feature_folder in feature_folders:
+        source = os.path.join(
+            os.path.join(*[".."] * (feature_folder.relative_path_count + 2)),
+            feature_folder.root,
+            feature_folder.folder,
+        )
+
+        destination_folder = os.path.join(
+            "targets", target, feature_folder.category_folder
+        )
+        destination = os.path.join(destination_folder, feature_folder.container_folder)
+
+        if os.path.lexists(destination):
+            os.unlink(destination)
+
+            # Remove empty parent directories up to targets/target
+            current_dir = destination_folder
+            target_base = os.path.join("targets", target)
+
+            while current_dir != target_base and os.path.exists(current_dir):
+                try:
+                    if not os.listdir(current_dir):  # Directory is empty
+                        os.rmdir(current_dir)
+                        current_dir = os.path.dirname(current_dir)
+                    else:
+                        break  # Directory not empty, stop
+                except OSError:
+                    break  # Can't remove directory, stop
+
+
+def discover_existing_links(target: str) -> list[str]:
+    target_path = os.path.join("targets", target)
+    existing_links = []
+    for root, dirs, files in os.walk(target_path):
+        for name in dirs + files:
+            full_path = os.path.join(root, name)
+            if os.path.islink(full_path):
+                existing_links.append(os.readlink(full_path))
+    cleaned_links = []
+    for link in existing_links:
+        parts = link.split(os.path.sep)
+        cleaned_parts = [part for part in parts if part != ".."]
+        if cleaned_parts:
+            cleaned_links.append(os.path.sep.join(cleaned_parts))
+    existing_links = cleaned_links
+    return existing_links
+
+
 @dataclass
 class FeatureFolder:
+    root: str
     folder: str
     name: str
     categories: tuple[str, ...]
     selected: bool
 
     @classmethod
-    def parse(cls, feature_folder: str) -> "FeatureFolder":
+    def parse(
+        cls, root: str, feature_folder: str, selected: bool = False
+    ) -> "FeatureFolder":
         categories, name = os.path.split(feature_folder)
         return cls(
+            root=root,
             folder=feature_folder,
             name=denumbered_name(name),
             categories=tuple(
@@ -76,7 +165,7 @@ class FeatureFolder:
                     for category in categories.split(os.path.sep)
                 ]
             ),
-            selected=False,
+            selected=selected,
         )
 
     def is_part_of_categories(self, categories: tuple[str, ...]) -> bool:
@@ -86,6 +175,18 @@ class FeatureFolder:
 
     def is_in_category(self, categories: tuple[str, ...]) -> bool:
         return categories == self.categories
+
+    @property
+    def category_folder(self):
+        return os.path.dirname(self.folder)
+
+    @property
+    def container_folder(self):
+        return os.path.basename(self.folder)
+
+    @property
+    def relative_path_count(self):
+        return len(self.categories)
 
 
 @dataclass(frozen=True)
@@ -127,7 +228,9 @@ def denumbered_name(name: str):
     return matches.group(2)
 
 
-def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[list[FeatureFolder], list[FeatureFolder]]:
+def selector_ui(
+    components: FeatureTree, title: str = "Configuration"
+) -> tuple[list[FeatureFolder], list[FeatureFolder]]:
     """
     Display a cursive UI for selecting components.
     Returns (unchecked_items, newly_selected_items)
@@ -147,7 +250,9 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
     collect_folders(components, original_state)
     current_state = original_state.copy()
 
-    def flatten_tree(tree: FeatureTree, level: int = 0) -> list[tuple[Union[FeatureTree, FeatureFolder], int]]:
+    def flatten_tree(
+        tree: FeatureTree, level: int = 0
+    ) -> list[tuple[Union[FeatureTree, FeatureFolder], int]]:
         """Flatten tree structure for display with indentation levels"""
         items = []
         for item in tree.contents:
@@ -158,12 +263,18 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
 
     def main_ui(stdscr):
         curses.curs_set(0)  # Hide cursor
-        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)   # Menu text (black on white)
-        curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_RED)     # Selected line (white on red)
-        curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_CYAN)    # Changed items
-        curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLUE)    # Title text (white on blue)
+        curses.init_pair(
+            1, curses.COLOR_BLACK, curses.COLOR_WHITE
+        )  # Menu text (black on white)
+        curses.init_pair(
+            2, curses.COLOR_WHITE, curses.COLOR_RED
+        )  # Selected line (white on red)
+        curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_CYAN)  # Changed items
+        curses.init_pair(
+            4, curses.COLOR_WHITE, curses.COLOR_BLUE
+        )  # Title text (white on blue)
 
-        stdscr.bkgd(' ', curses.color_pair(4))  # Blue background like raspi-config
+        stdscr.bkgd(" ", curses.color_pair(4))  # Blue background like raspi-config
 
         selected_index = 0
         scroll_offset = 0
@@ -180,11 +291,15 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
             display_items = flatten_tree(components)
 
             # Calculate changes in entire tree
-            added_count, removed_count = count_added_removed(components, original_state, current_state)
+            added_count, removed_count = count_added_removed(
+                components, original_state, current_state
+            )
 
             # Calculate window dimensions
             menu_width = min(width - 4, 80)  # Max 80 chars wide, leave margins
-            menu_height = min(height - 6, len(display_items) + 4)  # Leave space for borders and buttons
+            menu_height = min(
+                height - 6, len(display_items) + 4
+            )  # Leave space for borders and buttons
             menu_start_x = (width - menu_width) // 2
             menu_start_y = 2  # Start higher since title is now in border
 
@@ -200,10 +315,12 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
             content_start_x = menu_start_x + 2
 
             # Full redraw needed?
-            full_redraw_needed = (needs_full_redraw or
-                                display_items != last_display_items or
-                                scroll_offset != last_scroll_offset or
-                                not menu_drawn)
+            full_redraw_needed = (
+                needs_full_redraw
+                or display_items != last_display_items
+                or scroll_offset != last_scroll_offset
+                or not menu_drawn
+            )
 
             def draw_menu_item(item_index, force_redraw=False):
                 """Draw a single menu item"""
@@ -217,7 +334,7 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
                 item, level = display_items[item_index]
                 y = content_start_y + visible_index
 
-                is_selected = (item_index == selected_index)
+                is_selected = item_index == selected_index
                 color = curses.color_pair(2) if is_selected else curses.color_pair(1)
 
                 # Create indentation
@@ -261,12 +378,14 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
                 if text:
                     max_text_width = menu_width - 4
                     if len(text) > max_text_width:
-                        text = text[:max_text_width - 3] + "..."
+                        text = text[: max_text_width - 3] + "..."
 
                     try:
                         # Clear the line first with white background
                         line_clear = " " * (menu_width - 4)
-                        stdscr.addstr(y, content_start_x, line_clear, curses.color_pair(1))
+                        stdscr.addstr(
+                            y, content_start_x, line_clear, curses.color_pair(1)
+                        )
                         stdscr.addstr(y, content_start_x, text, color)
                     except curses.error:
                         pass  # Ignore if we can't draw (screen too small)
@@ -278,7 +397,9 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
                 # Generate title text with change information
                 if added_count > 0 or removed_count > 0:
                     if added_count > 0 and removed_count > 0:
-                        title_text = f"{title} (added: {added_count}, removed: {removed_count})"
+                        title_text = (
+                            f"{title} (added: {added_count}, removed: {removed_count})"
+                        )
                     elif added_count > 0:
                         title_text = f"{title} (added: {added_count})"
                     else:
@@ -291,39 +412,74 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
                     # Fill menu area with white background
                     for y in range(menu_height):
                         for x in range(menu_width):
-                            stdscr.addstr(menu_start_y + y, menu_start_x + x, " ", curses.color_pair(1))
+                            stdscr.addstr(
+                                menu_start_y + y,
+                                menu_start_x + x,
+                                " ",
+                                curses.color_pair(1),
+                            )
 
                     # Top border with integrated title
                     if len(title_text) + 4 < menu_width:  # Check if title fits
                         # Calculate spacing for centered title
                         title_padding = (menu_width - len(title_text) - 4) // 2
                         left_border = "─" * title_padding
-                        right_border = "─" * (menu_width - len(title_text) - 4 - title_padding)
+                        right_border = "─" * (
+                            menu_width - len(title_text) - 4 - title_padding
+                        )
                         top_border = f"┌{left_border} {title_text} {right_border}┐"
                     else:
                         # Fallback: truncate title if too long
                         max_title_len = menu_width - 6
-                        truncated_title = title_text[:max_title_len] + "..." if len(title_text) > max_title_len else title_text
+                        truncated_title = (
+                            title_text[:max_title_len] + "..."
+                            if len(title_text) > max_title_len
+                            else title_text
+                        )
                         title_padding = (menu_width - len(truncated_title) - 4) // 2
                         left_border = "─" * title_padding
-                        right_border = "─" * (menu_width - len(truncated_title) - 4 - title_padding)
+                        right_border = "─" * (
+                            menu_width - len(truncated_title) - 4 - title_padding
+                        )
                         top_border = f"┌{left_border} {truncated_title} {right_border}┐"
 
-                    stdscr.addstr(menu_start_y, menu_start_x, top_border, curses.color_pair(1))
+                    stdscr.addstr(
+                        menu_start_y, menu_start_x, top_border, curses.color_pair(1)
+                    )
 
                     # Side borders
                     for i in range(menu_height - 2):
-                        stdscr.addstr(menu_start_y + 1 + i, menu_start_x, "│", curses.color_pair(1))
-                        stdscr.addstr(menu_start_y + 1 + i, menu_start_x + menu_width - 1, "│", curses.color_pair(1))
+                        stdscr.addstr(
+                            menu_start_y + 1 + i,
+                            menu_start_x,
+                            "│",
+                            curses.color_pair(1),
+                        )
+                        stdscr.addstr(
+                            menu_start_y + 1 + i,
+                            menu_start_x + menu_width - 1,
+                            "│",
+                            curses.color_pair(1),
+                        )
 
                     # Bottom border
-                    stdscr.addstr(menu_start_y + menu_height - 1, menu_start_x, "└" + "─" * (menu_width - 2) + "┘", curses.color_pair(1))
+                    stdscr.addstr(
+                        menu_start_y + menu_height - 1,
+                        menu_start_x,
+                        "└" + "─" * (menu_width - 2) + "┘",
+                        curses.color_pair(1),
+                    )
                 except curses.error:
                     # Fallback to simple border if unicode fails
                     for y in range(menu_height):
                         for x in range(menu_width):
                             try:
-                                stdscr.addstr(menu_start_y + y, menu_start_x + x, " ", curses.color_pair(1))
+                                stdscr.addstr(
+                                    menu_start_y + y,
+                                    menu_start_x + x,
+                                    " ",
+                                    curses.color_pair(1),
+                                )
                             except curses.error:
                                 pass
 
@@ -331,29 +487,58 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
                     if len(title_text) + 4 < menu_width:
                         title_padding = (menu_width - len(title_text) - 4) // 2
                         left_border = "-" * title_padding
-                        right_border = "-" * (menu_width - len(title_text) - 4 - title_padding)
+                        right_border = "-" * (
+                            menu_width - len(title_text) - 4 - title_padding
+                        )
                         top_border = f"+{left_border} {title_text} {right_border}+"
                     else:
                         max_title_len = menu_width - 6
-                        truncated_title = title_text[:max_title_len] + "..." if len(title_text) > max_title_len else title_text
+                        truncated_title = (
+                            title_text[:max_title_len] + "..."
+                            if len(title_text) > max_title_len
+                            else title_text
+                        )
                         title_padding = (menu_width - len(truncated_title) - 4) // 2
                         left_border = "-" * title_padding
-                        right_border = "-" * (menu_width - len(truncated_title) - 4 - title_padding)
+                        right_border = "-" * (
+                            menu_width - len(truncated_title) - 4 - title_padding
+                        )
                         top_border = f"+{left_border} {truncated_title} {right_border}+"
 
-                    stdscr.addstr(menu_start_y, menu_start_x, top_border, curses.color_pair(1))
+                    stdscr.addstr(
+                        menu_start_y, menu_start_x, top_border, curses.color_pair(1)
+                    )
                     for i in range(menu_height - 2):
-                        stdscr.addstr(menu_start_y + 1 + i, menu_start_x, "|", curses.color_pair(1))
-                        stdscr.addstr(menu_start_y + 1 + i, menu_start_x + menu_width - 1, "|", curses.color_pair(1))
-                    stdscr.addstr(menu_start_y + menu_height - 1, menu_start_x, "+" + "-" * (menu_width - 2) + "+", curses.color_pair(1))
+                        stdscr.addstr(
+                            menu_start_y + 1 + i,
+                            menu_start_x,
+                            "|",
+                            curses.color_pair(1),
+                        )
+                        stdscr.addstr(
+                            menu_start_y + 1 + i,
+                            menu_start_x + menu_width - 1,
+                            "|",
+                            curses.color_pair(1),
+                        )
+                    stdscr.addstr(
+                        menu_start_y + menu_height - 1,
+                        menu_start_x,
+                        "+" + "-" * (menu_width - 2) + "+",
+                        curses.color_pair(1),
+                    )
 
                 # Draw buttons
                 button_y = height - 2
                 update_text = "[U]pdate"
-                cancel_text = "[C]ancel"
+                cancel_text = "[Q]uit"
                 try:
-                    stdscr.addstr(button_y, width - 20, update_text, curses.color_pair(4))
-                    stdscr.addstr(button_y, width - 10, cancel_text, curses.color_pair(4))
+                    stdscr.addstr(
+                        button_y, width - 20, update_text, curses.color_pair(4)
+                    )
+                    stdscr.addstr(
+                        button_y, width - 10, cancel_text, curses.color_pair(4)
+                    )
                 except curses.error:
                     pass
 
@@ -366,7 +551,9 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
                     y = content_start_y + i
                     line_clear = " " * (menu_width - 4)
                     try:
-                        stdscr.addstr(y, content_start_x, line_clear, curses.color_pair(1))
+                        stdscr.addstr(
+                            y, content_start_x, line_clear, curses.color_pair(1)
+                        )
                     except curses.error:
                         pass
 
@@ -379,7 +566,12 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
                 if len(display_items) > visible_height:
                     scroll_info = f"[{scroll_offset + 1}-{min(scroll_offset + visible_height, len(display_items))} of {len(display_items)}]"
                     try:
-                        stdscr.addstr(menu_start_y + menu_height - 1, menu_start_x + menu_width - len(scroll_info) - 2, scroll_info, curses.color_pair(1))
+                        stdscr.addstr(
+                            menu_start_y + menu_height - 1,
+                            menu_start_x + menu_width - len(scroll_info) - 2,
+                            scroll_info,
+                            curses.color_pair(1),
+                        )
                     except curses.error:
                         pass
 
@@ -393,7 +585,7 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
                 # Only redraw the changed lines
                 if last_selected >= 0:
                     draw_menu_item(last_selected)  # Redraw old selection
-                draw_menu_item(selected_index)     # Redraw new selection
+                draw_menu_item(selected_index)  # Redraw new selection
                 stdscr.refresh()
 
             last_selected = selected_index
@@ -407,7 +599,7 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
             elif key == curses.KEY_DOWN:
                 if selected_index < len(display_items) - 1:
                     selected_index += 1
-            elif key in [curses.KEY_ENTER, ord('\n'), ord('\r'), ord(' ')]:
+            elif key in [curses.KEY_ENTER, ord("\n"), ord("\r"), ord(" ")]:
                 if selected_index < len(display_items):
                     item, level = display_items[selected_index]
                     if isinstance(item, FeatureTree):
@@ -421,7 +613,7 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
                         # Toggle checkbox
                         current_state[id(item)] = not current_state[id(item)]
                         needs_full_redraw = True
-            elif key == ord('u') or key == ord('U'):
+            elif key == ord("u") or key == ord("U"):
                 # Update - calculate changes and return
                 unchecked = []
                 newly_selected = []
@@ -440,11 +632,13 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
 
                 collect_changes(components)
                 return unchecked, newly_selected
-            elif key == ord('c') or key == ord('C'):
+            elif key == ord("q") or key == ord("Q"):
                 # Cancel
                 return [], []
 
-    def count_changes(tree: Union[FeatureTree, FeatureFolder], original: dict, current: dict) -> int:
+    def count_changes(
+        tree: Union[FeatureTree, FeatureFolder], original: dict, current: dict
+    ) -> int:
         """Count number of changes in a tree/folder"""
         if isinstance(tree, FeatureFolder):
             return 1 if original[id(tree)] != current[id(tree)] else 0
@@ -455,7 +649,9 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
             return total
         return 0
 
-    def count_added_removed(tree: Union[FeatureTree, FeatureFolder], original: dict, current: dict) -> tuple[int, int]:
+    def count_added_removed(
+        tree: Union[FeatureTree, FeatureFolder], original: dict, current: dict
+    ) -> tuple[int, int]:
         """Count added and removed items separately. Returns (added_count, removed_count)"""
         if isinstance(tree, FeatureFolder):
             original_state = original[id(tree)]
@@ -480,4 +676,4 @@ def selector_ui(components: FeatureTree, title: str = "Configuration") -> tuple[
 
 
 if __name__ == "__main__":
-    main()
+    main(dict(os.environ), sys.argv[0], sys.argv[1:])
