@@ -74,11 +74,14 @@ function ensure_essentials {
     fi
     eval "$($BREW_HOME/bin/brew shellenv)"
     log_info "Homebrew paths setup in this environment"
+    mkdir -p $HOME/opt/bin
 
     brew_install mas
     brew_install git
-
-    mkdir -p $HOME/opt/bin
+    brew_install nvm
+    brew_install "rustup-init"
+    rustup-init --no-modify-path -y
+    brew_install uv
 }
 
 function ensure_xcode {
