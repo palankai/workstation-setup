@@ -52,7 +52,7 @@ def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
     print(f"Newly selected items ({len(newly_selected)}):")
     make_links(target, newly_selected)
 
-    instructions = InstructionSet()
+    instructions = InstructionSet(target)
     for feature in discover(os.path.join("fundamentals")):
         instructions.extend(feature)
 
@@ -60,7 +60,7 @@ def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
         instructions.extend(feature)
 
     script_lines = instructions.compile_single_upgrader()
-    script_path = os.path.join("targets", target, "upgrade.sh")
+    script_path = os.path.join("targets", target, ".upgrade.sh")
     with open(script_path, "w") as f:
         _ = f.write("\n".join(script_lines))
         _ = f.write("\n")
@@ -203,8 +203,10 @@ class InstructionSet:
     after: list[str]
     brewfile: list[str]
     run: list[str]
+    target: str
 
-    def __init__(self):
+    def __init__(self, target: str):
+        self.target = target
         self.brewfile = []
         self.run = []
         self.before = []
@@ -272,11 +274,19 @@ class InstructionSet:
         lines = [
             "#!/bin/bash",
             "",
+            "# DO NOT EDIT this script by hand, this script is generated!",
+            "# Instead, edit the components and fundamentals and re-run compile-targets.py",
             "set -e",
             "",
+            "source ~/.workstation-setup-config"
         ]
         lines.append('if [ "$(pwd)" != "$(dirname "$0")" ]; then')
         lines.append('    echo "Please run this script from its own directory: $(dirname "$0")"')
+        lines.append("    exit 1")
+        lines.append("fi")
+        # Check if $WORKSTATION is equal to the target
+        lines.append(f'if [ "$WORKSTATION" != "{self.target}" ]; then')
+        lines.append(f'    echo "This script is intended for $WORKSTATION, but you are running it on {self.target}."')
         lines.append("    exit 1")
         lines.append("fi")
         lines.append("")
