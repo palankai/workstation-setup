@@ -55,10 +55,17 @@ def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
 
     instructions = InstructionSet(target)
     for feature in discover(os.path.join("fundamentals")):
-        instructions.extend(feature)
+        instructions.extend("fundamentals", feature)
 
     for feature in discover(os.path.join("targets", target)):
-        instructions.extend(feature)
+        for dependency in find_dependencies(os.path.join("targets", target), feature.folder):
+            dep_feature = FeatureFolder.make(
+                root_dir="components",
+                feature_folder=dependency,
+                selected=True,
+            )
+            instructions.extend("components", dep_feature)
+        instructions.extend("components", feature)
 
     script_lines = instructions.make_single_updater()
     script_path = os.path.join("targets", target, ".upgrade.sh")
@@ -83,11 +90,11 @@ def discover(root_dir: str, selected: list[str] | None = None) -> list["FeatureF
             feature_folder=feature_folder,
             selected=os.path.join(root_dir, feature_folder) in selected,
         )
-        for feature_folder in discover_features(root_dir)
+        for feature_folder in find_features(root_dir)
     ]
 
 
-def discover_features(root: str, dir: str = "") -> list[str]:
+def find_features(root: str, dir: str = "") -> list[str]:
     features: list[str] = []
 
     folders = os.scandir(os.path.join(root, dir))
@@ -95,7 +102,7 @@ def discover_features(root: str, dir: str = "") -> list[str]:
         if is_feature_folder(folder.path):
             features.append(os.path.join(dir, folder.name))
         elif folder.is_dir():
-            features.extend(discover_features(root, os.path.join(dir, folder.name)))
+            features.extend(find_features(root, os.path.join(dir, folder.name)))
     return sorted(features)
 
 
@@ -116,7 +123,7 @@ def find_dependencies(root: str, feature_path: str) -> list[str]:
     if not os.path.exists(dependency_folder) or not os.path.isdir(dependency_folder):
         return []
     dependencies: list[str] = []
-    for feature in discover_features(dependency_folder):
+    for feature in find_features(dependency_folder):
         if os.path.islink(os.path.join(dependency_folder, feature)):
             link = os.path.abspath(os.path.join(dependency_folder,os.readlink(os.path.join(dependency_folder, feature))))
             dependency = link.replace(root + os.sep, "")
@@ -226,43 +233,22 @@ class InstructionSet:
     target: str
     functions: list[str]
     function_names: list[str]
+    _features: list[str]
 
     def __init__(self, target: str):
         self.target = target
         self.functions = []
         self.function_names = []
+        self._features = []
 
 
-    def extend(self, feature_folder: "FeatureFolder"):
-        function_name, function_lines = feature_folder.make_script()
-        if function_name in self.function_names:
+    def extend(self, base: str,  feature_folder: "FeatureFolder"):
+        if os.path.join(base, feature_folder.folder) in self._features:
             return
+        self._features.append(os.path.join(base, feature_folder.folder))
+        function_name, function_lines = feature_folder.make_script(base)
         self.function_names.append(function_name)
         self.functions.extend(function_lines)
-        # for content in feature_folder.contents:
-        #     full_path = os.path.join(
-        #         feature_folder.root, feature_folder.folder, content
-        #     )
-        #     if os.path.isfile(full_path):
-
-        #         if content.endswith("Brewfile"):
-        #             self.brewfile.extend(self.read_content(full_path))
-        #         elif content.endswith(".sh"):
-        #             name = self.make_unique_function_name(feature_folder, content)
-        #             function = self.make_shell_function(full_path, name)
-        #             self.functions.extend(function)
-        #             if content.endswith("runonce.sh"):
-        #                 self.run.append(f"_run_once {name}")
-        #             elif content.endswith("afteronce.sh"):
-        #                 self.after.append(f"_run_once {name}")
-        #             elif content.endswith("beforeonce.sh"):
-        #                 self.before.append(f"_run_once {name}")
-        #             elif content.endswith("before.sh"):
-        #                 self.before.append(f"{name}\n")
-        #             elif content.endswith("after.sh"):
-        #                 self.after.append(f"{name}\n")
-        #             elif content.endswith("run.sh"):
-        #                 self.run.append(f"{name}\n")
 
     def read_content(self, fn: str, indent: str = "") -> list[str]:
         with open(fn, "r") as f:
@@ -404,8 +390,8 @@ class FeatureFolder:
     def relative_path_count(self):
         return len(self.categories)
 
-    def make_script(self) -> tuple[str, list[str]]:
-        shell_function_name = make_function_name(["install", self.root] + list(self.categories) + [self.name])
+    def make_script(self, base: str) -> tuple[str, list[str]]:
+        shell_function_name = make_function_name(["install", base] + list(self.categories) + [self.name])
         function_names: list[str] = []
         functions: list[str] = []
         for content in self.contents:
