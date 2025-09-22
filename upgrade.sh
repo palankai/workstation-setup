@@ -2,6 +2,14 @@
 
 set -e
 
-source "~/.workstation-setup-config"
+source ~/.workstation-setup-config
 
-bash "$WORKSTATION_INSTALLATION_PATH/targets/$WORKSTATION/.upgrade.sh"
+cd $WORKSTATION_INSTALLATION_PATH/targets/$WORKSTATION/
+
+if [ $# -eq 0 ]; then
+    bash .upgrade.sh help
+    exit 0
+fi
+
+
+bash .upgrade.sh $1

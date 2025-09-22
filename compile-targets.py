@@ -198,7 +198,7 @@ def discover_existing_links(target: str) -> list[str]:
 
 
 def discover_broken_links(target_path: str) -> list["BrokenLink"]:
-    broken_links = []
+    broken_links: list[BrokenLink] = []
     for root, dirs, files in os.walk(target_path):
         for name in dirs + files:
             full_path = os.path.join(root, name)
@@ -278,32 +278,81 @@ class InstructionSet:
             "",
             "source ~/.workstation-setup-config",
             'source "$WORKSTATION_INSTALLATION_PATH/_config.sh"',
-            'source "$WORKSTATION_INSTALLATION_PATH/_functions.sh"',
-            ''
+            'source "$WORKSTATION_INSTALLATION_PATH/_setup_functions.sh"',
+            '',
+            'SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"'
 
         ]
-        lines.append('if [ "$(pwd)" != "$(dirname "$0")" ]; then')
-        lines.append('    echo "Please run this script from its own directory: $(dirname "$0")"')
+        lines.append('if [ "$(pwd)" != "$SCRIPT_DIR" ]; then')
+        lines.append('    echo "Please run this script from its own directory: $SCRIPT_DIR"')
         lines.append("    exit 1")
         lines.append("fi")
-        # Check if $WORKSTATION is equal to the target
         lines.append(f'if [ "$WORKSTATION" != "{self.target}" ]; then')
-        lines.append(f'    echo "This script is intended for "{self.target}", but you are running it on $WORKSTATION."')
+        lines.append(f'    echo "This script is intended for \'"{self.target}"\', but you are running it on \'$WORKSTATION\'."')
         lines.append("    exit 1")
         lines.append("fi")
         lines.append("")
-        lines.append("mkdir -p .once")
-        lines.append("brew update")
-        lines.append("brew upgrade")
-        lines.append("")
-        lines.append("# Stuff to install")
+        lines.append("function help() {")
+        lines.append('    echo "Usage: $0 <command>"')
+        lines.append('    echo "Available commands:"')
+        lines.append('    echo "  run_upgrade                   Run the full upgrade process"')
+        lines.append('    echo "  brew_upgrade                  Update Homebrew and upgrade all packages"')
+        lines.append('    echo "  brew_cleanup                  Cleanup old Homebrew packages and caches"')
+        lines.append('    echo "  brew_upgrade_and_cleanup      Update Homebrew and upgrade all packages"')
+        lines.append('    echo "  help                          Show this help message"')
+        lines.append('    echo ""')
+        lines.append('    echo "Included feature functions:"')
         for function_name in self.function_names:
-            lines.append(f"{function_name}")
+            lines.append(f'    echo "  {function_name}"')
+        lines.append('}')
+        lines.append("")
+
+        lines.append("function run_upgrade() {")
+        lines.append("    mkdir -p .once")
+        lines.append("    brew_upgrade")
+        lines.append("")
+        for function_name in self.function_names:
+            lines.append(f"    {function_name}")
+        lines.append("")
+        lines.append("    brew_cleanup")
+        lines.append("}")
+
+        lines.append("function brew_upgrade_and_cleanup() {")
+        lines.append("    brew_upgrade")
+        lines.append("    brew_cleanup")
+        lines.append("}")
+        lines.append("")
+        lines.append("function brew_upgrade() {")
+        lines.append("    brew update")
+        lines.append("    brew upgrade")
+        lines.append("}")
+        lines.append("")
+
+        lines.append("function brew_cleanup() {")
+        lines.append("    brew cleanup --prune=all --scrub")
+        lines.append("}")
+        lines.append("")
 
         lines.append("")
         lines.append("# Install function implementations")
         for function in self.functions:
             lines.append(function)
+
+        lines.append('if [ $# -eq 0 ]; then')
+        lines.append('    help')
+        lines.append('    exit 0')
+        lines.append('fi')
+        lines.append("")
+        lines.append('COMMAND="$1"')
+        lines.append('if declare -F "$COMMAND" > /dev/null; then')
+        lines.append('    "$@"')
+        lines.append('else')
+        lines.append('    echo "❌ Error: Unknown command \'$COMMAND\'" >&2')
+        lines.append('    echo >&2 # Print a blank line for spacing')
+        lines.append('    help')
+        lines.append('    exit 1 # Exit with an error code')
+        lines.append('fi')
+        lines.append("")
 
         lines.append("# Internal functions")
         lines.extend(run_once_function())
@@ -312,15 +361,15 @@ class InstructionSet:
 
 
 
-def make_brew_install_function(brewlines: list[str]) -> list[str]:
-    lines = [
-        "function install_brew_packages() {",
-    ]
-    lines.append("    brew bundle -q --no-lock --file=- <<EOF")
-    lines.extend(["        " + line for line in brewlines])
-    lines.append("EOF")
-    lines.append("}")
-    return lines
+# def make_brew_install_function(brewlines: list[str]) -> list[str]:
+#     lines = [
+#         "function install_brew_packages() {",
+#     ]
+#     lines.append("    brew bundle -q --file=- <<EOF")
+#     lines.extend(["        " + line for line in brewlines])
+#     lines.append("EOF")
+#     lines.append("}")
+#     return lines
 
 
 
@@ -415,11 +464,13 @@ class FeatureFolder:
 
         lines = [
             f"function {shell_function_name}() {{",
+            f"    echo \"Installing feature: {self.folder}\"",
         ]
+        lines.extend(functions)
+        lines.append("")
         for fn in function_names:
             lines.append(f"    {fn}")
-        lines.append("")
-        lines.extend(functions)
+        lines.append(f'    echo "  Feature ({self.folder}) installed successfully."')
         lines.append("}")
         return shell_function_name, lines
 
@@ -477,6 +528,10 @@ def make_shell_function(name: str, content: list[str], indent: int = 0, source_f
     if source_file_name:
         lines.append(f"    # Source: {source_file_name}")
     lines.extend(["    " + line for line in content])
+    if source_file_name:
+        lines.append(f"    echo \"  [✓] Script ({source_file_name}) executed successfully.\"")
+    else:
+        lines.append(f"    echo \"  [✓] Functtion ({name}) executed successfully.\"")
     lines.append("}")
     if indent > 0:
         lines = [" " * indent + line for line in lines]
@@ -502,9 +557,11 @@ def make_shell_function_for_brewfile(name: str, content: list[str], indent: int 
     ]
     if source_file_name:
         lines.append(f"    # Source: {source_file_name}")
-    lines.append("    brew bundle -q --no-lock --file=- <<EOF")
+    lines.append("    brew bundle -q --file=- <<EOF")
     lines.extend(["        " + line for line in content])
     lines.append("EOF")
+    if source_file_name:
+        lines.append(f"    echo \"  [✓] Brewfile ({source_file_name}) applied successfully.\"")
     lines.append("}")
     # Indent all lines except the "EOF"
     if indent > 0:
