@@ -78,10 +78,10 @@ function ensure_essentials {
 
     brew_install mas
     brew_install git
-    brew_install nvm
-    brew_install "rustup-init"
-    rustup-init --no-modify-path -y
-    brew_install uv
+    # brew_install nvm
+    # brew_install "rustup-init"
+    # rustup-init --no-modify-path -y
+    # brew_install uv
 }
 
 function ensure_xcode {
