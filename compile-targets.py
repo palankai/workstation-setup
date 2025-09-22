@@ -28,7 +28,8 @@ def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
     args = get_parser(prog, targets).parse_args(argv)
     target: str = str(args.target)
 
-    broken_links = discover_broken_links(target)
+
+    broken_links = discover_broken_links("fundamentals") + discover_broken_links("components") + discover_broken_links(os.path.join("targets", target))
     if len(broken_links):
         print(f"🚨 {len(broken_links)} Broken links found")
         for broken_link in broken_links:
@@ -196,8 +197,7 @@ def discover_existing_links(target: str) -> list[str]:
     return existing_links
 
 
-def discover_broken_links(target: str) -> list["BrokenLink"]:
-    target_path = os.path.join("targets", target)
+def discover_broken_links(target_path: str) -> list["BrokenLink"]:
     broken_links = []
     for root, dirs, files in os.walk(target_path):
         for name in dirs + files:
