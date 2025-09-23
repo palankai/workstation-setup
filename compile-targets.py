@@ -249,6 +249,7 @@ class InstructionSet:
         function_name, function_lines = feature_folder.make_script(base)
         self.function_names.append(function_name)
         self.functions.extend(function_lines)
+        self.functions.append("")
 
     def read_content(self, fn: str, indent: str = "") -> list[str]:
         with open(fn, "r") as f:
@@ -381,6 +382,7 @@ class FeatureFolder:
     categories: tuple[str, ...]
     contents: tuple[str, ...]
     selected: bool
+    home: str
 
     def __init__(
         self,
@@ -389,12 +391,14 @@ class FeatureFolder:
         feature_folder: str,
         contents: tuple[str, ...],
         selected: bool = False,
+        home: str
     ):
         categories, name = os.path.split(feature_folder)
         self.root=root
         self.folder=feature_folder
         self.name=denumbered_name(name)
         self.contents=contents
+        self.home=home
         self.categories=tuple(
             [
                 denumbered_name(category)
@@ -405,10 +409,15 @@ class FeatureFolder:
 
     @classmethod
     def make(cls, root_dir: str, feature_folder: str, selected: bool = False) -> "FeatureFolder":
+        if os.path.islink(os.path.join(root_dir, feature_folder)):
+            home = os.path.abspath(os.path.join(root_dir, feature_folder, '..', os.readlink(os.path.join(root_dir, feature_folder))))
+        else:
+            home = os.path.abspath(os.path.join(root_dir, feature_folder))
         return cls(
             root=root_dir,
             feature_folder=feature_folder,
             selected=selected,
+            home=home,
             contents=tuple(
                 sorted(glob.glob(
                     "**",
@@ -457,10 +466,10 @@ class FeatureFolder:
                 if content.endswith("once.sh"):
                     lock_name = make_function_name(["install"] + list(self.categories) + [self.name, content])
                     function_names.append(f'_run_once "{lock_name}" {inner_function_name}')
-                    functions.extend(make_shell_function(inner_function_name, file_content, source_file_name=full_path, indent=4))
+                    functions.extend(make_shell_function(inner_function_name, file_content, source_file_name=full_path, indent=4, home=self.home))
                 elif content.endswith(".sh"):
                     function_names.append(inner_function_name)
-                    functions.extend(make_shell_function(inner_function_name, file_content, source_file_name=full_path, indent=4))
+                    functions.extend(make_shell_function(inner_function_name, file_content, source_file_name=full_path, indent=4, home=self.home))
 
         lines = [
             f"function {shell_function_name}() {{",
@@ -521,17 +530,22 @@ def denumbered_name(name: str):
 def make_function_name(parts: list[str]) -> str:
     return "_".join([part.replace("-", "_").replace(".", "_").replace("//", "_") for part in parts])
 
-def make_shell_function(name: str, content: list[str], indent: int = 0, source_file_name: str | None = None) -> list[str]:
+def make_shell_function(name: str, content: list[str], indent: int = 0, home: str | None = None, source_file_name: str | None = None) -> list[str]:
     lines = [
         f"function {name}() {{",
     ]
     if source_file_name:
         lines.append(f"    # Source: {source_file_name}")
+    if home:
+        lines.append(f'    pushd . > /dev/null')
+        lines.append(f'    cd "{home}"')
     lines.extend(["    " + line for line in content])
     if source_file_name:
         lines.append(f"    echo \"  [✓] Script ({source_file_name}) executed successfully.\"")
     else:
         lines.append(f"    echo \"  [✓] Functtion ({name}) executed successfully.\"")
+    if home:
+        lines.append(f'    popd > /dev/null')
     lines.append("}")
     if indent > 0:
         lines = [" " * indent + line for line in lines]
