@@ -338,7 +338,10 @@ class InstructionSet:
         lines.append("# Install function implementations")
         for function in self.functions:
             lines.append(function)
-
+        lines.append("")
+        lines.append("# Internal functions")
+        lines.extend(run_once_function())
+        lines.append("")
         lines.append('if [ $# -eq 0 ]; then')
         lines.append('    help')
         lines.append('    exit 0')
@@ -355,8 +358,6 @@ class InstructionSet:
         lines.append('fi')
         lines.append("")
 
-        lines.append("# Internal functions")
-        lines.extend(run_once_function())
 
         return lines
 

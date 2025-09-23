@@ -3,4 +3,6 @@ workstation-setup-log.txt
 .workstation-setup-log.txt
 Brewfile.lock.json
 .installed-*
+**/.once/installed-*
+
 logs/
