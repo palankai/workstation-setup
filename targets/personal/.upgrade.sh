@@ -49,7 +49,6 @@ function help() {
     echo "  install_components_database_postgresql"
     echo "  install_components_desktop_brave_browser"
     echo "  install_components_desktop_grammarly_desktop"
-    echo "  install_components_desktop_kindle"
     echo "  install_components_desktop_obsidian"
     echo "  install_components_desktop_vlc"
     echo "  install_components_dev_dbeaver_community"
@@ -65,6 +64,7 @@ function help() {
     echo "  install_components_programming_python_pipx"
     echo "  install_components_programming_python_pyenv"
     echo "  install_components_programming_rust_rustup"
+    echo "  install_components_programming_python_uv"
     echo "  install_components_programming_terraform"
     echo "  install_components_secrets_1password_latest"
     echo "  install_components_secrets_keepassium_pro"
@@ -113,7 +113,6 @@ function run_upgrade() {
     install_components_database_postgresql
     install_components_desktop_brave_browser
     install_components_desktop_grammarly_desktop
-    install_components_desktop_kindle
     install_components_desktop_obsidian
     install_components_desktop_vlc
     install_components_dev_dbeaver_community
@@ -129,6 +128,7 @@ function run_upgrade() {
     install_components_programming_python_pipx
     install_components_programming_python_pyenv
     install_components_programming_rust_rustup
+    install_components_programming_python_uv
     install_components_programming_terraform
     install_components_secrets_1password_latest
     install_components_secrets_keepassium_pro
@@ -595,20 +595,6 @@ EOF
     echo "  Feature (desktop/grammarly-desktop) installed successfully."
 }
 
-function install_components_desktop_kindle() {
-    echo "Installing feature: desktop/kindle"
-    function run_00_Brewfile() {
-        # Source: targets/personal/desktop/kindle/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            cask "kindle"
-EOF
-        echo "  [✓] Brewfile (targets/personal/desktop/kindle/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (desktop/kindle) installed successfully."
-}
-
 function install_components_desktop_obsidian() {
     echo "Installing feature: desktop/obsidian"
     function run_00_Brewfile() {
@@ -797,83 +783,83 @@ EOF
 }
 
 function install_components_programming_python_pip() {
-    echo "Installing feature: programming/python/30-pip"
+    echo "Installing feature: programming/python/pip"
     function run_00_run_sh() {
-        # Source: targets/personal/programming/python/30-pip/00-run.sh
+        # Source: targets/personal/programming/python/pip/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/python/30-pip"
+        cd "/Users/csaba/opt/workstation-setup/components/programming/python/pip"
         $SYSTEM_PYTHON -m pip install --upgrade pip
-        echo "  [✓] Script (targets/personal/programming/python/30-pip/00-run.sh) executed successfully."
+        echo "  [✓] Script (targets/personal/programming/python/pip/00-run.sh) executed successfully."
         popd > /dev/null
     }
 
     run_00_run_sh
-    echo "  Feature (programming/python/30-pip) installed successfully."
+    echo "  Feature (programming/python/pip) installed successfully."
 }
 
 function install_components_programming_python_pipx() {
-    echo "Installing feature: programming/python/40-pipx"
+    echo "Installing feature: programming/python/pipx"
     function run_00_Brewfile() {
-        # Source: targets/personal/programming/python/40-pipx/00-Brewfile
+        # Source: targets/personal/programming/python/pipx/00-Brewfile
         brew bundle -q --file=- <<EOF
             brew "pipx"
 EOF
-        echo "  [✓] Brewfile (targets/personal/programming/python/40-pipx/00-Brewfile) applied successfully."
+        echo "  [✓] Brewfile (targets/personal/programming/python/pipx/00-Brewfile) applied successfully."
     }
 
     run_00_Brewfile
-    echo "  Feature (programming/python/40-pipx) installed successfully."
+    echo "  Feature (programming/python/pipx) installed successfully."
 }
 
 function install_components_programming_python_pyenv() {
-    echo "Installing feature: programming/python/50-pyenv"
+    echo "Installing feature: programming/python/pyenv"
     function run_00_Brewfile() {
-        # Source: targets/personal/programming/python/50-pyenv/00-Brewfile
+        # Source: targets/personal/programming/python/pyenv/00-Brewfile
         brew bundle -q --file=- <<EOF
             brew "pyenv"
             brew "pyenv-virtualenv"
             brew "pyenv-virtualenvwrapper"
 EOF
-        echo "  [✓] Brewfile (targets/personal/programming/python/50-pyenv/00-Brewfile) applied successfully."
+        echo "  [✓] Brewfile (targets/personal/programming/python/pyenv/00-Brewfile) applied successfully."
     }
 
     run_00_Brewfile
-    echo "  Feature (programming/python/50-pyenv) installed successfully."
+    echo "  Feature (programming/python/pyenv) installed successfully."
 }
 
 function install_components_programming_rust_rustup() {
-    echo "Installing feature: programming/rust/10-rustup"
+    echo "Installing feature: programming/rust/rustup"
     function run_00_run_sh() {
-        # Source: targets/personal/programming/rust/10-rustup/00-run.sh
+        # Source: components/programming/rust/rustup/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/10-rustup"
+        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/rustup"
         mkdir -p $HOME/.cargo
         ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/cargo/env $HOME/.cargo/env
         ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/cargo/config.toml $HOME/.cargo/config.toml
-        echo "  [✓] Script (targets/personal/programming/rust/10-rustup/00-run.sh) executed successfully."
+        echo "  [✓] Script (components/programming/rust/rustup/00-run.sh) executed successfully."
         popd > /dev/null
     }
     function run_10_Brewfile() {
-        # Source: targets/personal/programming/rust/10-rustup/10-Brewfile
+        # Source: components/programming/rust/rustup/10-Brewfile
         brew bundle -q --file=- <<EOF
             brew "rustup-init"
 EOF
-        echo "  [✓] Brewfile (targets/personal/programming/rust/10-rustup/10-Brewfile) applied successfully."
+        echo "  [✓] Brewfile (components/programming/rust/rustup/10-Brewfile) applied successfully."
     }
     function run_20_runonce_sh() {
-        # Source: targets/personal/programming/rust/10-rustup/20-runonce.sh
+        # Source: components/programming/rust/rustup/20-runonce.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/10-rustup"
+        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/rustup"
         rustup-init --no-modify-path -y
-        echo "  [✓] Script (targets/personal/programming/rust/10-rustup/20-runonce.sh) executed successfully."
+        echo "  [✓] Script (components/programming/rust/rustup/20-runonce.sh) executed successfully."
         popd > /dev/null
     }
     function run_30_run_sh() {
-        # Source: targets/personal/programming/rust/10-rustup/30-run.sh
+        # Source: components/programming/rust/rustup/30-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/10-rustup"
+        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/rustup"
         rustup update
-        echo "  [✓] Script (targets/personal/programming/rust/10-rustup/30-run.sh) executed successfully."
+        echo "  [✓] Script (components/programming/rust/rustup/30-run.sh) executed successfully."
         popd > /dev/null
     }
 
@@ -881,7 +867,31 @@ EOF
     run_10_Brewfile
     _run_once "install_programming_rust_rustup_20_runonce_sh" run_20_runonce_sh
     run_30_run_sh
-    echo "  Feature (programming/rust/10-rustup) installed successfully."
+    echo "  Feature (programming/rust/rustup) installed successfully."
+}
+
+function install_components_programming_python_uv() {
+    echo "Installing feature: programming/python/uv"
+    function run_00_runonce_sh() {
+        # Source: targets/personal/programming/python/uv/00-runonce.sh
+        pushd . > /dev/null
+        cd "/Users/csaba/opt/workstation-setup/components/programming/python/uv"
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "  [✓] Script (targets/personal/programming/python/uv/00-runonce.sh) executed successfully."
+        popd > /dev/null
+    }
+    function run_10_run_sh() {
+        # Source: targets/personal/programming/python/uv/10-run.sh
+        pushd . > /dev/null
+        cd "/Users/csaba/opt/workstation-setup/components/programming/python/uv"
+        uv self update
+        echo "  [✓] Script (targets/personal/programming/python/uv/10-run.sh) executed successfully."
+        popd > /dev/null
+    }
+
+    _run_once "install_programming_python_uv_00_runonce_sh" run_00_runonce_sh
+    run_10_run_sh
+    echo "  Feature (programming/python/uv) installed successfully."
 }
 
 function install_components_programming_terraform() {
