@@ -1,9 +1,9 @@
 ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/zprofile $HOME/.zprofile
 
-ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/ssh_config $HOME/.ssh/config
+ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/targets/${WORKSTATION}/dotfiles/ssh_config $HOME/.ssh/config
 
 ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gitignore_global $HOME/.gitignore_global
-ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/gitconfig $HOME/.gitconfig
+ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/targets/${WORKSTATION}/dotfiles/gitconfig $HOME/.gitconfig
 
 
 ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gpg-agent.conf $HOME/.gnupg/gpg-agent.conf
