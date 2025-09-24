@@ -49,7 +49,7 @@ function ensure_local_file {
 
     # SELECT workstation profile
     if ! test_line_exists $PROFILE_FILE "WORKSTATION="; then
-        local WORKSTATION=$(menu "Select installation profile" personal maxilux quit)
+        local WORKSTATION=$(menu "Select installation profile" personal maxilux freetrade quit)
         if [[ $WORKSTATION == "quit" ]]; then
             echo "bye"
             exit 1
@@ -102,11 +102,14 @@ function ensure_essentials {
     fi
     eval "$($BREW_HOME/bin/brew shellenv)"
     log_info "Homebrew paths setup in this environment"
+    mkdir -p $HOME/opt/bin
 
     brew_install mas
     brew_install git
-
-    mkdir -p $HOME/opt/bin
+    # brew_install nvm
+    # brew_install "rustup-init"
+    # rustup-init --no-modify-path -y
+    # brew_install uv
 }
 
 function ensure_xcode {

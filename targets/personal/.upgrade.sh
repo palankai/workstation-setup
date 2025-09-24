@@ -30,11 +30,8 @@ function help() {
     echo "Included feature functions:"
     echo "  install_fundamentals_shell_folders"
     echo "  install_fundamentals_shell_linux_compatibility"
-    echo "  install_fundamentals_shell_settings"
     echo "  install_fundamentals_shell_zsh"
     echo "  install_fundamentals_shell_git"
-    echo "  install_fundamentals_desktop_1password_latest"
-    echo "  install_fundamentals_desktop_iterm2"
     echo "  install_fundamentals_terminal_rustup"
     echo "  install_fundamentals_terminal_uv"
     echo "  install_fundamentals_terminal_pip"
@@ -42,7 +39,6 @@ function help() {
     echo "  install_fundamentals_terminal_pyenv"
     echo "  install_fundamentals_terminal_nvm"
     echo "  install_fundamentals_essentials_envchain"
-    echo "  install_fundamentals_essentials_jq"
     echo "  install_fundamentals_essentials_keyring"
     echo "  install_fundamentals_essentials_tmux"
     echo "  install_fundamentals_essentials_vim_setup"
@@ -54,11 +50,8 @@ function run_upgrade() {
 
     install_fundamentals_shell_folders
     install_fundamentals_shell_linux_compatibility
-    install_fundamentals_shell_settings
     install_fundamentals_shell_zsh
     install_fundamentals_shell_git
-    install_fundamentals_desktop_1password_latest
-    install_fundamentals_desktop_iterm2
     install_fundamentals_terminal_rustup
     install_fundamentals_terminal_uv
     install_fundamentals_terminal_pip
@@ -66,7 +59,6 @@ function run_upgrade() {
     install_fundamentals_terminal_pyenv
     install_fundamentals_terminal_nvm
     install_fundamentals_essentials_envchain
-    install_fundamentals_essentials_jq
     install_fundamentals_essentials_keyring
     install_fundamentals_essentials_tmux
     install_fundamentals_essentials_vim_setup
@@ -195,26 +187,6 @@ EOF
     echo "  Feature (00-shell/20-linux-compatibility) installed successfully."
 }
 
-function install_fundamentals_shell_settings() {
-    echo "Installing feature: 00-shell/30-settings"
-    function run_00_run_sh() {
-        # Source: fundamentals/00-shell/30-settings/00-run.sh
-        pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/00-shell/30-settings"
-        # Enable or disable press and hold for keys in favor of key repeat
-        defaults write -g ApplePressAndHoldEnabled -bool true
-        # Don't store quick time history
-        defaults write com.apple.QuickTimePlayerX NSRecentDocumentsLimit 0
-        defaults delete com.apple.QuickTimePlayerX.LSSharedFileList RecentDocuments
-        defaults write com.apple.QuickTimePlayerX.LSSharedFileList RecentDocuments -dict-add MaxAmount 0
-        echo "  [✓] Script (fundamentals/00-shell/30-settings/00-run.sh) executed successfully."
-        popd > /dev/null
-    }
-
-    run_00_run_sh
-    echo "  Feature (00-shell/30-settings) installed successfully."
-}
-
 function install_fundamentals_shell_zsh() {
     echo "Installing feature: 00-shell/40-zsh"
     function run_00_Brewfile() {
@@ -266,34 +238,6 @@ EOF
     run_00_Brewfile
     run_01_run_sh
     echo "  Feature (00-shell/50-git) installed successfully."
-}
-
-function install_fundamentals_desktop_1password_latest() {
-    echo "Installing feature: 10-desktop/1password-latest"
-    function run_00_Brewfile() {
-        # Source: fundamentals/10-desktop/1password-latest/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            cask "1password"
-EOF
-        echo "  [✓] Brewfile (fundamentals/10-desktop/1password-latest/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (10-desktop/1password-latest) installed successfully."
-}
-
-function install_fundamentals_desktop_iterm2() {
-    echo "Installing feature: 10-desktop/iterm2"
-    function run_00_Brewfile() {
-        # Source: fundamentals/10-desktop/iterm2/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            cask "iterm2"
-EOF
-        echo "  [✓] Brewfile (fundamentals/10-desktop/iterm2/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (10-desktop/iterm2) installed successfully."
 }
 
 function install_fundamentals_terminal_rustup() {
@@ -443,20 +387,6 @@ EOF
 
     run_00_Brewfile
     echo "  Feature (30-essentials/envchain) installed successfully."
-}
-
-function install_fundamentals_essentials_jq() {
-    echo "Installing feature: 30-essentials/jq"
-    function run_00_Brewfile() {
-        # Source: fundamentals/30-essentials/jq/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            brew "jq"
-EOF
-        echo "  [✓] Brewfile (fundamentals/30-essentials/jq/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (30-essentials/jq) installed successfully."
 }
 
 function install_fundamentals_essentials_keyring() {
