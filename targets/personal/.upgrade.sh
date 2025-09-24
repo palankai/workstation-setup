@@ -70,7 +70,6 @@ function help() {
     echo "  install_components_secrets_keepassium_pro"
     echo "  install_components_secrets_keepassxc"
     echo "  install_components_secrets_ledger_live"
-    echo "  install_components_system_FruitJuice"
     echo "  install_components_system_TheUnarchiver"
     echo "  install_components_system_bartender"
     echo "  install_components_system_iStatMenus"
@@ -133,7 +132,6 @@ function run_upgrade() {
     install_components_secrets_keepassium_pro
     install_components_secrets_keepassxc
     install_components_secrets_ledger_live
-    install_components_system_FruitJuice
     install_components_system_TheUnarchiver
     install_components_system_bartender
     install_components_system_iStatMenus
@@ -960,20 +958,6 @@ EOF
 
     run_00_Brewfile
     echo "  Feature (secrets/ledger-live) installed successfully."
-}
-
-function install_components_system_FruitJuice() {
-    echo "Installing feature: system/FruitJuice"
-    function run_00_Brewfile() {
-        # Source: targets/personal/system/FruitJuice/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            mas "FruitJuice", id: 671736912
-EOF
-        echo "  [✓] Brewfile (targets/personal/system/FruitJuice/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (system/FruitJuice) installed successfully."
 }
 
 function install_components_system_TheUnarchiver() {
