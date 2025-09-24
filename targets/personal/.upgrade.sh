@@ -78,7 +78,6 @@ function help() {
     echo "  install_components_system_settings"
     echo "  install_components_system_surfshark"
     echo "  install_components_terminal_ghostty"
-    echo "  install_components_terminal_iterm2"
     echo "  install_components_tools_bat"
     echo "  install_components_tools_btop"
     echo "  install_components_tools_cmake"
@@ -142,7 +141,6 @@ function run_upgrade() {
     install_components_system_settings
     install_components_system_surfshark
     install_components_terminal_ghostty
-    install_components_terminal_iterm2
     install_components_tools_bat
     install_components_tools_btop
     install_components_tools_cmake
@@ -1089,20 +1087,6 @@ EOF
     run_00_Brewfile
     run_00_run_sh
     echo "  Feature (terminal/ghostty) installed successfully."
-}
-
-function install_components_terminal_iterm2() {
-    echo "Installing feature: terminal/iterm2"
-    function run_00_Brewfile() {
-        # Source: targets/personal/terminal/iterm2/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            cask "iterm2"
-EOF
-        echo "  [✓] Brewfile (targets/personal/terminal/iterm2/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (terminal/iterm2) installed successfully."
 }
 
 function install_components_tools_bat() {
