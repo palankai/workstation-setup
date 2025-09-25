@@ -1052,24 +1052,26 @@ EOF
 
 function install_components_terminal_ghostty() {
     echo "Installing feature: terminal/ghostty"
-    function run_00_Brewfile() {
-        # Source: targets/personal/terminal/ghostty/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            cask "ghostty"
-EOF
-        echo "  [✓] Brewfile (targets/personal/terminal/ghostty/00-Brewfile) applied successfully."
-    }
-    function run_00_run_sh() {
-        # Source: targets/personal/terminal/ghostty/00-run.sh
+    function run_10_run_sh() {
+        # Source: targets/personal/terminal/ghostty/10-run.sh
         pushd . > /dev/null
         cd "/Users/csaba/opt/workstation-setup/components/terminal/ghostty"
         # TODO: Ensure ghostty config link
-        echo "  [✓] Script (targets/personal/terminal/ghostty/00-run.sh) executed successfully."
+        mkdir -p ~/.config/ghostty
+        ln -sf $(pwd)/config/config ~/.config/ghostty/config
+        echo "  [✓] Script (targets/personal/terminal/ghostty/10-run.sh) executed successfully."
         popd > /dev/null
     }
+    function run_20_Brewfile() {
+        # Source: targets/personal/terminal/ghostty/20-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "ghostty"
+EOF
+        echo "  [✓] Brewfile (targets/personal/terminal/ghostty/20-Brewfile) applied successfully."
+    }
 
-    run_00_Brewfile
-    run_00_run_sh
+    run_10_run_sh
+    run_20_Brewfile
     echo "  Feature (terminal/ghostty) installed successfully."
 }
 
