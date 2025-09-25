@@ -5,7 +5,7 @@ then
 fi
 
 # Apollo rover
-source "/Users/csaba/.rover/env"
+#source "/Users/csaba/.rover/env"
 
 
 # # NVM
