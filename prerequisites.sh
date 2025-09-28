@@ -1,3 +1,5 @@
+export KEYID=0x4C4A8C7E5C4575B7
+
 ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/zprofile $HOME/.zprofile
 
 ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/targets/${WORKSTATION}/dotfiles/ssh_config $HOME/.ssh/config
@@ -11,6 +13,7 @@ ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/gpg.conf $HOME/.gnupg/gpg.c
 ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gnupg/scdaemon.conf $HOME/.gnupg/scdaemon.conf
 
 gpg --recv $KEYID
+gpg -k
 
 mkdir -p $HOME/Library/LaunchAgents/
 

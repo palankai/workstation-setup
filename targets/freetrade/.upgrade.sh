@@ -30,22 +30,17 @@ function help() {
     echo "Included feature functions:"
     echo "  install_fundamentals_shell_folders"
     echo "  install_fundamentals_shell_linux_compatibility"
-    echo "  install_fundamentals_shell_settings"
     echo "  install_fundamentals_shell_zsh"
     echo "  install_fundamentals_shell_git"
-    echo "  install_fundamentals_desktop_1password_latest"
-    echo "  install_fundamentals_desktop_iterm2"
-    echo "  install_fundamentals_terminal_rustup"
-    echo "  install_fundamentals_terminal_uv"
-    echo "  install_fundamentals_terminal_pip"
-    echo "  install_fundamentals_terminal_pipx"
-    echo "  install_fundamentals_terminal_pyenv"
-    echo "  install_fundamentals_terminal_nvm"
     echo "  install_fundamentals_essentials_envchain"
-    echo "  install_fundamentals_essentials_jq"
     echo "  install_fundamentals_essentials_keyring"
     echo "  install_fundamentals_essentials_tmux"
     echo "  install_fundamentals_essentials_vim_setup"
+    echo "  install_components_programming_node_node"
+    echo "  install_components_programming_node_nvm"
+    echo "  install_components_programming_rust_rustup"
+    echo "  install_components_programming_python_uv"
+    echo "  install_components_terminal_ghostty"
 }
 
 function run_upgrade() {
@@ -54,22 +49,17 @@ function run_upgrade() {
 
     install_fundamentals_shell_folders
     install_fundamentals_shell_linux_compatibility
-    install_fundamentals_shell_settings
     install_fundamentals_shell_zsh
     install_fundamentals_shell_git
-    install_fundamentals_desktop_1password_latest
-    install_fundamentals_desktop_iterm2
-    install_fundamentals_terminal_rustup
-    install_fundamentals_terminal_uv
-    install_fundamentals_terminal_pip
-    install_fundamentals_terminal_pipx
-    install_fundamentals_terminal_pyenv
-    install_fundamentals_terminal_nvm
     install_fundamentals_essentials_envchain
-    install_fundamentals_essentials_jq
     install_fundamentals_essentials_keyring
     install_fundamentals_essentials_tmux
     install_fundamentals_essentials_vim_setup
+    install_components_programming_node_node
+    install_components_programming_node_nvm
+    install_components_programming_rust_rustup
+    install_components_programming_python_uv
+    install_components_terminal_ghostty
 
     brew_cleanup
 }
@@ -195,26 +185,6 @@ EOF
     echo "  Feature (00-shell/20-linux-compatibility) installed successfully."
 }
 
-function install_fundamentals_shell_settings() {
-    echo "Installing feature: 00-shell/30-settings"
-    function run_00_run_sh() {
-        # Source: fundamentals/00-shell/30-settings/00-run.sh
-        pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/00-shell/30-settings"
-        # Enable or disable press and hold for keys in favor of key repeat
-        defaults write -g ApplePressAndHoldEnabled -bool true
-        # Don't store quick time history
-        defaults write com.apple.QuickTimePlayerX NSRecentDocumentsLimit 0
-        defaults delete com.apple.QuickTimePlayerX.LSSharedFileList RecentDocuments
-        defaults write com.apple.QuickTimePlayerX.LSSharedFileList RecentDocuments -dict-add MaxAmount 0
-        echo "  [✓] Script (fundamentals/00-shell/30-settings/00-run.sh) executed successfully."
-        popd > /dev/null
-    }
-
-    run_00_run_sh
-    echo "  Feature (00-shell/30-settings) installed successfully."
-}
-
 function install_fundamentals_shell_zsh() {
     echo "Installing feature: 00-shell/40-zsh"
     function run_00_Brewfile() {
@@ -268,169 +238,6 @@ EOF
     echo "  Feature (00-shell/50-git) installed successfully."
 }
 
-function install_fundamentals_desktop_1password_latest() {
-    echo "Installing feature: 10-desktop/1password-latest"
-    function run_00_Brewfile() {
-        # Source: fundamentals/10-desktop/1password-latest/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            cask "1password"
-EOF
-        echo "  [✓] Brewfile (fundamentals/10-desktop/1password-latest/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (10-desktop/1password-latest) installed successfully."
-}
-
-function install_fundamentals_desktop_iterm2() {
-    echo "Installing feature: 10-desktop/iterm2"
-    function run_00_Brewfile() {
-        # Source: fundamentals/10-desktop/iterm2/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            cask "iterm2"
-EOF
-        echo "  [✓] Brewfile (fundamentals/10-desktop/iterm2/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (10-desktop/iterm2) installed successfully."
-}
-
-function install_fundamentals_terminal_rustup() {
-    echo "Installing feature: 20-terminal/10-rustup"
-    function run_00_run_sh() {
-        # Source: fundamentals/20-terminal/10-rustup/00-run.sh
-        pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/20-terminal/10-rustup"
-        mkdir -p $HOME/.cargo
-        ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/cargo/env $HOME/.cargo/env
-        ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/cargo/config.toml $HOME/.cargo/config.toml
-        echo "  [✓] Script (fundamentals/20-terminal/10-rustup/00-run.sh) executed successfully."
-        popd > /dev/null
-    }
-    function run_10_Brewfile() {
-        # Source: fundamentals/20-terminal/10-rustup/10-Brewfile
-        brew bundle -q --file=- <<EOF
-            brew "rustup-init"
-EOF
-        echo "  [✓] Brewfile (fundamentals/20-terminal/10-rustup/10-Brewfile) applied successfully."
-    }
-    function run_20_runonce_sh() {
-        # Source: fundamentals/20-terminal/10-rustup/20-runonce.sh
-        pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/20-terminal/10-rustup"
-        rustup-init --no-modify-path -y
-        echo "  [✓] Script (fundamentals/20-terminal/10-rustup/20-runonce.sh) executed successfully."
-        popd > /dev/null
-    }
-    function run_30_run_sh() {
-        # Source: fundamentals/20-terminal/10-rustup/30-run.sh
-        pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/20-terminal/10-rustup"
-        rustup update
-        echo "  [✓] Script (fundamentals/20-terminal/10-rustup/30-run.sh) executed successfully."
-        popd > /dev/null
-    }
-
-    run_00_run_sh
-    run_10_Brewfile
-    _run_once "install_terminal_rustup_20_runonce_sh" run_20_runonce_sh
-    run_30_run_sh
-    echo "  Feature (20-terminal/10-rustup) installed successfully."
-}
-
-function install_fundamentals_terminal_uv() {
-    echo "Installing feature: 20-terminal/20-uv"
-    function run_00_runonce_sh() {
-        # Source: fundamentals/20-terminal/20-uv/00-runonce.sh
-        pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/20-terminal/20-uv"
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "  [✓] Script (fundamentals/20-terminal/20-uv/00-runonce.sh) executed successfully."
-        popd > /dev/null
-    }
-    function run_10_run_sh() {
-        # Source: fundamentals/20-terminal/20-uv/10-run.sh
-        pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/20-terminal/20-uv"
-        uv self update
-        echo "  [✓] Script (fundamentals/20-terminal/20-uv/10-run.sh) executed successfully."
-        popd > /dev/null
-    }
-
-    _run_once "install_terminal_uv_00_runonce_sh" run_00_runonce_sh
-    run_10_run_sh
-    echo "  Feature (20-terminal/20-uv) installed successfully."
-}
-
-function install_fundamentals_terminal_pip() {
-    echo "Installing feature: 20-terminal/30-pip"
-    function run_00_run_sh() {
-        # Source: fundamentals/20-terminal/30-pip/00-run.sh
-        pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/20-terminal/30-pip"
-        $SYSTEM_PYTHON -m pip install --upgrade pip
-        echo "  [✓] Script (fundamentals/20-terminal/30-pip/00-run.sh) executed successfully."
-        popd > /dev/null
-    }
-
-    run_00_run_sh
-    echo "  Feature (20-terminal/30-pip) installed successfully."
-}
-
-function install_fundamentals_terminal_pipx() {
-    echo "Installing feature: 20-terminal/40-pipx"
-    function run_00_Brewfile() {
-        # Source: fundamentals/20-terminal/40-pipx/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            brew "pipx"
-EOF
-        echo "  [✓] Brewfile (fundamentals/20-terminal/40-pipx/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (20-terminal/40-pipx) installed successfully."
-}
-
-function install_fundamentals_terminal_pyenv() {
-    echo "Installing feature: 20-terminal/50-pyenv"
-    function run_00_Brewfile() {
-        # Source: fundamentals/20-terminal/50-pyenv/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            brew "pyenv"
-            brew "pyenv-virtualenv"
-            brew "pyenv-virtualenvwrapper"
-EOF
-        echo "  [✓] Brewfile (fundamentals/20-terminal/50-pyenv/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (20-terminal/50-pyenv) installed successfully."
-}
-
-function install_fundamentals_terminal_nvm() {
-    echo "Installing feature: 20-terminal/70-nvm"
-    function run_00_run_sh() {
-        # Source: fundamentals/20-terminal/70-nvm/00-run.sh
-        pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/20-terminal/70-nvm"
-        mkdir -p ~/.nvm
-        echo "  [✓] Script (fundamentals/20-terminal/70-nvm/00-run.sh) executed successfully."
-        popd > /dev/null
-    }
-    function run_01_Brewfile() {
-        # Source: fundamentals/20-terminal/70-nvm/01-Brewfile
-        brew bundle -q --file=- <<EOF
-            brew "nvm"
-EOF
-        echo "  [✓] Brewfile (fundamentals/20-terminal/70-nvm/01-Brewfile) applied successfully."
-    }
-
-    run_00_run_sh
-    run_01_Brewfile
-    echo "  Feature (20-terminal/70-nvm) installed successfully."
-}
-
 function install_fundamentals_essentials_envchain() {
     echo "Installing feature: 30-essentials/envchain"
     function run_00_Brewfile() {
@@ -443,20 +250,6 @@ EOF
 
     run_00_Brewfile
     echo "  Feature (30-essentials/envchain) installed successfully."
-}
-
-function install_fundamentals_essentials_jq() {
-    echo "Installing feature: 30-essentials/jq"
-    function run_00_Brewfile() {
-        # Source: fundamentals/30-essentials/jq/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            brew "jq"
-EOF
-        echo "  [✓] Brewfile (fundamentals/30-essentials/jq/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (30-essentials/jq) installed successfully."
 }
 
 function install_fundamentals_essentials_keyring() {
@@ -511,6 +304,135 @@ function install_fundamentals_essentials_vim_setup() {
 
     run_00_run_sh
     echo "  Feature (30-essentials/vim-setup) installed successfully."
+}
+
+function install_components_programming_node_node() {
+    echo "Installing feature: programming/node/node"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/programming/node/node/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "node"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/programming/node/node/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (programming/node/node) installed successfully."
+}
+
+function install_components_programming_node_nvm() {
+    echo "Installing feature: programming/node/nvm"
+    function run_00_run_sh() {
+        # Source: targets/freetrade/programming/node/nvm/00-run.sh
+        pushd . > /dev/null
+        cd "/Users/csaba/opt/workstation-setup/components/programming/node/nvm"
+        mkdir -p ~/.nvm
+        echo "  [✓] Script (targets/freetrade/programming/node/nvm/00-run.sh) executed successfully."
+        popd > /dev/null
+    }
+    function run_01_Brewfile() {
+        # Source: targets/freetrade/programming/node/nvm/01-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "nvm"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/programming/node/nvm/01-Brewfile) applied successfully."
+    }
+
+    run_00_run_sh
+    run_01_Brewfile
+    echo "  Feature (programming/node/nvm) installed successfully."
+}
+
+function install_components_programming_rust_rustup() {
+    echo "Installing feature: programming/rust/rustup"
+    function run_00_run_sh() {
+        # Source: components/programming/rust/rustup/00-run.sh
+        pushd . > /dev/null
+        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/rustup"
+        mkdir -p $HOME/.cargo
+        ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/cargo/env $HOME/.cargo/env
+        ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/cargo/config.toml $HOME/.cargo/config.toml
+        echo "  [✓] Script (components/programming/rust/rustup/00-run.sh) executed successfully."
+        popd > /dev/null
+    }
+    function run_10_Brewfile() {
+        # Source: components/programming/rust/rustup/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "rustup-init"
+EOF
+        echo "  [✓] Brewfile (components/programming/rust/rustup/10-Brewfile) applied successfully."
+    }
+    function run_20_runonce_sh() {
+        # Source: components/programming/rust/rustup/20-runonce.sh
+        pushd . > /dev/null
+        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/rustup"
+        rustup-init --no-modify-path -y
+        echo "  [✓] Script (components/programming/rust/rustup/20-runonce.sh) executed successfully."
+        popd > /dev/null
+    }
+    function run_30_run_sh() {
+        # Source: components/programming/rust/rustup/30-run.sh
+        pushd . > /dev/null
+        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/rustup"
+        rustup update
+        echo "  [✓] Script (components/programming/rust/rustup/30-run.sh) executed successfully."
+        popd > /dev/null
+    }
+
+    run_00_run_sh
+    run_10_Brewfile
+    _run_once "install_programming_rust_rustup_20_runonce_sh" run_20_runonce_sh
+    run_30_run_sh
+    echo "  Feature (programming/rust/rustup) installed successfully."
+}
+
+function install_components_programming_python_uv() {
+    echo "Installing feature: programming/python/uv"
+    function run_00_runonce_sh() {
+        # Source: targets/freetrade/programming/python/uv/00-runonce.sh
+        pushd . > /dev/null
+        cd "/Users/csaba/opt/workstation-setup/components/programming/python/uv"
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "  [✓] Script (targets/freetrade/programming/python/uv/00-runonce.sh) executed successfully."
+        popd > /dev/null
+    }
+    function run_10_run_sh() {
+        # Source: targets/freetrade/programming/python/uv/10-run.sh
+        pushd . > /dev/null
+        cd "/Users/csaba/opt/workstation-setup/components/programming/python/uv"
+        uv self update
+        echo "  [✓] Script (targets/freetrade/programming/python/uv/10-run.sh) executed successfully."
+        popd > /dev/null
+    }
+
+    _run_once "install_programming_python_uv_00_runonce_sh" run_00_runonce_sh
+    run_10_run_sh
+    echo "  Feature (programming/python/uv) installed successfully."
+}
+
+function install_components_terminal_ghostty() {
+    echo "Installing feature: terminal/ghostty"
+    function run_10_run_sh() {
+        # Source: targets/freetrade/terminal/ghostty/10-run.sh
+        pushd . > /dev/null
+        cd "/Users/csaba/opt/workstation-setup/components/terminal/ghostty"
+        # TODO: Ensure ghostty config link
+        mkdir -p ~/.config/ghostty
+        ln -sf $(pwd)/config/config ~/.config/ghostty/config
+        echo "  [✓] Script (targets/freetrade/terminal/ghostty/10-run.sh) executed successfully."
+        popd > /dev/null
+    }
+    function run_20_Brewfile() {
+        # Source: targets/freetrade/terminal/ghostty/20-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "ghostty"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/terminal/ghostty/20-Brewfile) applied successfully."
+    }
+
+    run_10_run_sh
+    run_20_Brewfile
+    echo "  Feature (terminal/ghostty) installed successfully."
 }
 
 
