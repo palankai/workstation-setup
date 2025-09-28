@@ -1,2 +1,7 @@
 background = 000000
 copy-on-select = clipboard
+font-family = "MesloLGS NF Regular"
+font-family-bold = "MesloLGS NF Bold"
+font-family-italic = "MesloLGS NF Italic"
+font-family-bold-italic = "MesloLGS NF Bold Italic"
+font-size = 16
