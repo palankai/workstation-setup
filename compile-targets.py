@@ -13,6 +13,7 @@ import curses
 from itertools import groupby
 import sys
 from typing import Union
+from pathlib import Path
 
 FEATURE_FILES = [
     "Brewfile",
@@ -21,6 +22,7 @@ FEATURE_FILES = [
 
 FEATURE_FILES_RE = re.compile(f".*({'|'.join(FEATURE_FILES)})$")
 FEATURE_NAME_REGEX = re.compile(f"([0-9]?[0-9][0-9]-)?(.*)$")
+HOME = Path(os.environ["HOME"])
 
 
 def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
@@ -28,8 +30,11 @@ def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
     args = get_parser(prog, targets).parse_args(argv)
     target: str = str(args.target)
 
-
-    broken_links = discover_broken_links("fundamentals") + discover_broken_links("components") + discover_broken_links(os.path.join("targets", target))
+    broken_links = (
+        discover_broken_links("fundamentals")
+        + discover_broken_links("components")
+        + discover_broken_links(os.path.join("targets", target))
+    )
     if len(broken_links):
         print(f"🚨 {len(broken_links)} Broken links found")
         for broken_link in broken_links:
@@ -59,7 +64,9 @@ def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
         instructions.extend("fundamentals", feature)
 
     for feature in discover(os.path.join("targets", target)):
-        for dependency in find_dependencies(os.path.join("targets", target), feature.folder):
+        for dependency in find_dependencies(
+            os.path.join("targets", target), feature.folder
+        ):
             dep_feature = FeatureFolder.make(
                 root_dir="components",
                 feature_folder=dependency,
@@ -126,13 +133,17 @@ def find_dependencies(root: str, feature_path: str) -> list[str]:
     dependencies: list[str] = []
     for feature in find_features(dependency_folder):
         if os.path.islink(os.path.join(dependency_folder, feature)):
-            link = os.path.abspath(os.path.join(dependency_folder,os.readlink(os.path.join(dependency_folder, feature))))
+            link = os.path.abspath(
+                os.path.join(
+                    dependency_folder,
+                    os.readlink(os.path.join(dependency_folder, feature)),
+                )
+            )
             dependency = link.replace(root + os.sep, "")
             dependencies.extend(find_dependencies(root, dependency))
             dependencies.append(dependency)
         pass
     return dependencies
-
 
 
 def make_links(target: str, feature_folders: list["FeatureFolder"]):
@@ -241,8 +252,7 @@ class InstructionSet:
         self.function_names = []
         self._features = []
 
-
-    def extend(self, base: str,  feature_folder: "FeatureFolder"):
+    def extend(self, base: str, feature_folder: "FeatureFolder"):
         if os.path.join(base, feature_folder.folder) in self._features:
             return
         self._features.append(os.path.join(base, feature_folder.folder))
@@ -255,12 +265,16 @@ class InstructionSet:
         with open(fn, "r") as f:
             return [indent + line.rstrip() for line in f.readlines() if line.strip()]
 
-    def make_unique_function_name(self, feature_folder: "FeatureFolder", fn: str) -> str:
+    def make_unique_function_name(
+        self, feature_folder: "FeatureFolder", fn: str
+    ) -> str:
         return "_".join(
-            ["run"] + [cat.replace("-", "_") for cat in feature_folder.categories] +
-            [feature_folder.name.replace("-", "_")] +
-            [os.path.splitext(os.path.basename(fn))[0].replace("-", "_")]
+            ["run"]
+            + [cat.replace("-", "_") for cat in feature_folder.categories]
+            + [feature_folder.name.replace("-", "_")]
+            + [os.path.splitext(os.path.basename(fn))[0].replace("-", "_")]
         )
+
     def make_shell_function(self, fn: str, name: str) -> list[str]:
         lines = [
             f"function {name}() {{",
@@ -280,32 +294,45 @@ class InstructionSet:
             "source ~/.workstation-setup-config",
             'source "$WORKSTATION_INSTALLATION_PATH/_config.sh"',
             'source "$WORKSTATION_INSTALLATION_PATH/_setup_functions.sh"',
-            '',
-            'SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"'
-
+            "",
+            'SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"',
         ]
         lines.append('if [ "$(pwd)" != "$SCRIPT_DIR" ]; then')
-        lines.append('    echo "Please run this script from its own directory: $SCRIPT_DIR"')
+        lines.append(
+            '    echo "Please run this script from its own directory: $SCRIPT_DIR"'
+        )
         lines.append("    exit 1")
         lines.append("fi")
         lines.append(f'if [ "$WORKSTATION" != "{self.target}" ]; then')
-        lines.append(f'    echo "This script is intended for \'"{self.target}"\', but you are running it on \'$WORKSTATION\'."')
+        lines.append(
+            f"    echo \"This script is intended for '\"{self.target}\"', but you are running it on '$WORKSTATION'.\""
+        )
         lines.append("    exit 1")
         lines.append("fi")
         lines.append("")
         lines.append("function help() {")
         lines.append('    echo "Usage: $0 <command>"')
         lines.append('    echo "Available commands:"')
-        lines.append('    echo "  run_upgrade                   Run the full upgrade process"')
-        lines.append('    echo "  brew_upgrade                  Update Homebrew and upgrade all packages"')
-        lines.append('    echo "  brew_cleanup                  Cleanup old Homebrew packages and caches"')
-        lines.append('    echo "  brew_upgrade_and_cleanup      Update Homebrew and upgrade all packages"')
-        lines.append('    echo "  help                          Show this help message"')
+        lines.append(
+            '    echo "  run_upgrade                   Run the full upgrade process"'
+        )
+        lines.append(
+            '    echo "  brew_upgrade                  Update Homebrew and upgrade all packages"'
+        )
+        lines.append(
+            '    echo "  brew_cleanup                  Cleanup old Homebrew packages and caches"'
+        )
+        lines.append(
+            '    echo "  brew_upgrade_and_cleanup      Update Homebrew and upgrade all packages"'
+        )
+        lines.append(
+            '    echo "  help                          Show this help message"'
+        )
         lines.append('    echo ""')
         lines.append('    echo "Included feature functions:"')
         for function_name in self.function_names:
             lines.append(f'    echo "  {function_name}"')
-        lines.append('}')
+        lines.append("}")
         lines.append("")
 
         lines.append("function run_upgrade() {")
@@ -342,25 +369,23 @@ class InstructionSet:
         lines.append("# Internal functions")
         lines.extend(run_once_function())
         lines.append("")
-        lines.append('if [ $# -eq 0 ]; then')
-        lines.append('    help')
-        lines.append('    exit 0')
-        lines.append('fi')
+        lines.append("if [ $# -eq 0 ]; then")
+        lines.append("    help")
+        lines.append("    exit 0")
+        lines.append("fi")
         lines.append("")
         lines.append('COMMAND="$1"')
         lines.append('if declare -F "$COMMAND" > /dev/null; then')
         lines.append('    "$@"')
-        lines.append('else')
-        lines.append('    echo "❌ Error: Unknown command \'$COMMAND\'" >&2')
-        lines.append('    echo >&2 # Print a blank line for spacing')
-        lines.append('    help')
-        lines.append('    exit 1 # Exit with an error code')
-        lines.append('fi')
+        lines.append("else")
+        lines.append("    echo \"❌ Error: Unknown command '$COMMAND'\" >&2")
+        lines.append("    echo >&2 # Print a blank line for spacing")
+        lines.append("    help")
+        lines.append("    exit 1 # Exit with an error code")
+        lines.append("fi")
         lines.append("")
 
-
         return lines
-
 
 
 # def make_brew_install_function(brewlines: list[str]) -> list[str]:
@@ -372,8 +397,6 @@ class InstructionSet:
 #     lines.append("EOF")
 #     lines.append("}")
 #     return lines
-
-
 
 
 class FeatureFolder:
@@ -392,26 +415,32 @@ class FeatureFolder:
         feature_folder: str,
         contents: tuple[str, ...],
         selected: bool = False,
-        home: str
+        home: str,
     ):
         categories, name = os.path.split(feature_folder)
-        self.root=root
-        self.folder=feature_folder
-        self.name=denumbered_name(name)
-        self.contents=contents
-        self.home=home
-        self.categories=tuple(
-            [
-                denumbered_name(category)
-                for category in categories.split(os.path.sep)
-            ]
+        self.root = root
+        self.folder = feature_folder
+        self.name = denumbered_name(name)
+        self.contents = contents
+        self.home = home
+        self.categories = tuple(
+            [denumbered_name(category) for category in categories.split(os.path.sep)]
         )
-        self.selected=selected
+        self.selected = selected
 
     @classmethod
-    def make(cls, root_dir: str, feature_folder: str, selected: bool = False) -> "FeatureFolder":
+    def make(
+        cls, root_dir: str, feature_folder: str, selected: bool = False
+    ) -> "FeatureFolder":
         if os.path.islink(os.path.join(root_dir, feature_folder)):
-            home = os.path.abspath(os.path.join(root_dir, feature_folder, '..', os.readlink(os.path.join(root_dir, feature_folder))))
+            home = os.path.abspath(
+                os.path.join(
+                    root_dir,
+                    feature_folder,
+                    "..",
+                    os.readlink(os.path.join(root_dir, feature_folder)),
+                )
+            )
         else:
             home = os.path.abspath(os.path.join(root_dir, feature_folder))
         return cls(
@@ -420,14 +449,15 @@ class FeatureFolder:
             selected=selected,
             home=home,
             contents=tuple(
-                sorted(glob.glob(
-                    "**",
-                    root_dir=os.path.join(root_dir, feature_folder),
-                    include_hidden=True,
-                ))
+                sorted(
+                    glob.glob(
+                        "**",
+                        root_dir=os.path.join(root_dir, feature_folder),
+                        include_hidden=True,
+                    )
+                )
             ),
         )
-
 
     def is_part_of_categories(self, categories: tuple[str, ...]) -> bool:
         if len(categories) >= len(self.categories):
@@ -450,31 +480,58 @@ class FeatureFolder:
         return len(self.categories)
 
     def make_script(self, base: str) -> tuple[str, list[str]]:
-        shell_function_name = make_function_name(["install", base] + list(self.categories) + [self.name])
+        shell_function_name = make_function_name(
+            ["install", base] + list(self.categories) + [self.name]
+        )
         function_names: list[str] = []
         functions: list[str] = []
         for content in self.contents:
-            full_path = os.path.join(
-                self.root, self.folder, content
-            )
+            full_path = os.path.join(self.root, self.folder, content)
             if os.path.isfile(full_path):
                 inner_function_name = make_function_name(["run", content])
                 file_content = read_content(full_path)
 
                 if content.endswith("Brewfile"):
                     function_names.append(inner_function_name)
-                    functions.extend(make_shell_function_for_brewfile(inner_function_name, file_content, source_file_name=full_path, indent=4))
+                    functions.extend(
+                        make_shell_function_for_brewfile(
+                            inner_function_name,
+                            file_content,
+                            source_file_name=full_path,
+                            indent=4,
+                        )
+                    )
                 if content.endswith("once.sh"):
-                    lock_name = make_function_name(["install"] + list(self.categories) + [self.name, content])
-                    function_names.append(f'_run_once "{lock_name}" {inner_function_name}')
-                    functions.extend(make_shell_function(inner_function_name, file_content, source_file_name=full_path, indent=4, home=self.home))
+                    lock_name = make_function_name(
+                        ["install"] + list(self.categories) + [self.name, content]
+                    )
+                    function_names.append(
+                        f'_run_once "{lock_name}" {inner_function_name}'
+                    )
+                    functions.extend(
+                        make_shell_function(
+                            inner_function_name,
+                            file_content,
+                            source_file_name=full_path,
+                            indent=4,
+                            home=self.home,
+                        )
+                    )
                 elif content.endswith(".sh"):
                     function_names.append(inner_function_name)
-                    functions.extend(make_shell_function(inner_function_name, file_content, source_file_name=full_path, indent=4, home=self.home))
+                    functions.extend(
+                        make_shell_function(
+                            inner_function_name,
+                            file_content,
+                            source_file_name=full_path,
+                            indent=4,
+                            home=self.home,
+                        )
+                    )
 
         lines = [
             f"function {shell_function_name}() {{",
-            f"    echo \"Installing feature: {self.folder}\"",
+            f'    echo "Installing feature: {self.folder}"',
         ]
         lines.extend(functions)
         lines.append("")
@@ -528,29 +585,42 @@ def denumbered_name(name: str):
         return name
     return matches.group(2)
 
-def make_function_name(parts: list[str]) -> str:
-    return "_".join([part.replace("-", "_").replace(".", "_").replace("//", "_") for part in parts])
 
-def make_shell_function(name: str, content: list[str], indent: int = 0, home: str | None = None, source_file_name: str | None = None) -> list[str]:
+def make_function_name(parts: list[str]) -> str:
+    return "_".join(
+        [part.replace("-", "_").replace(".", "_").replace("//", "_") for part in parts]
+    )
+
+
+def make_shell_function(
+    name: str,
+    content: list[str],
+    indent: int = 0,
+    home: str | None = None,
+    source_file_name: str | None = None,
+) -> list[str]:
     lines = [
         f"function {name}() {{",
     ]
     if source_file_name:
         lines.append(f"    # Source: {source_file_name}")
     if home:
-        lines.append(f'    pushd . > /dev/null')
-        lines.append(f'    cd "{home}"')
+        lines.append(f"    pushd . > /dev/null")
+        lines.append(f"    cd $HOME{home.replace(str(HOME), '')}")
     lines.extend(["    " + line for line in content])
     if source_file_name:
-        lines.append(f"    echo \"  [✓] Script ({source_file_name}) executed successfully.\"")
+        lines.append(
+            f'    echo "  [✓] Script ({source_file_name}) executed successfully."'
+        )
     else:
-        lines.append(f"    echo \"  [✓] Functtion ({name}) executed successfully.\"")
+        lines.append(f'    echo "  [✓] Functtion ({name}) executed successfully."')
     if home:
-        lines.append(f'    popd > /dev/null')
+        lines.append(f"    popd > /dev/null")
     lines.append("}")
     if indent > 0:
         lines = [" " * indent + line for line in lines]
     return lines
+
 
 def run_once_function() -> list[str]:
     lines = [
@@ -566,7 +636,9 @@ def run_once_function() -> list[str]:
     return lines
 
 
-def make_shell_function_for_brewfile(name: str, content: list[str], indent: int = 0, source_file_name: str | None = None) -> list[str]:
+def make_shell_function_for_brewfile(
+    name: str, content: list[str], indent: int = 0, source_file_name: str | None = None
+) -> list[str]:
     lines = [
         f"function {name}() {{",
     ]
@@ -576,11 +648,15 @@ def make_shell_function_for_brewfile(name: str, content: list[str], indent: int 
     lines.extend(["        " + line for line in content])
     lines.append("EOF")
     if source_file_name:
-        lines.append(f"    echo \"  [✓] Brewfile ({source_file_name}) applied successfully.\"")
+        lines.append(
+            f'    echo "  [✓] Brewfile ({source_file_name}) applied successfully."'
+        )
     lines.append("}")
     # Indent all lines except the "EOF"
     if indent > 0:
-        lines = [" " * indent + line if line.strip() != "EOF" else line for line in lines]
+        lines = [
+            " " * indent + line if line.strip() != "EOF" else line for line in lines
+        ]
     return lines
 
 

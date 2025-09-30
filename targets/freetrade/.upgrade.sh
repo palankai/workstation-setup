@@ -84,7 +84,7 @@ function install_fundamentals_shell_folders() {
     function run_00_run_sh() {
         # Source: fundamentals/00-shell/10-folders/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/00-shell/10-folders"
+        cd $HOME/opt/workstation-setup/fundamentals/00-shell/10-folders
         mkdir -p $HOME/opt/Applications
         mkdir -p $HOME/opt/src
         mkdir -p $HOME/Local
@@ -143,7 +143,7 @@ EOF
     function run_01_run_sh() {
         # Source: fundamentals/00-shell/20-linux-compatibility/01-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/00-shell/20-linux-compatibility"
+        cd $HOME/opt/workstation-setup/fundamentals/00-shell/20-linux-compatibility
         # https://apple.stackexchange.com/questions/69223/how-to-replace-mac-os-x-utilities-with-gnu-core-utilities
         # https://dev.to/dnsmichi/use-homebrew-bundle-to-manage-software-installation-on-macos-1223
         mkdir -p $HOME/opt/gnubin
@@ -198,7 +198,7 @@ EOF
     function run_01_run_sh() {
         # Source: fundamentals/00-shell/40-zsh/01-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/00-shell/40-zsh"
+        cd $HOME/opt/workstation-setup/fundamentals/00-shell/40-zsh
         ensure_repository https://github.com/robbyrussell/oh-my-zsh ~/.oh-my-zsh
         ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/zshenv $HOME/.zshenv
         ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/zshrc $HOME/.zshrc
@@ -227,7 +227,7 @@ EOF
     function run_01_run_sh() {
         # Source: fundamentals/00-shell/50-git/01-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/00-shell/50-git"
+        cd $HOME/opt/workstation-setup/fundamentals/00-shell/50-git
         git lfs install
         echo "  [✓] Script (fundamentals/00-shell/50-git/01-run.sh) executed successfully."
         popd > /dev/null
@@ -278,7 +278,7 @@ EOF
     function run_00_run_sh() {
         # Source: fundamentals/30-essentials/tmux/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/30-essentials/tmux"
+        cd $HOME/opt/workstation-setup/fundamentals/30-essentials/tmux
         ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/tmux.conf $HOME/.tmux.conf
         echo "  [✓] Script (fundamentals/30-essentials/tmux/00-run.sh) executed successfully."
         popd > /dev/null
@@ -294,7 +294,7 @@ function install_fundamentals_essentials_vim_setup() {
     function run_00_run_sh() {
         # Source: fundamentals/30-essentials/vim-setup/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/30-essentials/vim-setup"
+        cd $HOME/opt/workstation-setup/fundamentals/30-essentials/vim-setup
         mkdir -p $HOME/.vim
         mkdir -p $HOME/.vim-tmp
         ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/vimrc.vim $HOME/.vimrc
@@ -325,7 +325,7 @@ function install_components_programming_node_nvm() {
     function run_00_run_sh() {
         # Source: targets/freetrade/programming/node/nvm/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/node/nvm"
+        cd $HOME/opt/workstation-setup/components/programming/node/nvm
         mkdir -p ~/.nvm
         echo "  [✓] Script (targets/freetrade/programming/node/nvm/00-run.sh) executed successfully."
         popd > /dev/null
@@ -348,7 +348,7 @@ function install_components_programming_rust_rustup() {
     function run_00_run_sh() {
         # Source: components/programming/rust/rustup/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/rustup"
+        cd $HOME/opt/workstation-setup/components/programming/rust/rustup
         mkdir -p $HOME/.cargo
         ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/cargo/env $HOME/.cargo/env
         ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/cargo/config.toml $HOME/.cargo/config.toml
@@ -365,7 +365,7 @@ EOF
     function run_20_runonce_sh() {
         # Source: components/programming/rust/rustup/20-runonce.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/rustup"
+        cd $HOME/opt/workstation-setup/components/programming/rust/rustup
         rustup-init --no-modify-path -y
         echo "  [✓] Script (components/programming/rust/rustup/20-runonce.sh) executed successfully."
         popd > /dev/null
@@ -373,7 +373,7 @@ EOF
     function run_30_run_sh() {
         # Source: components/programming/rust/rustup/30-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/rustup"
+        cd $HOME/opt/workstation-setup/components/programming/rust/rustup
         rustup update
         echo "  [✓] Script (components/programming/rust/rustup/30-run.sh) executed successfully."
         popd > /dev/null
@@ -391,7 +391,7 @@ function install_components_programming_python_uv() {
     function run_00_runonce_sh() {
         # Source: targets/freetrade/programming/python/uv/00-runonce.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/python/uv"
+        cd $HOME/opt/workstation-setup/components/programming/python/uv
         curl -LsSf https://astral.sh/uv/install.sh | sh
         echo "  [✓] Script (targets/freetrade/programming/python/uv/00-runonce.sh) executed successfully."
         popd > /dev/null
@@ -399,7 +399,7 @@ function install_components_programming_python_uv() {
     function run_10_run_sh() {
         # Source: targets/freetrade/programming/python/uv/10-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/python/uv"
+        cd $HOME/opt/workstation-setup/components/programming/python/uv
         uv self update
         echo "  [✓] Script (targets/freetrade/programming/python/uv/10-run.sh) executed successfully."
         popd > /dev/null
@@ -415,7 +415,7 @@ function install_components_terminal_ghostty() {
     function run_10_run_sh() {
         # Source: targets/freetrade/terminal/ghostty/10-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/terminal/ghostty"
+        cd $HOME/opt/workstation-setup/components/terminal/ghostty
         # TODO: Ensure ghostty config link
         mkdir -p ~/.config/ghostty
         ln -sf $(pwd)/config/config ~/.config/ghostty/config
@@ -460,4 +460,3 @@ else
     help
     exit 1 # Exit with an error code
 fi
-
