@@ -116,10 +116,10 @@ source $ZSH/oh-my-zsh.sh
 #     . /Applications/Docker.app/Contents/Resources/etc/docker-compose.zsh-completion
 # fi
 
-export GPG_TTY=$(tty)
-gpgconf --launch gpg-agent
+#export GPG_TTY=$(tty)
+#gpgconf --launch gpg-agent
 #gpg-agent --daemon --homedir $HOME/.gnupg
-export SSH_AUTH_SOCK=$HOME/.gnupg/S.gpg-agent.ssh
+#export SSH_AUTH_SOCK=$HOME/.gnupg/S.gpg-agent.ssh
 
 autoload zmv
 
@@ -162,3 +162,7 @@ alias claude="/Users/csaba/.claude/local/claude"
 # Task Master aliases added on 03/07/2025
 alias tm='task-master'
 alias taskmaster='task-master'
+
+# Freetrade stuff
+disable r functions
+export PATH="./node_modules/.bin:$PATH"

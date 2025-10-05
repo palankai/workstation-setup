@@ -36,11 +36,33 @@ function help() {
     echo "  install_fundamentals_essentials_keyring"
     echo "  install_fundamentals_essentials_tmux"
     echo "  install_fundamentals_essentials_vim_setup"
+    echo "  install_components_cloud_google_cloud_proxy"
+    echo "  install_components_cloud_google_firebase"
+    echo "  install_components_cloud_google_gcloud"
+    echo "  install_components_database_postgresql"
+    echo "  install_components_dev_vscode"
+    echo "  install_components_dev_zed"
+    echo "  install_components_programming_asdf_asdf"
     echo "  install_components_programming_node_node"
     echo "  install_components_programming_node_nvm"
+    echo "  install_components_programming_node_pnpm"
+    echo "  install_components_programming_node_yarn"
+    echo "  install_components_programming_python_pip"
+    echo "  install_components_programming_python_pipx"
+    echo "  install_components_programming_python_pyenv"
     echo "  install_components_programming_rust_rustup"
     echo "  install_components_programming_python_uv"
+    echo "  install_components_programming_terraform_tfenv"
     echo "  install_components_terminal_ghostty"
+    echo "  install_components_tools_ag"
+    echo "  install_components_tools_bat"
+    echo "  install_components_tools_btop"
+    echo "  install_components_tools_colima_docker"
+    echo "  install_components_tools_csvkit"
+    echo "  install_components_tools_docker_cli"
+    echo "  install_components_tools_fzf"
+    echo "  install_components_tools_jq"
+    echo "  install_components_tools_miller_csv"
 }
 
 function run_upgrade() {
@@ -55,11 +77,33 @@ function run_upgrade() {
     install_fundamentals_essentials_keyring
     install_fundamentals_essentials_tmux
     install_fundamentals_essentials_vim_setup
+    install_components_cloud_google_cloud_proxy
+    install_components_cloud_google_firebase
+    install_components_cloud_google_gcloud
+    install_components_database_postgresql
+    install_components_dev_vscode
+    install_components_dev_zed
+    install_components_programming_asdf_asdf
     install_components_programming_node_node
     install_components_programming_node_nvm
+    install_components_programming_node_pnpm
+    install_components_programming_node_yarn
+    install_components_programming_python_pip
+    install_components_programming_python_pipx
+    install_components_programming_python_pyenv
     install_components_programming_rust_rustup
     install_components_programming_python_uv
+    install_components_programming_terraform_tfenv
     install_components_terminal_ghostty
+    install_components_tools_ag
+    install_components_tools_bat
+    install_components_tools_btop
+    install_components_tools_colima_docker
+    install_components_tools_csvkit
+    install_components_tools_docker_cli
+    install_components_tools_fzf
+    install_components_tools_jq
+    install_components_tools_miller_csv
 
     brew_cleanup
 }
@@ -306,6 +350,130 @@ function install_fundamentals_essentials_vim_setup() {
     echo "  Feature (30-essentials/vim-setup) installed successfully."
 }
 
+function install_components_cloud_google_cloud_proxy() {
+    echo "Installing feature: cloud/google/cloud-proxy"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/cloud/google/cloud-proxy/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "cloud-sql-proxy"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/cloud/google/cloud-proxy/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (cloud/google/cloud-proxy) installed successfully."
+}
+
+function install_components_cloud_google_firebase() {
+    echo "Installing feature: cloud/google/firebase"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/cloud/google/firebase/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "firebase-cli"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/cloud/google/firebase/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (cloud/google/firebase) installed successfully."
+}
+
+function install_components_cloud_google_gcloud() {
+    echo "Installing feature: cloud/google/gcloud"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/cloud/google/gcloud/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "gcloud-cli"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/cloud/google/gcloud/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (cloud/google/gcloud) installed successfully."
+}
+
+function install_components_database_postgresql() {
+    echo "Installing feature: database/postgresql"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/database/postgresql/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "postgresql@17"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/database/postgresql/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (database/postgresql) installed successfully."
+}
+
+function install_components_dev_vscode() {
+    echo "Installing feature: dev/vscode"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/dev/vscode/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "visual-studio-code"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/dev/vscode/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (dev/vscode) installed successfully."
+}
+
+function install_components_dev_zed() {
+    echo "Installing feature: dev/zed"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/dev/zed/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "zed"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/dev/zed/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (dev/zed) installed successfully."
+}
+
+function install_components_programming_asdf_asdf() {
+    echo "Installing feature: programming/asdf/asdf"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/programming/asdf/asdf/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "asdf"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/programming/asdf/asdf/00-Brewfile) applied successfully."
+    }
+    function run_10_run_sh() {
+        # Source: targets/freetrade/programming/asdf/asdf/10-run.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/programming/asdf/asdf
+        asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git
+        asdf plugin add yarn https://github.com/twuni/asdf-yarn
+        asdf plugin add pnpm https://github.com/jonathanmorley/asdf-pnpm
+        asdf plugin add gcloud https://github.com/jthegedus/asdf-gcloud
+        asdf plugin add github-cli https://github.com/bartlomiejdanek/asdf-github-cli.git
+        asdf plugin add terraform https://github.com/asdf-community/asdf-hashicorp.git
+        asdf install nodejs lts
+        asdf install pnpm latest
+        asdf install yarn latest
+        asdf install gcloud latest
+        # asdf install github-cli latest
+        asdf install terraform latest
+        asdf set -u nodejs lts
+        asdf set -u pnpm latest
+        asdf set -u yarn latest
+        asdf set -u gcloud latest
+        # asdf global github-cli latest
+        asdf set -u terraform latest
+        echo "  [✓] Script (targets/freetrade/programming/asdf/asdf/10-run.sh) executed successfully."
+        popd > /dev/null
+    }
+
+    run_00_Brewfile
+    run_10_run_sh
+    echo "  Feature (programming/asdf/asdf) installed successfully."
+}
+
 function install_components_programming_node_node() {
     echo "Installing feature: programming/node/node"
     function run_00_Brewfile() {
@@ -341,6 +509,79 @@ EOF
     run_00_run_sh
     run_01_Brewfile
     echo "  Feature (programming/node/nvm) installed successfully."
+}
+
+function install_components_programming_node_pnpm() {
+    echo "Installing feature: programming/node/pnpm"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/programming/node/pnpm/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "pnpm"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/programming/node/pnpm/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (programming/node/pnpm) installed successfully."
+}
+
+function install_components_programming_node_yarn() {
+    echo "Installing feature: programming/node/yarn"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/programming/node/yarn/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "yarn"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/programming/node/yarn/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (programming/node/yarn) installed successfully."
+}
+
+function install_components_programming_python_pip() {
+    echo "Installing feature: programming/python/pip"
+    function run_00_run_sh() {
+        # Source: targets/freetrade/programming/python/pip/00-run.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/programming/python/pip
+        $SYSTEM_PYTHON -m pip install --upgrade pip
+        echo "  [✓] Script (targets/freetrade/programming/python/pip/00-run.sh) executed successfully."
+        popd > /dev/null
+    }
+
+    run_00_run_sh
+    echo "  Feature (programming/python/pip) installed successfully."
+}
+
+function install_components_programming_python_pipx() {
+    echo "Installing feature: programming/python/pipx"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/programming/python/pipx/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "pipx"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/programming/python/pipx/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (programming/python/pipx) installed successfully."
+}
+
+function install_components_programming_python_pyenv() {
+    echo "Installing feature: programming/python/pyenv"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/programming/python/pyenv/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "pyenv"
+            brew "pyenv-virtualenv"
+            brew "pyenv-virtualenvwrapper"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/programming/python/pyenv/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (programming/python/pyenv) installed successfully."
 }
 
 function install_components_programming_rust_rustup() {
@@ -410,6 +651,29 @@ function install_components_programming_python_uv() {
     echo "  Feature (programming/python/uv) installed successfully."
 }
 
+function install_components_programming_terraform_tfenv() {
+    echo "Installing feature: programming/terraform/tfenv"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/programming/terraform/tfenv/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "tfenv"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/programming/terraform/tfenv/00-Brewfile) applied successfully."
+    }
+    function run_10_run_sh() {
+        # Source: targets/freetrade/programming/terraform/tfenv/10-run.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/programming/terraform/tfenv
+        tfenv install
+        echo "  [✓] Script (targets/freetrade/programming/terraform/tfenv/10-run.sh) executed successfully."
+        popd > /dev/null
+    }
+
+    run_00_Brewfile
+    run_10_run_sh
+    echo "  Feature (programming/terraform/tfenv) installed successfully."
+}
+
 function install_components_terminal_ghostty() {
     echo "Installing feature: terminal/ghostty"
     function run_10_run_sh() {
@@ -433,6 +697,156 @@ EOF
     run_10_run_sh
     run_20_Brewfile
     echo "  Feature (terminal/ghostty) installed successfully."
+}
+
+function install_components_tools_ag() {
+    echo "Installing feature: tools/ag"
+    function run_Brewfile() {
+        # Source: targets/freetrade/tools/ag/Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "ag"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/tools/ag/Brewfile) applied successfully."
+    }
+
+    run_Brewfile
+    echo "  Feature (tools/ag) installed successfully."
+}
+
+function install_components_tools_bat() {
+    echo "Installing feature: tools/bat"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/tools/bat/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "bat"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/tools/bat/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (tools/bat) installed successfully."
+}
+
+function install_components_tools_btop() {
+    echo "Installing feature: tools/btop"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/tools/btop/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "btop"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/tools/btop/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (tools/btop) installed successfully."
+}
+
+function install_components_tools_colima_docker() {
+    echo "Installing feature: tools/colima-docker"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/tools/colima-docker/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "colima"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/tools/colima-docker/00-Brewfile) applied successfully."
+    }
+    function run_10_runonce_sh() {
+        # Source: targets/freetrade/tools/colima-docker/10-runonce.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/tools/colima-docker
+        colima start
+        docker context use colima
+        docker context ls
+        echo "  [✓] Script (targets/freetrade/tools/colima-docker/10-runonce.sh) executed successfully."
+        popd > /dev/null
+    }
+
+    run_00_Brewfile
+    _run_once "install_tools_colima_docker_10_runonce_sh" run_10_runonce_sh
+    echo "  Feature (tools/colima-docker) installed successfully."
+}
+
+function install_components_tools_csvkit() {
+    echo "Installing feature: tools/csvkit"
+    function run_Brewfile() {
+        # Source: targets/freetrade/tools/csvkit/Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "csvkit"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/tools/csvkit/Brewfile) applied successfully."
+    }
+
+    run_Brewfile
+    echo "  Feature (tools/csvkit) installed successfully."
+}
+
+function install_components_tools_docker_cli() {
+    echo "Installing feature: tools/docker-cli"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/tools/docker-cli/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "docker"
+            brew "docker-buildx"
+            brew "docker-compose"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/tools/docker-cli/10-Brewfile) applied successfully."
+    }
+    function run_20_run_sh() {
+        # Source: targets/freetrade/tools/docker-cli/20-run.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/tools/docker-cli
+        mkdir -p ~/.docker/cli-plugins
+        ln -sfn $(which docker-buildx) ~/.docker/cli-plugins/docker-buildx
+        ln -sfn $(which docker-compose) ~/.docker/cli-plugins/docker-compose
+        echo "  [✓] Script (targets/freetrade/tools/docker-cli/20-run.sh) executed successfully."
+        popd > /dev/null
+    }
+
+    run_10_Brewfile
+    run_20_run_sh
+    echo "  Feature (tools/docker-cli) installed successfully."
+}
+
+function install_components_tools_fzf() {
+    echo "Installing feature: tools/fzf"
+    function run_Brewfile() {
+        # Source: targets/freetrade/tools/fzf/Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "fzf"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/tools/fzf/Brewfile) applied successfully."
+    }
+
+    run_Brewfile
+    echo "  Feature (tools/fzf) installed successfully."
+}
+
+function install_components_tools_jq() {
+    echo "Installing feature: tools/jq"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/tools/jq/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "jq"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/tools/jq/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (tools/jq) installed successfully."
+}
+
+function install_components_tools_miller_csv() {
+    echo "Installing feature: tools/miller-csv"
+    function run_Brewfile() {
+        # Source: targets/freetrade/tools/miller-csv/Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "miller"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/tools/miller-csv/Brewfile) applied successfully."
+    }
+
+    run_Brewfile
+    echo "  Feature (tools/miller-csv) installed successfully."
 }
 
 
@@ -460,3 +874,4 @@ else
     help
     exit 1 # Exit with an error code
 fi
+

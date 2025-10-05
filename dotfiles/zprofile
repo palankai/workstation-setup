@@ -87,8 +87,8 @@ fi
 export GPG_TTY=$(tty)
 
 # GPG Based SSH setup
-gpgconf --launch gpg-agent
-export SSH_AUTH_SOCK=$HOME/.gnupg/S.gpg-agent.ssh
+#gpgconf --launch gpg-agent
+#export SSH_AUTH_SOCK=$HOME/.gnupg/S.gpg-agent.ssh
 
 if [ -f ~/.zprofile.local ]; then
       source ~/.zprofile.local
@@ -100,3 +100,7 @@ export locize_INSTALL="/Users/csaba/.locize-cli"
 export PATH="$locize_INSTALL/bin:$PATH"
 
 # BEGIN aliases
+
+# Added by OrbStack: command-line tools and integration
+# This won't be added again if you remove it.
+source ~/.orbstack/shell/init.zsh 2>/dev/null || :
