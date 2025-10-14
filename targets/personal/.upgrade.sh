@@ -41,8 +41,10 @@ function help() {
     echo "  install_components_chat_slack"
     echo "  install_components_cloud_aws"
     echo "  install_components_cloud_aws_cli"
-    echo "  install_components_cloud_google"
     echo "  install_components_cloud_google_drive"
+    echo "  install_components_cloud_google_cloud_proxy"
+    echo "  install_components_cloud_google_firebase"
+    echo "  install_components_cloud_google_gcloud"
     echo "  install_components_cloud_synology_drive"
     echo "  install_components_creative_adobe"
     echo "  install_components_creative_obs"
@@ -65,14 +67,11 @@ function help() {
     echo "  install_components_programming_python_pyenv"
     echo "  install_components_programming_rust_rustup"
     echo "  install_components_programming_python_uv"
-    echo "  install_components_programming_terraform"
     echo "  install_components_secrets_1password_latest"
     echo "  install_components_secrets_keepassium_pro"
     echo "  install_components_secrets_keepassxc"
     echo "  install_components_secrets_ledger_live"
     echo "  install_components_system_TheUnarchiver"
-    echo "  install_components_system_bartender"
-    echo "  install_components_system_iStatMenus"
     echo "  install_components_system_karabiner_elements"
     echo "  install_components_system_settings"
     echo "  install_components_system_surfshark"
@@ -80,7 +79,6 @@ function help() {
     echo "  install_components_tools_bat"
     echo "  install_components_tools_btop"
     echo "  install_components_tools_cmake"
-    echo "  install_components_tools_docker"
     echo "  install_components_tools_jq"
     echo "  install_components_tools_watchman"
     echo "  install_components_tools_websocat"
@@ -103,8 +101,10 @@ function run_upgrade() {
     install_components_chat_slack
     install_components_cloud_aws
     install_components_cloud_aws_cli
-    install_components_cloud_google
     install_components_cloud_google_drive
+    install_components_cloud_google_cloud_proxy
+    install_components_cloud_google_firebase
+    install_components_cloud_google_gcloud
     install_components_cloud_synology_drive
     install_components_creative_adobe
     install_components_creative_obs
@@ -127,14 +127,11 @@ function run_upgrade() {
     install_components_programming_python_pyenv
     install_components_programming_rust_rustup
     install_components_programming_python_uv
-    install_components_programming_terraform
     install_components_secrets_1password_latest
     install_components_secrets_keepassium_pro
     install_components_secrets_keepassxc
     install_components_secrets_ledger_live
     install_components_system_TheUnarchiver
-    install_components_system_bartender
-    install_components_system_iStatMenus
     install_components_system_karabiner_elements
     install_components_system_settings
     install_components_system_surfshark
@@ -142,7 +139,6 @@ function run_upgrade() {
     install_components_tools_bat
     install_components_tools_btop
     install_components_tools_cmake
-    install_components_tools_docker
     install_components_tools_jq
     install_components_tools_watchman
     install_components_tools_websocat
@@ -170,7 +166,7 @@ function install_fundamentals_shell_folders() {
     function run_00_run_sh() {
         # Source: fundamentals/00-shell/10-folders/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/00-shell/10-folders"
+        cd $HOME/opt/workstation-setup/fundamentals/00-shell/10-folders
         mkdir -p $HOME/opt/Applications
         mkdir -p $HOME/opt/src
         mkdir -p $HOME/Local
@@ -229,7 +225,7 @@ EOF
     function run_01_run_sh() {
         # Source: fundamentals/00-shell/20-linux-compatibility/01-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/00-shell/20-linux-compatibility"
+        cd $HOME/opt/workstation-setup/fundamentals/00-shell/20-linux-compatibility
         # https://apple.stackexchange.com/questions/69223/how-to-replace-mac-os-x-utilities-with-gnu-core-utilities
         # https://dev.to/dnsmichi/use-homebrew-bundle-to-manage-software-installation-on-macos-1223
         mkdir -p $HOME/opt/gnubin
@@ -284,7 +280,7 @@ EOF
     function run_01_run_sh() {
         # Source: fundamentals/00-shell/40-zsh/01-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/00-shell/40-zsh"
+        cd $HOME/opt/workstation-setup/fundamentals/00-shell/40-zsh
         ensure_repository https://github.com/robbyrussell/oh-my-zsh ~/.oh-my-zsh
         ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/zshenv $HOME/.zshenv
         ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/zshrc $HOME/.zshrc
@@ -313,7 +309,7 @@ EOF
     function run_01_run_sh() {
         # Source: fundamentals/00-shell/50-git/01-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/00-shell/50-git"
+        cd $HOME/opt/workstation-setup/fundamentals/00-shell/50-git
         git lfs install
         echo "  [✓] Script (fundamentals/00-shell/50-git/01-run.sh) executed successfully."
         popd > /dev/null
@@ -364,7 +360,7 @@ EOF
     function run_00_run_sh() {
         # Source: fundamentals/30-essentials/tmux/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/30-essentials/tmux"
+        cd $HOME/opt/workstation-setup/fundamentals/30-essentials/tmux
         ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/tmux.conf $HOME/.tmux.conf
         echo "  [✓] Script (fundamentals/30-essentials/tmux/00-run.sh) executed successfully."
         popd > /dev/null
@@ -380,7 +376,7 @@ function install_fundamentals_essentials_vim_setup() {
     function run_00_run_sh() {
         # Source: fundamentals/30-essentials/vim-setup/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/fundamentals/30-essentials/vim-setup"
+        cd $HOME/opt/workstation-setup/fundamentals/30-essentials/vim-setup
         mkdir -p $HOME/.vim
         mkdir -p $HOME/.vim-tmp
         ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/vimrc.vim $HOME/.vimrc
@@ -464,7 +460,7 @@ EOF
     function run_00_run_sh() {
         # Source: targets/personal/cloud/aws-cli/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/cloud/aws-cli"
+        cd $HOME/opt/workstation-setup/components/cloud/aws-cli
         mkdir -p $HOME/.aws
         chmod 1755 $HOME/.aws
         ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/dotfiles/aws.conf $HOME/.aws/config
@@ -479,20 +475,6 @@ EOF
     echo "  Feature (cloud/aws-cli) installed successfully."
 }
 
-function install_components_cloud_google() {
-    echo "Installing feature: cloud/google"
-    function run_00_Brewfile() {
-        # Source: targets/personal/cloud/google/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            cask "gcloud-cli"
-EOF
-        echo "  [✓] Brewfile (targets/personal/cloud/google/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (cloud/google) installed successfully."
-}
-
 function install_components_cloud_google_drive() {
     echo "Installing feature: cloud/google-drive"
     function run_00_Brewfile() {
@@ -505,6 +487,48 @@ EOF
 
     run_00_Brewfile
     echo "  Feature (cloud/google-drive) installed successfully."
+}
+
+function install_components_cloud_google_cloud_proxy() {
+    echo "Installing feature: cloud/google/cloud-proxy"
+    function run_10_Brewfile() {
+        # Source: targets/personal/cloud/google/cloud-proxy/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "cloud-sql-proxy"
+EOF
+        echo "  [✓] Brewfile (targets/personal/cloud/google/cloud-proxy/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (cloud/google/cloud-proxy) installed successfully."
+}
+
+function install_components_cloud_google_firebase() {
+    echo "Installing feature: cloud/google/firebase"
+    function run_00_Brewfile() {
+        # Source: targets/personal/cloud/google/firebase/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "firebase-cli"
+EOF
+        echo "  [✓] Brewfile (targets/personal/cloud/google/firebase/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (cloud/google/firebase) installed successfully."
+}
+
+function install_components_cloud_google_gcloud() {
+    echo "Installing feature: cloud/google/gcloud"
+    function run_00_Brewfile() {
+        # Source: targets/personal/cloud/google/gcloud/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "gcloud-cli"
+EOF
+        echo "  [✓] Brewfile (targets/personal/cloud/google/gcloud/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (cloud/google/gcloud) installed successfully."
 }
 
 function install_components_cloud_synology_drive() {
@@ -558,8 +582,17 @@ function install_components_database_postgresql() {
 EOF
         echo "  [✓] Brewfile (targets/personal/database/postgresql/00-Brewfile) applied successfully."
     }
+    function run_10_run_sh() {
+        # Source: targets/personal/database/postgresql/10-run.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/database/postgresql
+        brew link postgresql@17
+        echo "  [✓] Script (targets/personal/database/postgresql/10-run.sh) executed successfully."
+        popd > /dev/null
+    }
 
     run_00_Brewfile
+    run_10_run_sh
     echo "  Feature (database/postgresql) installed successfully."
 }
 
@@ -694,7 +727,7 @@ function install_components_programming_node_bun() {
     function run_00_run_sh() {
         # Source: targets/personal/programming/node/bun/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/node/bun"
+        cd $HOME/opt/workstation-setup/components/programming/node/bun
         if [ ! -f .installed-once ]; then
             curl -fsSL https://bun.sh/install | bash
             echo "" > .installed-once
@@ -707,7 +740,7 @@ function install_components_programming_node_bun() {
     function run_after_sh() {
         # Source: targets/personal/programming/node/bun/after.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/node/bun"
+        cd $HOME/opt/workstation-setup/components/programming/node/bun
         bun upgrade
         echo "  [✓] Script (targets/personal/programming/node/bun/after.sh) executed successfully."
         popd > /dev/null
@@ -715,7 +748,7 @@ function install_components_programming_node_bun() {
     function run_runonce_sh() {
         # Source: targets/personal/programming/node/bun/runonce.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/node/bun"
+        cd $HOME/opt/workstation-setup/components/programming/node/bun
         curl -fsSL https://bun.sh/install | bash
         echo "  [✓] Script (targets/personal/programming/node/bun/runonce.sh) executed successfully."
         popd > /dev/null
@@ -746,7 +779,7 @@ function install_components_programming_node_nvm() {
     function run_00_run_sh() {
         # Source: targets/personal/programming/node/nvm/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/node/nvm"
+        cd $HOME/opt/workstation-setup/components/programming/node/nvm
         mkdir -p ~/.nvm
         echo "  [✓] Script (targets/personal/programming/node/nvm/00-run.sh) executed successfully."
         popd > /dev/null
@@ -783,7 +816,7 @@ function install_components_programming_python_pip() {
     function run_00_run_sh() {
         # Source: targets/personal/programming/python/pip/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/python/pip"
+        cd $HOME/opt/workstation-setup/components/programming/python/pip
         $SYSTEM_PYTHON -m pip install --upgrade pip
         echo "  [✓] Script (targets/personal/programming/python/pip/00-run.sh) executed successfully."
         popd > /dev/null
@@ -828,7 +861,7 @@ function install_components_programming_rust_rustup() {
     function run_00_run_sh() {
         # Source: components/programming/rust/rustup/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/rustup"
+        cd $HOME/opt/workstation-setup/components/programming/rust/rustup
         mkdir -p $HOME/.cargo
         ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/cargo/env $HOME/.cargo/env
         ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/cargo/config.toml $HOME/.cargo/config.toml
@@ -845,7 +878,7 @@ EOF
     function run_20_runonce_sh() {
         # Source: components/programming/rust/rustup/20-runonce.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/rustup"
+        cd $HOME/opt/workstation-setup/components/programming/rust/rustup
         rustup-init --no-modify-path -y
         echo "  [✓] Script (components/programming/rust/rustup/20-runonce.sh) executed successfully."
         popd > /dev/null
@@ -853,7 +886,7 @@ EOF
     function run_30_run_sh() {
         # Source: components/programming/rust/rustup/30-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/rust/rustup"
+        cd $HOME/opt/workstation-setup/components/programming/rust/rustup
         rustup update
         echo "  [✓] Script (components/programming/rust/rustup/30-run.sh) executed successfully."
         popd > /dev/null
@@ -871,7 +904,7 @@ function install_components_programming_python_uv() {
     function run_00_runonce_sh() {
         # Source: targets/personal/programming/python/uv/00-runonce.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/python/uv"
+        cd $HOME/opt/workstation-setup/components/programming/python/uv
         curl -LsSf https://astral.sh/uv/install.sh | sh
         echo "  [✓] Script (targets/personal/programming/python/uv/00-runonce.sh) executed successfully."
         popd > /dev/null
@@ -879,7 +912,7 @@ function install_components_programming_python_uv() {
     function run_10_run_sh() {
         # Source: targets/personal/programming/python/uv/10-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/programming/python/uv"
+        cd $HOME/opt/workstation-setup/components/programming/python/uv
         uv self update
         echo "  [✓] Script (targets/personal/programming/python/uv/10-run.sh) executed successfully."
         popd > /dev/null
@@ -888,20 +921,6 @@ function install_components_programming_python_uv() {
     _run_once "install_programming_python_uv_00_runonce_sh" run_00_runonce_sh
     run_10_run_sh
     echo "  Feature (programming/python/uv) installed successfully."
-}
-
-function install_components_programming_terraform() {
-    echo "Installing feature: programming/terraform"
-    function run_00_Brewfile() {
-        # Source: targets/personal/programming/terraform/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            brew "terraform"
-EOF
-        echo "  [✓] Brewfile (targets/personal/programming/terraform/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (programming/terraform) installed successfully."
 }
 
 function install_components_secrets_1password_latest() {
@@ -974,34 +993,6 @@ EOF
     echo "  Feature (system/TheUnarchiver) installed successfully."
 }
 
-function install_components_system_bartender() {
-    echo "Installing feature: system/bartender"
-    function run_00_Brewfile() {
-        # Source: targets/personal/system/bartender/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            cask "bartender"
-EOF
-        echo "  [✓] Brewfile (targets/personal/system/bartender/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (system/bartender) installed successfully."
-}
-
-function install_components_system_iStatMenus() {
-    echo "Installing feature: system/iStatMenus"
-    function run_00_Brewfile() {
-        # Source: targets/personal/system/iStatMenus/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            mas "iStat Menus", id: 1319778037
-EOF
-        echo "  [✓] Brewfile (targets/personal/system/iStatMenus/00-Brewfile) applied successfully."
-    }
-
-    run_00_Brewfile
-    echo "  Feature (system/iStatMenus) installed successfully."
-}
-
 function install_components_system_karabiner_elements() {
     echo "Installing feature: system/karabiner-elements"
     function run_00_Brewfile() {
@@ -1021,7 +1012,7 @@ function install_components_system_settings() {
     function run_00_run_sh() {
         # Source: targets/personal/system/settings/00-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/system/settings"
+        cd $HOME/opt/workstation-setup/components/system/settings
         # Enable or disable press and hold for keys in favor of key repeat
         defaults write -g ApplePressAndHoldEnabled -bool false || true
         # Don't store quick time history
@@ -1055,7 +1046,7 @@ function install_components_terminal_ghostty() {
     function run_10_run_sh() {
         # Source: targets/personal/terminal/ghostty/10-run.sh
         pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/terminal/ghostty"
+        cd $HOME/opt/workstation-setup/components/terminal/ghostty
         # TODO: Ensure ghostty config link
         mkdir -p ~/.config/ghostty
         ln -sf $(pwd)/config/config ~/.config/ghostty/config
@@ -1115,31 +1106,6 @@ EOF
 
     run_00_Brewfile
     echo "  Feature (tools/cmake) installed successfully."
-}
-
-function install_components_tools_docker() {
-    echo "Installing feature: tools/docker"
-    function run_00_Brewfile() {
-        # Source: targets/personal/tools/docker/00-Brewfile
-        brew bundle -q --file=- <<EOF
-            cask "docker", overwrite: true, link: true
-            brew "docker-credential-helper-ecr"
-EOF
-        echo "  [✓] Brewfile (targets/personal/tools/docker/00-Brewfile) applied successfully."
-    }
-    function run_00_run_sh() {
-        # Source: targets/personal/tools/docker/00-run.sh
-        pushd . > /dev/null
-        cd "/Users/csaba/opt/workstation-setup/components/tools/docker"
-        mkdir -p $HOME/.docker
-        ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/dotfiles/docker-config.json $HOME/.docker/config.json
-        echo "  [✓] Script (targets/personal/tools/docker/00-run.sh) executed successfully."
-        popd > /dev/null
-    }
-
-    run_00_Brewfile
-    run_00_run_sh
-    echo "  Feature (tools/docker) installed successfully."
 }
 
 function install_components_tools_jq() {
