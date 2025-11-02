@@ -27,8 +27,9 @@ HOME = Path(os.environ["HOME"])
 
 def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
     targets = glob.glob("*", root_dir="targets")
-    args = get_parser(prog, targets).parse_args(argv)
+    args = get_parser(environ, prog, targets).parse_args(argv)
     target: str = str(args.target)
+    upgrade_only = bool(args.upgrade_only)
 
     broken_links = (
         discover_broken_links("fundamentals")
@@ -45,12 +46,16 @@ def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
 
     components = FeatureTree.build(discover("components", selected))
 
-    unchecked, newly_selected, to_update = selector_ui(
-        components, f"Component Selector [{target}]"
-    )
-    if not to_update:
-        print(f"Abort updating {target}")
-        sys.exit(0)
+    if not upgrade_only:
+        unchecked, newly_selected, to_update = selector_ui(
+            components, f"Component Selector [{target}]"
+        )
+        if not to_update:
+            print(f"Abort updating {target}")
+            sys.exit(0)
+    else:
+        unchecked = []
+        newly_selected = []
 
     print(f"\nResults:")
     print(f"Unchecked items ({len(unchecked)}):")
@@ -83,9 +88,25 @@ def main(environ: dict[str, str], prog: str, argv: list[str]) -> None:
     os.chmod(script_path, 0o755)
 
 
-def get_parser(prog: str, targets: list[str]) -> ArgumentParser:
+def get_parser(
+    environ: dict[str, str], prog: str, targets: list[str]
+) -> ArgumentParser:
+    default_target = environ.get("WORKSTATION")
     parser = ArgumentParser(prog)
-    _ = parser.add_argument("target", choices=targets)
+    _ = parser.add_argument(
+        "target",
+        choices=targets,
+        default=default_target,
+        nargs="?",
+        help=f"default: {default_target}",
+    )
+    _ = parser.add_argument(
+        "-u",
+        "--upgrade-only",
+        action="store_true",
+        help="Only run the upgrade script without making any changes to links",
+    )
+
     return parser
 
 
