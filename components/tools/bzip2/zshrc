@@ -1,0 +1,2 @@
+export LDFLAGS="$LDFLAGS -L/usr/local/opt/bzip2/lib"
+export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/bzip2/include"

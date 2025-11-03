@@ -1,0 +1,2 @@
+export LDFLAGS="$LDFLAGS -L/usr/local/opt/zlib/lib"
+export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/zlib/include"

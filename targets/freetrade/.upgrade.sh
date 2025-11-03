@@ -36,13 +36,18 @@ function help() {
     echo "  install_fundamentals_essentials_keyring"
     echo "  install_fundamentals_essentials_tmux"
     echo "  install_fundamentals_essentials_vim_setup"
+    echo "  install_components_ai_gemini"
     echo "  install_components_cloud_google_cloud_proxy"
     echo "  install_components_cloud_google_firebase"
     echo "  install_components_cloud_google_gcloud"
     echo "  install_components_database_postgresql"
+    echo "  install_components_desktop_obsidian"
+    echo "  install_components_dev_github_desktop"
+    echo "  install_components_dev_postman"
     echo "  install_components_dev_vscode"
     echo "  install_components_dev_zed"
     echo "  install_components_programming_asdf_asdf"
+    echo "  install_components_programming_java_openjdk"
     echo "  install_components_programming_node_node"
     echo "  install_components_programming_node_nvm"
     echo "  install_components_programming_node_pnpm"
@@ -57,12 +62,16 @@ function help() {
     echo "  install_components_tools_ag"
     echo "  install_components_tools_bat"
     echo "  install_components_tools_btop"
+    echo "  install_components_tools_bzip2"
     echo "  install_components_tools_colima_docker"
+    echo "  install_components_tools_containerisation_lima_guest_agaent"
     echo "  install_components_tools_csvkit"
     echo "  install_components_tools_docker_cli"
     echo "  install_components_tools_fzf"
     echo "  install_components_tools_jq"
     echo "  install_components_tools_miller_csv"
+    echo "  install_components_tools_quemu"
+    echo "  install_components_tools_zlib"
 }
 
 function run_upgrade() {
@@ -77,13 +86,18 @@ function run_upgrade() {
     install_fundamentals_essentials_keyring
     install_fundamentals_essentials_tmux
     install_fundamentals_essentials_vim_setup
+    install_components_ai_gemini
     install_components_cloud_google_cloud_proxy
     install_components_cloud_google_firebase
     install_components_cloud_google_gcloud
     install_components_database_postgresql
+    install_components_desktop_obsidian
+    install_components_dev_github_desktop
+    install_components_dev_postman
     install_components_dev_vscode
     install_components_dev_zed
     install_components_programming_asdf_asdf
+    install_components_programming_java_openjdk
     install_components_programming_node_node
     install_components_programming_node_nvm
     install_components_programming_node_pnpm
@@ -98,12 +112,16 @@ function run_upgrade() {
     install_components_tools_ag
     install_components_tools_bat
     install_components_tools_btop
+    install_components_tools_bzip2
     install_components_tools_colima_docker
+    install_components_tools_containerisation_lima_guest_agaent
     install_components_tools_csvkit
     install_components_tools_docker_cli
     install_components_tools_fzf
     install_components_tools_jq
     install_components_tools_miller_csv
+    install_components_tools_quemu
+    install_components_tools_zlib
 
     brew_cleanup
 }
@@ -350,6 +368,20 @@ function install_fundamentals_essentials_vim_setup() {
     echo "  Feature (30-essentials/vim-setup) installed successfully."
 }
 
+function install_components_ai_gemini() {
+    echo "Installing feature: ai/gemini"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/ai/gemini/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "gemini-cli"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/ai/gemini/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (ai/gemini) installed successfully."
+}
+
 function install_components_cloud_google_cloud_proxy() {
     echo "Installing feature: cloud/google/cloud-proxy"
     function run_10_Brewfile() {
@@ -401,9 +433,60 @@ function install_components_database_postgresql() {
 EOF
         echo "  [✓] Brewfile (targets/freetrade/database/postgresql/00-Brewfile) applied successfully."
     }
+    function run_10_run_sh() {
+        # Source: targets/freetrade/database/postgresql/10-run.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/database/postgresql
+        brew link postgresql@17
+        echo "  [✓] Script (targets/freetrade/database/postgresql/10-run.sh) executed successfully."
+        popd > /dev/null
+    }
 
     run_00_Brewfile
+    run_10_run_sh
     echo "  Feature (database/postgresql) installed successfully."
+}
+
+function install_components_desktop_obsidian() {
+    echo "Installing feature: desktop/obsidian"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/desktop/obsidian/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "obsidian"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/desktop/obsidian/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (desktop/obsidian) installed successfully."
+}
+
+function install_components_dev_github_desktop() {
+    echo "Installing feature: dev/github-desktop"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/dev/github-desktop/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "github"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/dev/github-desktop/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (dev/github-desktop) installed successfully."
+}
+
+function install_components_dev_postman() {
+    echo "Installing feature: dev/postman"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/dev/postman/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "postman"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/dev/postman/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (dev/postman) installed successfully."
 }
 
 function install_components_dev_vscode() {
@@ -472,6 +555,20 @@ EOF
     run_00_Brewfile
     run_10_run_sh
     echo "  Feature (programming/asdf/asdf) installed successfully."
+}
+
+function install_components_programming_java_openjdk() {
+    echo "Installing feature: programming/java/openjdk"
+    function run_00_Brewfile() {
+        # Source: targets/freetrade/programming/java/openjdk/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "openjdk"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/programming/java/openjdk/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (programming/java/openjdk) installed successfully."
 }
 
 function install_components_programming_node_node() {
@@ -741,6 +838,20 @@ EOF
     echo "  Feature (tools/btop) installed successfully."
 }
 
+function install_components_tools_bzip2() {
+    echo "Installing feature: tools/bzip2"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/tools/bzip2/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "bzip2"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/tools/bzip2/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (tools/bzip2) installed successfully."
+}
+
 function install_components_tools_colima_docker() {
     echo "Installing feature: tools/colima-docker"
     function run_00_Brewfile() {
@@ -764,6 +875,20 @@ EOF
     run_00_Brewfile
     _run_once "install_tools_colima_docker_10_runonce_sh" run_10_runonce_sh
     echo "  Feature (tools/colima-docker) installed successfully."
+}
+
+function install_components_tools_containerisation_lima_guest_agaent() {
+    echo "Installing feature: tools/containerisation/lima-guest-agaent"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/tools/containerisation/lima-guest-agaent/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "lima-additional-guestagents"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/tools/containerisation/lima-guest-agaent/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (tools/containerisation/lima-guest-agaent) installed successfully."
 }
 
 function install_components_tools_csvkit() {
@@ -847,6 +972,34 @@ EOF
 
     run_Brewfile
     echo "  Feature (tools/miller-csv) installed successfully."
+}
+
+function install_components_tools_quemu() {
+    echo "Installing feature: tools/quemu"
+    function run_Brewfile() {
+        # Source: targets/freetrade/tools/quemu/Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "qemu"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/tools/quemu/Brewfile) applied successfully."
+    }
+
+    run_Brewfile
+    echo "  Feature (tools/quemu) installed successfully."
+}
+
+function install_components_tools_zlib() {
+    echo "Installing feature: tools/zlib"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/tools/zlib/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "zlib"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/tools/zlib/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (tools/zlib) installed successfully."
 }
 
 
