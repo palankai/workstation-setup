@@ -40,7 +40,7 @@ function help() {
     echo "  install_components_cloud_google_cloud_proxy"
     echo "  install_components_cloud_google_firebase"
     echo "  install_components_cloud_google_gcloud"
-    echo "  install_components_database_postgresql"
+    echo "  install_components_database_postgresql@18"
     echo "  install_components_desktop_obsidian"
     echo "  install_components_dev_github_desktop"
     echo "  install_components_dev_postman"
@@ -58,6 +58,7 @@ function help() {
     echo "  install_components_programming_rust_rustup"
     echo "  install_components_programming_python_uv"
     echo "  install_components_programming_terraform_tfenv"
+    echo "  install_components_secrets_1password_cli"
     echo "  install_components_terminal_ghostty"
     echo "  install_components_tools_ag"
     echo "  install_components_tools_bat"
@@ -90,7 +91,7 @@ function run_upgrade() {
     install_components_cloud_google_cloud_proxy
     install_components_cloud_google_firebase
     install_components_cloud_google_gcloud
-    install_components_database_postgresql
+    install_components_database_postgresql@18
     install_components_desktop_obsidian
     install_components_dev_github_desktop
     install_components_dev_postman
@@ -108,6 +109,7 @@ function run_upgrade() {
     install_components_programming_rust_rustup
     install_components_programming_python_uv
     install_components_programming_terraform_tfenv
+    install_components_secrets_1password_cli
     install_components_terminal_ghostty
     install_components_tools_ag
     install_components_tools_bat
@@ -424,27 +426,27 @@ EOF
     echo "  Feature (cloud/google/gcloud) installed successfully."
 }
 
-function install_components_database_postgresql() {
-    echo "Installing feature: database/postgresql"
+function install_components_database_postgresql@18() {
+    echo "Installing feature: database/postgresql@18"
     function run_00_Brewfile() {
-        # Source: targets/freetrade/database/postgresql/00-Brewfile
+        # Source: targets/freetrade/database/postgresql@18/00-Brewfile
         brew bundle -q --file=- <<EOF
-            brew "postgresql@17"
+            brew "postgresql@18"
 EOF
-        echo "  [✓] Brewfile (targets/freetrade/database/postgresql/00-Brewfile) applied successfully."
+        echo "  [✓] Brewfile (targets/freetrade/database/postgresql@18/00-Brewfile) applied successfully."
     }
     function run_10_run_sh() {
-        # Source: targets/freetrade/database/postgresql/10-run.sh
+        # Source: targets/freetrade/database/postgresql@18/10-run.sh
         pushd . > /dev/null
-        cd $HOME/opt/workstation-setup/components/database/postgresql
-        brew link postgresql@17
-        echo "  [✓] Script (targets/freetrade/database/postgresql/10-run.sh) executed successfully."
+        cd $HOME/opt/workstation-setup/components/database/postgresql@18
+        brew link postgresql@18
+        echo "  [✓] Script (targets/freetrade/database/postgresql@18/10-run.sh) executed successfully."
         popd > /dev/null
     }
 
     run_00_Brewfile
     run_10_run_sh
-    echo "  Feature (database/postgresql) installed successfully."
+    echo "  Feature (database/postgresql@18) installed successfully."
 }
 
 function install_components_desktop_obsidian() {
@@ -769,6 +771,20 @@ EOF
     run_00_Brewfile
     run_10_run_sh
     echo "  Feature (programming/terraform/tfenv) installed successfully."
+}
+
+function install_components_secrets_1password_cli() {
+    echo "Installing feature: secrets/1password-cli"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/secrets/1password-cli/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "1password-cli"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/secrets/1password-cli/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (secrets/1password-cli) installed successfully."
 }
 
 function install_components_terminal_ghostty() {
