@@ -43,7 +43,10 @@ function help() {
     echo "  install_components_database_postgresql@18"
     echo "  install_components_desktop_obsidian"
     echo "  install_components_dev_github_desktop"
+    echo "  install_components_dev_grpc_curl"
+    echo "  install_components_dev_grpc_ui"
     echo "  install_components_dev_postman"
+    echo "  install_components_dev_proto"
     echo "  install_components_dev_vscode"
     echo "  install_components_dev_zed"
     echo "  install_components_programming_asdf_asdf"
@@ -59,6 +62,7 @@ function help() {
     echo "  install_components_programming_python_uv"
     echo "  install_components_programming_terraform_tfenv"
     echo "  install_components_secrets_1password_cli"
+    echo "  install_components_secrets_berglas"
     echo "  install_components_terminal_ghostty"
     echo "  install_components_tools_ag"
     echo "  install_components_tools_bat"
@@ -94,7 +98,10 @@ function run_upgrade() {
     install_components_database_postgresql@18
     install_components_desktop_obsidian
     install_components_dev_github_desktop
+    install_components_dev_grpc_curl
+    install_components_dev_grpc_ui
     install_components_dev_postman
+    install_components_dev_proto
     install_components_dev_vscode
     install_components_dev_zed
     install_components_programming_asdf_asdf
@@ -110,6 +117,7 @@ function run_upgrade() {
     install_components_programming_python_uv
     install_components_programming_terraform_tfenv
     install_components_secrets_1password_cli
+    install_components_secrets_berglas
     install_components_terminal_ghostty
     install_components_tools_ag
     install_components_tools_bat
@@ -477,6 +485,34 @@ EOF
     echo "  Feature (dev/github-desktop) installed successfully."
 }
 
+function install_components_dev_grpc_curl() {
+    echo "Installing feature: dev/grpc-curl"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/dev/grpc-curl/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "grpcurl"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/dev/grpc-curl/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (dev/grpc-curl) installed successfully."
+}
+
+function install_components_dev_grpc_ui() {
+    echo "Installing feature: dev/grpc-ui"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/dev/grpc-ui/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "grpcui"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/dev/grpc-ui/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (dev/grpc-ui) installed successfully."
+}
+
 function install_components_dev_postman() {
     echo "Installing feature: dev/postman"
     function run_00_Brewfile() {
@@ -489,6 +525,20 @@ EOF
 
     run_00_Brewfile
     echo "  Feature (dev/postman) installed successfully."
+}
+
+function install_components_dev_proto() {
+    echo "Installing feature: dev/proto"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/dev/proto/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "proto"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/dev/proto/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (dev/proto) installed successfully."
 }
 
 function install_components_dev_vscode() {
@@ -785,6 +835,20 @@ EOF
 
     run_10_Brewfile
     echo "  Feature (secrets/1password-cli) installed successfully."
+}
+
+function install_components_secrets_berglas() {
+    echo "Installing feature: secrets/berglas"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/secrets/berglas/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "berglas"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/secrets/berglas/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (secrets/berglas) installed successfully."
 }
 
 function install_components_terminal_ghostty() {
