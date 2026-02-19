@@ -36,6 +36,7 @@ function help() {
     echo "  install_fundamentals_essentials_keyring"
     echo "  install_fundamentals_essentials_tmux"
     echo "  install_fundamentals_essentials_vim_setup"
+    echo "  install_components_ai_claude_code"
     echo "  install_components_ai_gemini"
     echo "  install_components_cloud_google_cloud_proxy"
     echo "  install_components_cloud_google_firebase"
@@ -91,6 +92,7 @@ function run_upgrade() {
     install_fundamentals_essentials_keyring
     install_fundamentals_essentials_tmux
     install_fundamentals_essentials_vim_setup
+    install_components_ai_claude_code
     install_components_ai_gemini
     install_components_cloud_google_cloud_proxy
     install_components_cloud_google_firebase
@@ -376,6 +378,20 @@ function install_fundamentals_essentials_vim_setup() {
 
     run_00_run_sh
     echo "  Feature (30-essentials/vim-setup) installed successfully."
+}
+
+function install_components_ai_claude_code() {
+    echo "Installing feature: ai/claude-code"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/ai/claude-code/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "claude-code"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/ai/claude-code/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (ai/claude-code) installed successfully."
 }
 
 function install_components_ai_gemini() {

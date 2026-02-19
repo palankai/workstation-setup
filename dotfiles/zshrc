@@ -157,7 +157,7 @@ export PATH="$PATH:/Users/csaba/.lmstudio/bin"
 # End of LM Studio CLI section
 
 
-alias claude="/Users/csaba/.claude/local/claude"
+# alias claude="/Users/csaba/.claude/local/claude"
 
 # Task Master aliases added on 03/07/2025
 alias tm='task-master'
@@ -174,3 +174,6 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 # proto
 export PROTO_HOME="$HOME/.proto";
 export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH";
+#source ~/.safe-chain/scripts/init-posix.sh # Safe-chain Zsh initialization script
+
+source ~/.safe-chain/scripts/init-posix.sh # Safe-chain Zsh initialization script
