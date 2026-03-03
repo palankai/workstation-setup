@@ -38,6 +38,7 @@ function help() {
     echo "  install_fundamentals_essentials_vim_setup"
     echo "  install_components_ai_claude_code"
     echo "  install_components_ai_gemini"
+    echo "  install_components_ai_github_copilot_cli"
     echo "  install_components_cloud_google_cloud_proxy"
     echo "  install_components_cloud_google_firebase"
     echo "  install_components_cloud_google_gcloud"
@@ -94,6 +95,7 @@ function run_upgrade() {
     install_fundamentals_essentials_vim_setup
     install_components_ai_claude_code
     install_components_ai_gemini
+    install_components_ai_github_copilot_cli
     install_components_cloud_google_cloud_proxy
     install_components_cloud_google_firebase
     install_components_cloud_google_gcloud
@@ -406,6 +408,20 @@ EOF
 
     run_10_Brewfile
     echo "  Feature (ai/gemini) installed successfully."
+}
+
+function install_components_ai_github_copilot_cli() {
+    echo "Installing feature: ai/github-copilot-cli"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/ai/github-copilot-cli/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "copilot-cli"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/ai/github-copilot-cli/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (ai/github-copilot-cli) installed successfully."
 }
 
 function install_components_cloud_google_cloud_proxy() {
