@@ -384,15 +384,25 @@ function install_fundamentals_essentials_vim_setup() {
 
 function install_components_ai_claude_code() {
     echo "Installing feature: ai/claude-code"
-    function run_10_Brewfile() {
-        # Source: targets/freetrade/ai/claude-code/10-Brewfile
-        brew bundle -q --file=- <<EOF
-            cask "claude-code"
-EOF
-        echo "  [✓] Brewfile (targets/freetrade/ai/claude-code/10-Brewfile) applied successfully."
+    function run_10_run_sh() {
+        # Source: targets/freetrade/ai/claude-code/10-run.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/ai/claude-code
+        echo "Installing Claude Code CLI"
+        echo "  [✓] Script (targets/freetrade/ai/claude-code/10-run.sh) executed successfully."
+        popd > /dev/null
+    }
+    function run_10_runonce_sh() {
+        # Source: targets/freetrade/ai/claude-code/10-runonce.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/ai/claude-code
+        curl -fsSL https://claude.ai/install.sh | bash
+        echo "  [✓] Script (targets/freetrade/ai/claude-code/10-runonce.sh) executed successfully."
+        popd > /dev/null
     }
 
-    run_10_Brewfile
+    run_10_run_sh
+    _run_once "install_ai_claude_code_10_runonce_sh" run_10_runonce_sh
     echo "  Feature (ai/claude-code) installed successfully."
 }
 
