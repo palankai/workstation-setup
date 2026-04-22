@@ -540,7 +540,7 @@ class FeatureFolder:
                             home=self.home,
                         )
                     )
-                if content.endswith("once.py"):
+                elif content.endswith("once.py"):
                     lock_name = make_function_name(
                         ["install"] + list(self.categories) + [self.name, content]
                     )
