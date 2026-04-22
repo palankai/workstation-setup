@@ -683,6 +683,37 @@ def make_shell_function_for_brewfile(
     return lines
 
 
+def make_shell_function_for_python(
+    name: str,
+    script_relative_path: str,
+    indent: int = 0,
+    home: str | None = None,
+    source_file_name: str | None = None,
+) -> list[str]:
+    lines = [
+        f"function {name}() {{",
+    ]
+    if source_file_name:
+        lines.append(f"    # Source: {source_file_name}")
+    if home:
+        lines.append(f"    pushd . > /dev/null")
+        lines.append(f"    cd $HOME{home.replace(str(HOME), '')}")
+    lines.append(
+        f'    PYTHONPATH="$WORKSTATION_INSTALLATION_PATH${{PYTHONPATH:+:$PYTHONPATH}}" \\'
+    )
+    lines.append(f"        uv run --script {script_relative_path}")
+    if source_file_name:
+        lines.append(
+            f'    echo "  [✓] Script ({source_file_name}) executed successfully."'
+        )
+    if home:
+        lines.append(f"    popd > /dev/null")
+    lines.append("}")
+    if indent > 0:
+        lines = [" " * indent + line for line in lines]
+    return lines
+
+
 def selector_ui(
     components: FeatureTree, title: str = "Configuration"
 ) -> tuple[list[FeatureFolder], list[FeatureFolder], bool]:
