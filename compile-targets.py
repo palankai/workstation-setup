@@ -551,6 +551,17 @@ class FeatureFolder:
                             home=self.home,
                         )
                     )
+                elif content.endswith("run.py"):
+                    function_names.append(inner_function_name)
+                    functions.extend(
+                        make_shell_function_for_python(
+                            inner_function_name,
+                            script_relative_path=f"./{os.path.basename(content)}",
+                            source_file_name=full_path,
+                            indent=4,
+                            home=self.home,
+                        )
+                    )
 
         lines = [
             f"function {shell_function_name}() {{",
