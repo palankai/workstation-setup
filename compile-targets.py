@@ -540,6 +540,22 @@ class FeatureFolder:
                             home=self.home,
                         )
                     )
+                if content.endswith("once.py"):
+                    lock_name = make_function_name(
+                        ["install"] + list(self.categories) + [self.name, content]
+                    )
+                    function_names.append(
+                        f'_run_once "{lock_name}" {inner_function_name}'
+                    )
+                    functions.extend(
+                        make_shell_function_for_python(
+                            inner_function_name,
+                            script_relative_path=f"./{os.path.basename(content)}",
+                            source_file_name=full_path,
+                            indent=4,
+                            home=self.home,
+                        )
+                    )
                 elif content.endswith(".sh"):
                     function_names.append(inner_function_name)
                     functions.extend(
