@@ -18,6 +18,8 @@ from pathlib import Path
 FEATURE_FILES = [
     "Brewfile",
     "run.sh",
+    "run.py",
+    "once.py",
 ]
 
 FEATURE_FILES_RE = re.compile(f".*({'|'.join(FEATURE_FILES)})$")
