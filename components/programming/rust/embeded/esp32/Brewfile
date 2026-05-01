@@ -1,5 +1,5 @@
 # ESP 32 related
 brew "ccache"
-brew "cmake"
+brew "cmake-app"
 brew "ninja"
 brew "dfu-util"

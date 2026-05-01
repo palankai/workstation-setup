@@ -418,9 +418,20 @@ function install_components_ai_claude_code() {
         echo "  [✓] Script (targets/personal/ai/claude-code/10-runonce.sh) executed successfully."
         popd > /dev/null
     }
+    function run_20_run_sh() {
+        # Source: targets/personal/ai/claude-code/20-run.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/ai/claude-code
+        mkdir -p $HOME/.claude/
+        ln -sf $(pwd)/config/hooks ~/.claude/hooks
+        ln -sf $(pwd)/config/statusline-command.sh ~/.claude/statusline-command.sh
+        echo "  [✓] Script (targets/personal/ai/claude-code/20-run.sh) executed successfully."
+        popd > /dev/null
+    }
 
     run_10_run_sh
     _run_once "install_ai_claude_code_10_runonce_sh" run_10_runonce_sh
+    run_20_run_sh
     echo "  Feature (ai/claude-code) installed successfully."
 }
 
