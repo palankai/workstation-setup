@@ -36,6 +36,9 @@ function help() {
     echo "  install_fundamentals_essentials_keyring"
     echo "  install_fundamentals_essentials_tmux"
     echo "  install_fundamentals_essentials_vim_setup"
+    echo "  install_components_ai_claude_code"
+    echo "  install_components_ai_gemini"
+    echo "  install_components_ai_github_copilot_cli"
     echo "  install_components_chat_discord"
     echo "  install_components_chat_signal"
     echo "  install_components_chat_slack"
@@ -58,6 +61,7 @@ function help() {
     echo "  install_components_dev_sublime"
     echo "  install_components_dev_vscode"
     echo "  install_components_dev_zed"
+    echo "  install_components_diy_freecad"
     echo "  install_components_programming_node_bun"
     echo "  install_components_programming_node_node"
     echo "  install_components_programming_node_nvm"
@@ -96,6 +100,9 @@ function run_upgrade() {
     install_fundamentals_essentials_keyring
     install_fundamentals_essentials_tmux
     install_fundamentals_essentials_vim_setup
+    install_components_ai_claude_code
+    install_components_ai_gemini
+    install_components_ai_github_copilot_cli
     install_components_chat_discord
     install_components_chat_signal
     install_components_chat_slack
@@ -118,6 +125,7 @@ function run_upgrade() {
     install_components_dev_sublime
     install_components_dev_vscode
     install_components_dev_zed
+    install_components_diy_freecad
     install_components_programming_node_bun
     install_components_programming_node_node
     install_components_programming_node_nvm
@@ -386,6 +394,58 @@ function install_fundamentals_essentials_vim_setup() {
 
     run_00_run_sh
     echo "  Feature (30-essentials/vim-setup) installed successfully."
+}
+
+function install_components_ai_claude_code() {
+    echo "Installing feature: ai/claude-code"
+    function run_10_run_sh() {
+        # Source: targets/personal/ai/claude-code/10-run.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/ai/claude-code
+        echo "Installing Claude Code CLI"
+        echo "  [✓] Script (targets/personal/ai/claude-code/10-run.sh) executed successfully."
+        popd > /dev/null
+    }
+    function run_10_runonce_sh() {
+        # Source: targets/personal/ai/claude-code/10-runonce.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/ai/claude-code
+        curl -fsSL https://claude.ai/install.sh | bash
+        echo "  [✓] Script (targets/personal/ai/claude-code/10-runonce.sh) executed successfully."
+        popd > /dev/null
+    }
+
+    run_10_run_sh
+    _run_once "install_ai_claude_code_10_runonce_sh" run_10_runonce_sh
+    echo "  Feature (ai/claude-code) installed successfully."
+}
+
+function install_components_ai_gemini() {
+    echo "Installing feature: ai/gemini"
+    function run_10_Brewfile() {
+        # Source: targets/personal/ai/gemini/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "gemini-cli"
+EOF
+        echo "  [✓] Brewfile (targets/personal/ai/gemini/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (ai/gemini) installed successfully."
+}
+
+function install_components_ai_github_copilot_cli() {
+    echo "Installing feature: ai/github-copilot-cli"
+    function run_10_Brewfile() {
+        # Source: targets/personal/ai/github-copilot-cli/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "copilot-cli"
+EOF
+        echo "  [✓] Brewfile (targets/personal/ai/github-copilot-cli/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (ai/github-copilot-cli) installed successfully."
 }
 
 function install_components_chat_discord() {
@@ -720,6 +780,20 @@ EOF
 
     run_00_Brewfile
     echo "  Feature (dev/zed) installed successfully."
+}
+
+function install_components_diy_freecad() {
+    echo "Installing feature: diy/freecad"
+    function run_10_Brewfile() {
+        # Source: targets/personal/diy/freecad/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "freecad"
+EOF
+        echo "  [✓] Brewfile (targets/personal/diy/freecad/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (diy/freecad) installed successfully."
 }
 
 function install_components_programming_node_bun() {
