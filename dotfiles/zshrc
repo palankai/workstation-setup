@@ -126,6 +126,12 @@ autoload zmv
 source $WORKSTATION_INSTALLATION_PATH/dotfiles/functions.sh
 source $WORKSTATION_INSTALLATION_PATH/sensitive/profiles/$WORKSTATION.sh
 
+
+if [ -f $HOME/.zshrc_local ]; then
+    . $HOME/.zshrc_local
+fi
+
+
 # bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
@@ -174,6 +180,5 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 # proto
 export PROTO_HOME="$HOME/.proto";
 export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH";
-#source ~/.safe-chain/scripts/init-posix.sh # Safe-chain Zsh initialization script
 
-source ~/.safe-chain/scripts/init-posix.sh # Safe-chain Zsh initialization script
+#source ~/.safe-chain/scripts/init-posix.sh # Safe-chain Zsh initialization script
