@@ -18,6 +18,8 @@ from pathlib import Path
 FEATURE_FILES = [
     "Brewfile",
     "run.sh",
+    "run.py",
+    "once.py",
 ]
 
 FEATURE_FILES_RE = re.compile(f".*({'|'.join(FEATURE_FILES)})$")
@@ -538,12 +540,39 @@ class FeatureFolder:
                             home=self.home,
                         )
                     )
+                elif content.endswith("once.py"):
+                    lock_name = make_function_name(
+                        ["install"] + list(self.categories) + [self.name, content]
+                    )
+                    function_names.append(
+                        f'_run_once "{lock_name}" {inner_function_name}'
+                    )
+                    functions.extend(
+                        make_shell_function_for_python(
+                            inner_function_name,
+                            script_relative_path=f"./{os.path.basename(content)}",
+                            source_file_name=full_path,
+                            indent=4,
+                            home=self.home,
+                        )
+                    )
                 elif content.endswith(".sh"):
                     function_names.append(inner_function_name)
                     functions.extend(
                         make_shell_function(
                             inner_function_name,
                             file_content,
+                            source_file_name=full_path,
+                            indent=4,
+                            home=self.home,
+                        )
+                    )
+                elif content.endswith("run.py"):
+                    function_names.append(inner_function_name)
+                    functions.extend(
+                        make_shell_function_for_python(
+                            inner_function_name,
+                            script_relative_path=f"./{os.path.basename(content)}",
                             source_file_name=full_path,
                             indent=4,
                             home=self.home,
@@ -678,6 +707,37 @@ def make_shell_function_for_brewfile(
         lines = [
             " " * indent + line if line.strip() != "EOF" else line for line in lines
         ]
+    return lines
+
+
+def make_shell_function_for_python(
+    name: str,
+    script_relative_path: str,
+    indent: int = 0,
+    home: str | None = None,
+    source_file_name: str | None = None,
+) -> list[str]:
+    lines = [
+        f"function {name}() {{",
+    ]
+    if source_file_name:
+        lines.append(f"    # Source: {source_file_name}")
+    if home:
+        lines.append(f"    pushd . > /dev/null")
+        lines.append(f"    cd $HOME{home.replace(str(HOME), '')}")
+    lines.append(
+        f'    PYTHONPATH="$WORKSTATION_INSTALLATION_PATH${{PYTHONPATH:+:$PYTHONPATH}}" \\'
+    )
+    lines.append(f"        uv run --script {script_relative_path}")
+    if source_file_name:
+        lines.append(
+            f'    echo "  [✓] Script ({source_file_name}) executed successfully."'
+        )
+    if home:
+        lines.append(f"    popd > /dev/null")
+    lines.append("}")
+    if indent > 0:
+        lines = [" " * indent + line for line in lines]
     return lines
 
 
