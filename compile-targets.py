@@ -776,6 +776,10 @@ def selector_ui(
 
     def main_ui(stdscr):
         curses.curs_set(0)  # Hide cursor
+        try:
+            curses.use_default_colors()  # Required on macOS for background colors to render
+        except curses.error:
+            pass
         curses.init_pair(
             1, curses.COLOR_BLACK, curses.COLOR_WHITE
         )  # Menu text (black on white)
@@ -848,7 +852,7 @@ def selector_ui(
                 y = content_start_y + visible_index
 
                 is_selected = item_index == selected_index
-                color = curses.color_pair(2) if is_selected else curses.color_pair(1)
+                color = (curses.color_pair(2) | curses.A_REVERSE) if is_selected else curses.color_pair(1)
 
                 # Create indentation
                 indent = "  " * level

@@ -37,6 +37,7 @@ function help() {
     echo "  install_fundamentals_essentials_tmux"
     echo "  install_fundamentals_essentials_vim_setup"
     echo "  install_components_ai_claude_code"
+    echo "  install_components_ai_claude_desktop"
     echo "  install_components_ai_gemini"
     echo "  install_components_ai_github_copilot_cli"
     echo "  install_components_chat_discord"
@@ -50,6 +51,7 @@ function help() {
     echo "  install_components_cloud_google_gcloud"
     echo "  install_components_cloud_synology_drive"
     echo "  install_components_creative_adobe"
+    echo "  install_components_creative_blender"
     echo "  install_components_creative_obs"
     echo "  install_components_database_postgresql"
     echo "  install_components_desktop_brave_browser"
@@ -101,6 +103,7 @@ function run_upgrade() {
     install_fundamentals_essentials_tmux
     install_fundamentals_essentials_vim_setup
     install_components_ai_claude_code
+    install_components_ai_claude_desktop
     install_components_ai_gemini
     install_components_ai_github_copilot_cli
     install_components_chat_discord
@@ -114,6 +117,7 @@ function run_upgrade() {
     install_components_cloud_google_gcloud
     install_components_cloud_synology_drive
     install_components_creative_adobe
+    install_components_creative_blender
     install_components_creative_obs
     install_components_database_postgresql
     install_components_desktop_brave_browser
@@ -420,6 +424,20 @@ function install_components_ai_claude_code() {
     echo "  Feature (ai/claude-code) installed successfully."
 }
 
+function install_components_ai_claude_desktop() {
+    echo "Installing feature: ai/claude-desktop"
+    function run_10_Brewfile() {
+        # Source: targets/personal/ai/claude-desktop/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "claude"
+EOF
+        echo "  [✓] Brewfile (targets/personal/ai/claude-desktop/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (ai/claude-desktop) installed successfully."
+}
+
 function install_components_ai_gemini() {
     echo "Installing feature: ai/gemini"
     function run_10_Brewfile() {
@@ -617,6 +635,20 @@ EOF
 
     run_00_Brewfile
     echo "  Feature (creative/adobe) installed successfully."
+}
+
+function install_components_creative_blender() {
+    echo "Installing feature: creative/blender"
+    function run_00_Brewfile() {
+        # Source: targets/personal/creative/blender/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "blender"
+EOF
+        echo "  [✓] Brewfile (targets/personal/creative/blender/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (creative/blender) installed successfully."
 }
 
 function install_components_creative_obs() {
@@ -1090,9 +1122,9 @@ function install_components_system_settings() {
         # Enable or disable press and hold for keys in favor of key repeat
         defaults write -g ApplePressAndHoldEnabled -bool false || true
         # Don't store quick time history
-        defaults write com.apple.QuickTimePlayerX NSRecentDocumentsLimit 0  || true
-        defaults delete com.apple.QuickTimePlayerX.LSSharedFileList RecentDocuments || true
-        defaults write com.apple.QuickTimePlayerX.LSSharedFileList RecentDocuments -dict-add MaxAmount 0 || true
+        # defaults write com.apple.QuickTimePlayerX NSRecentDocumentsLimit 0  || true
+        # defaults delete com.apple.QuickTimePlayerX.LSSharedFileList RecentDocuments || true
+        # defaults write com.apple.QuickTimePlayerX.LSSharedFileList RecentDocuments -dict-add MaxAmount 0 || true
         echo "  [✓] Script (targets/personal/system/settings/00-run.sh) executed successfully."
         popd > /dev/null
     }
