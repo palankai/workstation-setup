@@ -9,6 +9,7 @@ window-inherit-working-directory = false
 working-directory = home
 split-divider-color = #FF0000
 unfocused-split-fill = #333333
-# link-url = true
+link-url = true
 link-previews = true
 theme = iTerm2 Dark Background
+keybind = shift+enter=text:\n

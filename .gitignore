@@ -6,3 +6,6 @@ Brewfile.lock.json
 **/.once/installed-*
 
 logs/
+__pycache__/
+*.py[codz]
+*$py.class
