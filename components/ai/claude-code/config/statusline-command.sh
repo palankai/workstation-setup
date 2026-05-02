@@ -30,9 +30,10 @@ if [ -n "$used_pct" ]; then
 fi
 
 # Git segment
+ESC=$(printf '\033')
 git_seg=""
 if [ -n "$git_branch" ]; then
-  git_seg=" | \033[0;36m${git_branch}\033[0m"
+  git_seg=" | ${ESC}[0;36m${git_branch}${ESC}[0m"
 fi
 
 printf "\033[0;32m%s@%s\033[0m \033[0;33m%s\033[0m%s | \033[0;35m%s\033[0m%s" \

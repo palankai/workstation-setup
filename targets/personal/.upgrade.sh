@@ -40,6 +40,7 @@ function help() {
     echo "  install_components_ai_claude_desktop"
     echo "  install_components_ai_gemini"
     echo "  install_components_ai_github_copilot_cli"
+    echo "  install_components_ai_github_speckit"
     echo "  install_components_chat_discord"
     echo "  install_components_chat_signal"
     echo "  install_components_chat_slack"
@@ -106,6 +107,7 @@ function run_upgrade() {
     install_components_ai_claude_desktop
     install_components_ai_gemini
     install_components_ai_github_copilot_cli
+    install_components_ai_github_speckit
     install_components_chat_discord
     install_components_chat_signal
     install_components_chat_slack
@@ -425,6 +427,8 @@ function install_components_ai_claude_code() {
         mkdir -p $HOME/.claude/
         ln -sf $(pwd)/config/hooks ~/.claude/hooks
         ln -sf $(pwd)/config/statusline-command.sh ~/.claude/statusline-command.sh
+        ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/.claude/settings.json $HOME/.claude/settings.json
+        echo "Claude configuration completed. Hooks and settings have been linked."
         echo "  [✓] Script (targets/personal/ai/claude-code/20-run.sh) executed successfully."
         popd > /dev/null
     }
@@ -475,6 +479,22 @@ EOF
 
     run_10_Brewfile
     echo "  Feature (ai/github-copilot-cli) installed successfully."
+}
+
+function install_components_ai_github_speckit() {
+    echo "Installing feature: ai/github-speckit"
+    function run_10_run_sh() {
+        # Source: targets/personal/ai/github-speckit/10-run.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/ai/github-speckit
+        VERSION="v0.8.4"
+        uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git@$VERSION
+        echo "  [✓] Script (targets/personal/ai/github-speckit/10-run.sh) executed successfully."
+        popd > /dev/null
+    }
+
+    run_10_run_sh
+    echo "  Feature (ai/github-speckit) installed successfully."
 }
 
 function install_components_chat_discord() {
@@ -1087,7 +1107,7 @@ function install_components_secrets_ledger_live() {
     function run_00_Brewfile() {
         # Source: targets/personal/secrets/ledger-live/00-Brewfile
         brew bundle -q --file=- <<EOF
-            cask "ledger-live"
+            cask "ledger-wallet"
 EOF
         echo "  [✓] Brewfile (targets/personal/secrets/ledger-live/00-Brewfile) applied successfully."
     }
@@ -1216,7 +1236,7 @@ function install_components_tools_cmake() {
     function run_00_Brewfile() {
         # Source: targets/personal/tools/cmake/00-Brewfile
         brew bundle -q --file=- <<EOF
-            cask "cmake"
+            cask "cmake-app"
 EOF
         echo "  [✓] Brewfile (targets/personal/tools/cmake/00-Brewfile) applied successfully."
     }
