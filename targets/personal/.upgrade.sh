@@ -76,6 +76,7 @@ function help() {
     echo "  install_components_programming_python_pyenv"
     echo "  install_components_programming_rust_rustup"
     echo "  install_components_programming_python_uv"
+    echo "  install_components_programming_terraform_tfenv"
     echo "  install_components_secrets_1password_latest"
     echo "  install_components_secrets_keepassium_pro"
     echo "  install_components_secrets_keepassxc"
@@ -149,6 +150,7 @@ function run_upgrade() {
     install_components_programming_python_pyenv
     install_components_programming_rust_rustup
     install_components_programming_python_uv
+    install_components_programming_terraform_tfenv
     install_components_secrets_1password_latest
     install_components_secrets_keepassium_pro
     install_components_secrets_keepassxc
@@ -1105,6 +1107,29 @@ function install_components_programming_python_uv() {
     _run_once "install_programming_python_uv_00_runonce_sh" run_00_runonce_sh
     run_10_run_sh
     echo "  Feature (programming/python/uv) installed successfully."
+}
+
+function install_components_programming_terraform_tfenv() {
+    echo "Installing feature: programming/terraform/tfenv"
+    function run_00_Brewfile() {
+        # Source: targets/personal/programming/terraform/tfenv/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "tfenv"
+EOF
+        echo "  [✓] Brewfile (targets/personal/programming/terraform/tfenv/00-Brewfile) applied successfully."
+    }
+    function run_10_run_sh() {
+        # Source: targets/personal/programming/terraform/tfenv/10-run.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/programming/terraform/tfenv
+        tfenv install
+        echo "  [✓] Script (targets/personal/programming/terraform/tfenv/10-run.sh) executed successfully."
+        popd > /dev/null
+    }
+
+    run_00_Brewfile
+    run_10_run_sh
+    echo "  Feature (programming/terraform/tfenv) installed successfully."
 }
 
 function install_components_secrets_1password_latest() {
