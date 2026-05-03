@@ -41,6 +41,7 @@ function help() {
     echo "  install_components_ai_gemini"
     echo "  install_components_ai_github_copilot_cli"
     echo "  install_components_ai_github_speckit"
+    echo "  install_components_ai_tools_lsp"
     echo "  install_components_chat_discord"
     echo "  install_components_chat_signal"
     echo "  install_components_chat_slack"
@@ -108,6 +109,7 @@ function run_upgrade() {
     install_components_ai_gemini
     install_components_ai_github_copilot_cli
     install_components_ai_github_speckit
+    install_components_ai_tools_lsp
     install_components_chat_discord
     install_components_chat_signal
     install_components_chat_slack
@@ -495,6 +497,27 @@ function install_components_ai_github_speckit() {
 
     run_10_run_sh
     echo "  Feature (ai/github-speckit) installed successfully."
+}
+
+function install_components_ai_tools_lsp() {
+    echo "Installing feature: ai/tools/lsp"
+    function run_10_Brewfile() {
+        # Source: targets/personal/ai/tools/lsp/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "terraform-ls"
+            brew "pyright"
+            brew "jq-lsp"
+            brew "yaml-language-server"
+            brew "docker-language-server"
+            brew "typescript-language-server"
+            brew "tailwindcss-language-server"
+            cask "kotlin-lsp"
+EOF
+        echo "  [✓] Brewfile (targets/personal/ai/tools/lsp/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (ai/tools/lsp) installed successfully."
 }
 
 function install_components_chat_discord() {

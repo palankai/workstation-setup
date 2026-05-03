@@ -10,7 +10,9 @@ used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
 session_name=$(echo "$input" | jq -r '.session_name // empty')
 effort=$(echo "$input" | jq -r '.effort.level // empty')
 five_hour_pct=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
+five_hour_resets=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
 seven_day_pct=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
+seven_day_resets=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty')
 
 # user@host
 user=$(whoami)
@@ -44,17 +46,49 @@ fi
 # Rate limits segment (only shown when data is available from Claude.ai subscription)
 limits_info=""
 if [ -n "$five_hour_pct" ] || [ -n "$seven_day_pct" ]; then
+  now=$(date +%s)
   limits_parts=""
   if [ -n "$five_hour_pct" ]; then
     five_int=$(printf "%.0f" "$five_hour_pct")
-    limits_parts="5h:${five_int}%"
+    if [ -n "$five_hour_resets" ]; then
+      remaining=$((five_hour_resets - now))
+      if [ "$remaining" -gt 0 ]; then
+        rem_h=$((remaining / 3600))
+        rem_m=$(((remaining % 3600) / 60))
+        if [ "$rem_h" -gt 0 ]; then
+          limits_parts="5h:${five_int}%(${rem_h}h${rem_m}m)"
+        else
+          limits_parts="5h:${five_int}%(${rem_m}m)"
+        fi
+      else
+        limits_parts="5h:${five_int}%"
+      fi
+    else
+      limits_parts="5h:${five_int}%"
+    fi
   fi
   if [ -n "$seven_day_pct" ]; then
     seven_int=$(printf "%.0f" "$seven_day_pct")
-    if [ -n "$limits_parts" ]; then
-      limits_parts="${limits_parts} 7d:${seven_int}%"
+    if [ -n "$seven_day_resets" ]; then
+      remaining=$((seven_day_resets - now))
+      if [ "$remaining" -gt 0 ]; then
+        rem_d=$((remaining / 86400))
+        rem_h=$(((remaining % 86400) / 3600))
+        if [ "$rem_d" -gt 0 ]; then
+          seven_part="7d:${seven_int}%(${rem_d}d${rem_h}h)"
+        else
+          seven_part="7d:${seven_int}%(${rem_h}h)"
+        fi
+      else
+        seven_part="7d:${seven_int}%"
+      fi
     else
-      limits_parts="7d:${seven_int}%"
+      seven_part="7d:${seven_int}%"
+    fi
+    if [ -n "$limits_parts" ]; then
+      limits_parts="${limits_parts} ${seven_part}"
+    else
+      limits_parts="$seven_part"
     fi
   fi
   limits_info=" | ${ESC}[0;33m${limits_parts}${ESC}[0m"
