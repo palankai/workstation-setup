@@ -69,6 +69,7 @@ function help() {
     echo "  install_components_programming_node_bun"
     echo "  install_components_programming_node_node"
     echo "  install_components_programming_node_nvm"
+    echo "  install_components_programming_node_pnpm"
     echo "  install_components_programming_node_yarn"
     echo "  install_components_programming_python_pip"
     echo "  install_components_programming_python_pipx"
@@ -84,12 +85,16 @@ function help() {
     echo "  install_components_system_settings"
     echo "  install_components_system_surfshark"
     echo "  install_components_terminal_ghostty"
+    echo "  install_components_tools_ag"
     echo "  install_components_tools_bat"
     echo "  install_components_tools_btop"
     echo "  install_components_tools_cmake"
+    echo "  install_components_tools_docker_cli"
+    echo "  install_components_tools_colima_docker"
     echo "  install_components_tools_jq"
     echo "  install_components_tools_watchman"
     echo "  install_components_tools_websocat"
+    echo "  install_components_tools_zlib"
 }
 
 function run_upgrade() {
@@ -137,6 +142,7 @@ function run_upgrade() {
     install_components_programming_node_bun
     install_components_programming_node_node
     install_components_programming_node_nvm
+    install_components_programming_node_pnpm
     install_components_programming_node_yarn
     install_components_programming_python_pip
     install_components_programming_python_pipx
@@ -152,12 +158,16 @@ function run_upgrade() {
     install_components_system_settings
     install_components_system_surfshark
     install_components_terminal_ghostty
+    install_components_tools_ag
     install_components_tools_bat
     install_components_tools_btop
     install_components_tools_cmake
+    install_components_tools_docker_cli
+    install_components_tools_colima_docker
     install_components_tools_jq
     install_components_tools_watchman
     install_components_tools_websocat
+    install_components_tools_zlib
 
     brew_cleanup
 }
@@ -957,6 +967,20 @@ EOF
     echo "  Feature (programming/node/nvm) installed successfully."
 }
 
+function install_components_programming_node_pnpm() {
+    echo "Installing feature: programming/node/pnpm"
+    function run_00_Brewfile() {
+        # Source: targets/personal/programming/node/pnpm/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "pnpm"
+EOF
+        echo "  [✓] Brewfile (targets/personal/programming/node/pnpm/00-Brewfile) applied successfully."
+    }
+
+    run_00_Brewfile
+    echo "  Feature (programming/node/pnpm) installed successfully."
+}
+
 function install_components_programming_node_yarn() {
     echo "Installing feature: programming/node/yarn"
     function run_00_Brewfile() {
@@ -1226,6 +1250,20 @@ EOF
     echo "  Feature (terminal/ghostty) installed successfully."
 }
 
+function install_components_tools_ag() {
+    echo "Installing feature: tools/ag"
+    function run_Brewfile() {
+        # Source: targets/personal/tools/ag/Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "ag"
+EOF
+        echo "  [✓] Brewfile (targets/personal/tools/ag/Brewfile) applied successfully."
+    }
+
+    run_Brewfile
+    echo "  Feature (tools/ag) installed successfully."
+}
+
 function install_components_tools_bat() {
     echo "Installing feature: tools/bat"
     function run_00_Brewfile() {
@@ -1268,6 +1306,58 @@ EOF
     echo "  Feature (tools/cmake) installed successfully."
 }
 
+function install_components_tools_docker_cli() {
+    echo "Installing feature: tools/docker-cli"
+    function run_10_Brewfile() {
+        # Source: components/tools/docker-cli/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "docker"
+            brew "docker-buildx"
+            brew "docker-compose"
+EOF
+        echo "  [✓] Brewfile (components/tools/docker-cli/10-Brewfile) applied successfully."
+    }
+    function run_20_run_sh() {
+        # Source: components/tools/docker-cli/20-run.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/tools/docker-cli
+        mkdir -p ~/.docker/cli-plugins
+        ln -sfn $(which docker-buildx) ~/.docker/cli-plugins/docker-buildx
+        ln -sfn $(which docker-compose) ~/.docker/cli-plugins/docker-compose
+        echo "  [✓] Script (components/tools/docker-cli/20-run.sh) executed successfully."
+        popd > /dev/null
+    }
+
+    run_10_Brewfile
+    run_20_run_sh
+    echo "  Feature (tools/docker-cli) installed successfully."
+}
+
+function install_components_tools_colima_docker() {
+    echo "Installing feature: tools/colima-docker"
+    function run_00_Brewfile() {
+        # Source: targets/personal/tools/colima-docker/00-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "colima"
+EOF
+        echo "  [✓] Brewfile (targets/personal/tools/colima-docker/00-Brewfile) applied successfully."
+    }
+    function run_10_runonce_sh() {
+        # Source: targets/personal/tools/colima-docker/10-runonce.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/tools/colima-docker
+        colima start
+        docker context use colima
+        docker context ls
+        echo "  [✓] Script (targets/personal/tools/colima-docker/10-runonce.sh) executed successfully."
+        popd > /dev/null
+    }
+
+    run_00_Brewfile
+    _run_once "install_tools_colima_docker_10_runonce_sh" run_10_runonce_sh
+    echo "  Feature (tools/colima-docker) installed successfully."
+}
+
 function install_components_tools_jq() {
     echo "Installing feature: tools/jq"
     function run_00_Brewfile() {
@@ -1308,6 +1398,20 @@ EOF
 
     run_00_Brewfile
     echo "  Feature (tools/websocat) installed successfully."
+}
+
+function install_components_tools_zlib() {
+    echo "Installing feature: tools/zlib"
+    function run_10_Brewfile() {
+        # Source: targets/personal/tools/zlib/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "zlib"
+EOF
+        echo "  [✓] Brewfile (targets/personal/tools/zlib/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (tools/zlib) installed successfully."
 }
 
 
