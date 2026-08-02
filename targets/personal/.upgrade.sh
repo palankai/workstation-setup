@@ -77,6 +77,7 @@ function help() {
     echo "  install_components_programming_rust_rustup"
     echo "  install_components_programming_python_uv"
     echo "  install_components_programming_terraform_tfenv"
+    echo "  install_components_secrets_1password_cli"
     echo "  install_components_secrets_1password_latest"
     echo "  install_components_secrets_keepassium_pro"
     echo "  install_components_secrets_keepassxc"
@@ -151,6 +152,7 @@ function run_upgrade() {
     install_components_programming_rust_rustup
     install_components_programming_python_uv
     install_components_programming_terraform_tfenv
+    install_components_secrets_1password_cli
     install_components_secrets_1password_latest
     install_components_secrets_keepassium_pro
     install_components_secrets_keepassxc
@@ -1130,6 +1132,20 @@ EOF
     run_00_Brewfile
     run_10_run_sh
     echo "  Feature (programming/terraform/tfenv) installed successfully."
+}
+
+function install_components_secrets_1password_cli() {
+    echo "Installing feature: secrets/1password-cli"
+    function run_10_Brewfile() {
+        # Source: targets/personal/secrets/1password-cli/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "1password-cli"
+EOF
+        echo "  [✓] Brewfile (targets/personal/secrets/1password-cli/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (secrets/1password-cli) installed successfully."
 }
 
 function install_components_secrets_1password_latest() {

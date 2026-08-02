@@ -5,7 +5,6 @@ export PATH="$HOMEBREW_PREFIX/opt/curl/bin:$HOME/opt/bin:$HOME/.local/bin:$HOME/
 export MANPATH="$HOME/opt/gnuman:$HOMEBREW_PREFIX/man${MANPATH+:$MANPATH}";
 export PATH="$PATH:$SYSTEM_PYTHON_INSTALL_PATH:$HOME/.rvm/bin:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
 export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
-export PATH="$HOME/.cargo/bin:$PATH"
 
 # Linux compatibility
 export PATH="/opt/homebrew/opt/lsof/bin:$PATH"
