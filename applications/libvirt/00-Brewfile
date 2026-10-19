@@ -1,0 +1,6 @@
+#tap "arthurk/homebrew-virt-manager"
+tap "jeffreywildman/homebrew-virt-manager"
+brew "libvirt"
+brew "virt-manager"
+brew "virt-viewer"
+#brew --formula --build-from-source formulas/virt-viewer.rb

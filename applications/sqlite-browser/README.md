@@ -1,0 +1,14 @@
+---
+name: "DB Browser for SQLite"
+description: "Browser for SQLite databases"
+tags: [dev, database, sql, gui]
+dependencies: []
+homepage: https://sqlitebrowser.org/
+legacy: components/dev/sqlite-browser
+---
+
+# DB Browser for SQLite
+
+Browser for SQLite databases.
+
+<https://sqlitebrowser.org/>

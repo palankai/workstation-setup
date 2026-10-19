@@ -1,0 +1,5 @@
+# ESP 32 related
+brew "ccache"
+brew "cmake-app"
+brew "ninja"
+brew "dfu-util"

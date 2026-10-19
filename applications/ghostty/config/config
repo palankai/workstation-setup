@@ -1,0 +1,17 @@
+background = 000000
+background-opacity = 0.95
+copy-on-select = clipboard
+font-family = "MesloLGS NF Regular"
+font-family-bold = "MesloLGS NF Bold"
+font-family-italic = "MesloLGS NF Italic"
+font-family-bold-italic = "MesloLGS NF Bold Italic"
+font-size = 16
+window-inherit-working-directory = false
+working-directory = home
+split-divider-color = #FF0000
+unfocused-split-fill = #333333
+unfocused-split-opacity = 0.7
+link-url = true
+link-previews = true
+theme = iTerm2 Dark Background
+keybind = shift+enter=text:\n
