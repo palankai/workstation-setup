@@ -1,14 +1,4 @@
 applications:
-  # fundamentals
-  - $ref: home-folders
-  - $ref: linux-compatibility
-  - $ref: zsh
-  - $ref: git
-  - $ref: envchain
-  - $ref: python-keyring
-  - $ref: tmux
-  - $ref: vim
-
   - $ref: 1password
   - $ref: 1password-cli
   - $ref: adobe-creative-cloud
@@ -48,7 +38,6 @@ applications:
   - $ref: nvm-node-version-manager
   - $ref: obs-studio
   - $ref: obsidian
-  - $ref: system-pip
   - $ref: pipx
   - $ref: pnpm
   - $ref: postgresql-17
@@ -60,6 +49,7 @@ applications:
   - $ref: sublime-text
   - $ref: surfshark-vpn
   - $ref: synology-drive
+  - $ref: system-pip
   - $ref: tfenv
   - $ref: the-unarchiver
   - $ref: uv-python

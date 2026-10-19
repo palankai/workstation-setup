@@ -4,6 +4,8 @@ name: "envchain"
 description: "envchain, keep credentials in the keychain, expose as env vars"
 tags: [fundamental, security, secrets, cli]
 dependencies: []
+fundamental: true
+order: 60
 homepage: https://github.com/sorah/envchain
 legacy: fundamentals/30-essentials/envchain
 ---

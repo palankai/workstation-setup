@@ -4,6 +4,8 @@ name: "Zsh & Oh My Zsh"
 description: "Oh My Zsh, Powerlevel10k config, Nerd Fonts and dotfile sourcing"
 tags: [fundamental, shell, zsh, fonts]
 dependencies: []
+fundamental: true
+order: 40
 homepage: https://ohmyz.sh/
 legacy: fundamentals/00-shell/40-zsh
 ---

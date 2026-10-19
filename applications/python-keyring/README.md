@@ -4,6 +4,8 @@ name: "keyring"
 description: "keyring, access the system keyring from Python/CLI"
 tags: [fundamental, security, secrets, python, cli]
 dependencies: []
+fundamental: true
+order: 60
 homepage: https://github.com/jaraco/keyring
 legacy: fundamentals/30-essentials/keyring
 ---

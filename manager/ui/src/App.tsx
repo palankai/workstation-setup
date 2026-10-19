@@ -1,0 +1,458 @@
+import { AlertTriangle, Boxes, Loader2, RotateCcw, Save, Search, X } from 'lucide-react'
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { api, type Application, type Profile } from './api'
+import { AppCard } from './components/AppCard'
+import { DetailPanel } from './components/DetailPanel'
+import { search } from './search'
+import { difference, impliedBy } from './selection'
+
+type View = 'all' | 'selected' | 'available' | 'changes'
+
+const VIEWS: { id: View; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'selected', label: 'Will install' },
+  { id: 'available', label: 'Not selected' },
+  { id: 'changes', label: 'Changes' },
+]
+
+function initialProfile() {
+  return new URLSearchParams(window.location.search).get('profile')
+}
+
+export default function App() {
+  const [apps, setApps] = useState<Application[]>([])
+  const [profiles, setProfiles] = useState<string[]>([])
+  const [profileName, setProfileName] = useState<string | null>(initialProfile)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [draft, setDraft] = useState<Set<string>>(new Set())
+  const [query, setQuery] = useState('')
+  const [view, setView] = useState<View>('all')
+  const [activeTags, setActiveTags] = useState<Set<string>>(new Set())
+  const [detailId, setDetailId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    Promise.all([api.applications(), api.profiles()])
+      .then(([apps, profiles]) => {
+        setApps(apps.sort((a, b) => a.name.localeCompare(b.name)))
+        setProfiles(profiles)
+        setProfileName((current) => (current && profiles.includes(current) ? current : profiles[0] ?? null))
+      })
+      .catch((e: Error) => setError(e.message))
+  }, [])
+
+  useEffect(() => {
+    if (!profileName) return
+    const url = new URL(window.location.href)
+    url.searchParams.set('profile', profileName)
+    window.history.replaceState(null, '', url)
+    api
+      .profile(profileName)
+      .then((p) => {
+        setProfile(p)
+        setDraft(new Set(p.selected))
+      })
+      .catch((e: Error) => setError(e.message))
+  }, [profileName])
+
+  const byId = useMemo(() => new Map(apps.map((app) => [app.id, app])), [apps])
+  const saved = useMemo(() => new Set(profile?.selected ?? []), [profile])
+  const fundamentals = useMemo(() => new Set(profile?.fundamentals ?? []), [profile])
+  const implied = useMemo(() => impliedBy(byId, new Set([...fundamentals, ...draft])), [byId, fundamentals, draft])
+  const installs = useCallback(
+    (id: string) => draft.has(id) || fundamentals.has(id) || implied.has(id),
+    [draft, fundamentals, implied],
+  )
+  const added = useMemo(() => difference(draft, saved), [draft, saved])
+  const removed = useMemo(() => difference(saved, draft), [draft, saved])
+  const dirty = added.length > 0 || removed.length > 0
+  const loading = !profile || profile.name !== profileName
+
+  const changeOf = useCallback(
+    (id: string) => (draft.has(id) && !saved.has(id) ? 'added' : !draft.has(id) && saved.has(id) ? 'removed' : null),
+    [draft, saved],
+  )
+
+  const inView = useCallback(
+    (app: Application) => {
+      if (view === 'selected') return installs(app.id)
+      if (view === 'available') return !installs(app.id)
+      if (view === 'changes') return changeOf(app.id) !== null
+      return true
+    },
+    [view, installs, changeOf],
+  )
+
+  const matching = useMemo(() => search(apps, query).filter(inView), [apps, query, inView])
+  const visible = useMemo(
+    () => matching.filter((app) => [...activeTags].every((tag) => app.tags.includes(tag))),
+    [matching, activeTags],
+  )
+  const tagCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const app of visible) for (const tag of app.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1)
+    for (const tag of activeTags) if (!counts.has(tag)) counts.set(tag, 0)
+    return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  }, [visible, activeTags])
+
+  const viewCounts = useMemo(() => {
+    const searched = search(apps, query)
+    return {
+      all: searched.length,
+      selected: searched.filter((app) => installs(app.id)).length,
+      available: searched.filter((app) => !installs(app.id)).length,
+      changes: added.length + removed.length,
+    }
+  }, [apps, query, installs, added, removed])
+  const installCount = draft.size + fundamentals.size + implied.size
+
+  const toggle = useCallback((id: string) => {
+    if (fundamentals.has(id)) return
+    setDraft((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [fundamentals])
+
+  const toggleTag = useCallback((tag: string) => {
+    setActiveTags((current) => {
+      const next = new Set(current)
+      if (next.has(tag)) next.delete(tag)
+      else next.add(tag)
+      return next
+    })
+  }, [])
+
+  const save = useCallback(async () => {
+    if (!profile || !dirty || saving) return
+    setSaving(true)
+    try {
+      const ordered = apps.filter((app) => draft.has(app.id)).map((app) => app.id)
+      const updated = await api.saveProfile(profile.name, ordered)
+      setProfile(updated)
+      setDraft(new Set(updated.selected))
+      setToast(`Saved profiles/${updated.name}.yaml`)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setSaving(false)
+    }
+  }, [apps, draft, dirty, profile, saving])
+
+  const discard = () => setDraft(new Set(saved))
+
+  const switchProfile = (name: string) => {
+    if (dirty && !window.confirm(`Discard ${added.length + removed.length} unsaved change(s)?`)) return
+    setProfileName(name)
+  }
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement
+      if ((e.key === '/' && !typing) || (e.key === 'k' && (e.metaKey || e.ctrlKey))) {
+        e.preventDefault()
+        searchRef.current?.focus()
+        searchRef.current?.select()
+      } else if (e.key === 's' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        void save()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [save])
+
+  useEffect(() => {
+    if (!dirty) return
+    const onUnload = (e: BeforeUnloadEvent) => e.preventDefault()
+    window.addEventListener('beforeunload', onUnload)
+    return () => window.removeEventListener('beforeunload', onUnload)
+  }, [dirty])
+
+  useEffect(() => {
+    if (!toast) return
+    const timer = setTimeout(() => setToast(null), 2500)
+    return () => clearTimeout(timer)
+  }, [toast])
+
+  const closeDetail = useCallback(() => setDetailId(null), [])
+
+  return (
+    <div className="flex min-h-screen">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-6 overflow-y-auto border-r border-zinc-200 bg-white/60 p-5 backdrop-blur lg:flex dark:border-zinc-800 dark:bg-zinc-900/40">
+        <div className="flex items-center gap-2">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
+            <Boxes className="size-4.5" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold leading-tight">Workstation</p>
+            <p className="text-xs text-zinc-500">Application selector</p>
+          </div>
+        </div>
+
+        <section>
+          <SidebarTitle>Profile</SidebarTitle>
+          <div className="space-y-0.5">
+            {profiles.map((name) => (
+              <SidebarButton key={name} active={name === profileName} onClick={() => switchProfile(name)}>
+                <span>{name}</span>
+                {name === profile?.name && <Count>{installCount}</Count>}
+              </SidebarButton>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <SidebarTitle>Show</SidebarTitle>
+          <div className="space-y-0.5">
+            {VIEWS.map(({ id, label }) => (
+              <SidebarButton key={id} active={view === id} onClick={() => setView(id)}>
+                <span>{label}</span>
+                <Count>{viewCounts[id]}</Count>
+              </SidebarButton>
+            ))}
+          </div>
+        </section>
+
+        {profile && (profile.missing.length > 0 || profile.inline.length > 0) && (
+          <section className="space-y-2 rounded-lg border border-amber-300/70 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+            {profile.missing.length > 0 && (
+              <p>
+                <AlertTriangle className="mr-1 inline size-3.5" />
+                Unknown refs kept as-is: <span className="font-mono">{profile.missing.join(', ')}</span>
+              </p>
+            )}
+            {profile.inline.length > 0 && (
+              <p>Inline entries kept as-is: {profile.inline.map((e) => e.label).join(', ')}</p>
+            )}
+          </section>
+        )}
+
+        <section className="min-h-0">
+          <div className="flex items-center justify-between">
+            <SidebarTitle>Tags</SidebarTitle>
+            {activeTags.size > 0 && (
+              <button
+                type="button"
+                onClick={() => setActiveTags(new Set())}
+                className="mb-2 text-xs text-indigo-600 hover:underline dark:text-indigo-400"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {tagCounts.map(([tag, count]) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => toggleTag(tag)}
+                className={[
+                  'rounded-md px-1.5 py-0.5 text-xs transition',
+                  activeTags.has(tag)
+                    ? 'bg-indigo-600 text-white dark:bg-indigo-500'
+                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700',
+                ].join(' ')}
+              >
+                {tag} <span className="opacity-60">{count}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      </aside>
+
+      <main className="min-w-0 flex-1">
+        <div className="sticky top-0 z-30 border-b border-zinc-200 bg-zinc-50/80 px-6 py-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
+          <div className="mx-auto flex max-w-6xl items-center gap-3">
+            <select
+              value={profileName ?? ''}
+              onChange={(e) => switchProfile(e.target.value)}
+              className="rounded-lg border border-zinc-300 bg-white px-2 py-2 text-sm lg:hidden dark:border-zinc-700 dark:bg-zinc-900"
+            >
+              {profiles.map((name) => (
+                <option key={name}>{name}</option>
+              ))}
+            </select>
+            <label className="relative flex-1">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400" />
+              <input
+                ref={searchRef}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setQuery('')
+                    e.currentTarget.blur()
+                  }
+                }}
+                placeholder="Fuzzy search name, id or description · #tag to filter by tag"
+                className="w-full rounded-xl border border-zinc-300 bg-white py-2.5 pr-20 pl-10 text-sm shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-zinc-700 dark:bg-zinc-900"
+              />
+              {query ? (
+                <button
+                  type="button"
+                  onClick={() => setQuery('')}
+                  className="absolute top-1/2 right-3 -translate-y-1/2 rounded p-0.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                >
+                  <X className="size-4" />
+                </button>
+              ) : (
+                <kbd className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 rounded border border-zinc-200 px-1.5 font-mono text-[11px] text-zinc-400 dark:border-zinc-700">
+                  /
+                </kbd>
+              )}
+            </label>
+          </div>
+          <div className="mx-auto mt-3 flex max-w-6xl items-center gap-2 text-xs text-zinc-500">
+            <span>
+              {visible.length} of {apps.length} applications
+            </span>
+            {[...activeTags].map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => toggleTag(tag)}
+                className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-1.5 py-0.5 text-white dark:bg-indigo-500"
+              >
+                {tag} <X className="size-3" />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-6xl px-6 pt-6 pb-32">
+          {error && (
+            <div className="mb-6 flex items-start gap-2 rounded-lg border border-rose-300 bg-rose-50 p-3 text-sm text-rose-800 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+              <span className="flex-1">{error}</span>
+              <button type="button" onClick={() => setError(null)}>
+                <X className="size-4" />
+              </button>
+            </div>
+          )}
+
+          {loading && !error ? (
+            <div className="flex justify-center py-24 text-zinc-400">
+              <Loader2 className="size-6 animate-spin" />
+            </div>
+          ) : visible.length === 0 ? (
+            <p className="py-24 text-center text-sm text-zinc-500">No applications match.</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {visible.map((app) => (
+                <AppCard
+                  key={app.id}
+                  app={app}
+                  activeTags={activeTags}
+                  state={{
+                    selected: draft.has(app.id),
+                    locked: fundamentals.has(app.id),
+                    implied: implied.get(app.id) ?? [],
+                    change: changeOf(app.id),
+                  }}
+                  onToggle={() => toggle(app.id)}
+                  onDetails={() => setDetailId(app.id)}
+                  onTag={toggleTag}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {dirty && !loading && (
+        <div className="fixed inset-x-0 bottom-6 z-30 flex justify-center px-4">
+          <div className="flex items-center gap-4 rounded-2xl border border-zinc-200 bg-white/90 py-2 pr-2 pl-5 shadow-xl backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/90">
+            <p className="text-sm">
+              <span className="font-medium text-emerald-600 dark:text-emerald-400">+{added.length}</span>{' '}
+              <span className="font-medium text-rose-600 dark:text-rose-400">−{removed.length}</span>{' '}
+              <span className="text-zinc-500">
+                unsaved in <span className="font-medium text-zinc-700 dark:text-zinc-200">{profile?.name}</span>
+              </span>
+            </p>
+            <button
+              type="button"
+              onClick={() => setView('changes')}
+              className="rounded-lg px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              Review
+            </button>
+            <button
+              type="button"
+              onClick={discard}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              <RotateCcw className="size-4" /> Discard
+            </button>
+            <button
+              type="button"
+              onClick={() => void save()}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
+            >
+              {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />} Save
+              <kbd className="ml-1 rounded bg-white/20 px-1 font-mono text-[10px]">⌘S</kbd>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {toast && (
+        <div className="fixed right-6 bottom-6 z-50 rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white shadow-lg dark:bg-white dark:text-zinc-900">
+          {toast}
+        </div>
+      )}
+
+      {detailId && (
+        <DetailPanel
+          id={detailId}
+          apps={byId}
+          selected={draft.has(detailId)}
+          locked={fundamentals.has(detailId)}
+          impliedBy={implied.get(detailId) ?? []}
+          onToggle={() => toggle(detailId)}
+          onOpen={setDetailId}
+          onClose={closeDetail}
+        />
+      )}
+    </div>
+  )
+}
+
+function SidebarTitle({ children }: { children: ReactNode }) {
+  return <h2 className="mb-2 text-[11px] font-semibold tracking-wider text-zinc-400 uppercase">{children}</h2>
+}
+
+function SidebarButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-sm transition',
+        active
+          ? 'bg-indigo-50 font-medium text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300'
+          : 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800',
+      ].join(' ')}
+    >
+      {children}
+    </button>
+  )
+}
+
+function Count({ children }: { children: ReactNode }) {
+  return <span className="text-xs tabular-nums text-zinc-400">{children}</span>
+}

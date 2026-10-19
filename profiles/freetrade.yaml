@@ -1,14 +1,4 @@
 applications:
-  # fundamentals
-  - $ref: home-folders
-  - $ref: linux-compatibility
-  - $ref: zsh
-  - $ref: git
-  - $ref: envchain
-  - $ref: python-keyring
-  - $ref: tmux
-  - $ref: vim
-
   - $ref: 1password-cli
   - $ref: ag-silver-searcher
   - $ref: asdf-version-manager
@@ -30,14 +20,13 @@ applications:
   - $ref: github-desktop
   - $ref: grpcui
   - $ref: grpcurl
+  - $ref: java-openjdk
   - $ref: jq-json-processor
   - $ref: lima-guest-agents
   - $ref: miller-csv
   - $ref: nodejs
   - $ref: nvm-node-version-manager
   - $ref: obsidian
-  - $ref: java-openjdk
-  - $ref: system-pip
   - $ref: pipx
   - $ref: pnpm
   - $ref: postgresql-18
@@ -47,6 +36,7 @@ applications:
   - $ref: qemu
   - $ref: rustup
   - $ref: superset-sh
+  - $ref: system-pip
   - $ref: tfenv
   - $ref: uv-python
   - $ref: vscode
