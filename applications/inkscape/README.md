@@ -1,6 +1,7 @@
 ---
+id: inkscape
 name: "Inkscape"
-description: "Vector graphics editor"
+description: "Inkscape, vector graphics editor"
 tags: [creative, design, gui]
 dependencies: []
 homepage: https://inkscape.org/
@@ -9,6 +10,6 @@ legacy: components/creative/inkscape
 
 # Inkscape
 
-Vector graphics editor.
+Inkscape, vector graphics editor.
 
 <https://inkscape.org/>

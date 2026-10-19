@@ -1,6 +1,7 @@
 ---
+id: licecap
 name: "LICEcap"
-description: "Simple animated screen captures to GIF"
+description: "LICEcap, simple animated screen captures to GIF"
 tags: [screen-capture, gui]
 dependencies: []
 homepage: https://www.cockos.com/licecap/
@@ -9,7 +10,7 @@ legacy: components/desktop/licecap
 
 # LICEcap
 
-Simple animated screen captures to GIF.
+LICEcap, simple animated screen captures to GIF.
 
 <https://www.cockos.com/licecap/>
 

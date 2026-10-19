@@ -1,6 +1,7 @@
 ---
+id: ghostty
 name: "Ghostty"
-description: "GPU-accelerated terminal emulator with native UI, config linked"
+description: "Ghostty, GPU-accelerated terminal emulator with native UI, config linked"
 tags: [terminal, gui]
 dependencies: []
 homepage: https://ghostty.org/
@@ -9,7 +10,7 @@ legacy: components/terminal/ghostty
 
 # Ghostty
 
-GPU-accelerated terminal emulator with native UI, config linked.
+Ghostty, GPU-accelerated terminal emulator with native UI, config linked.
 
 <https://ghostty.org/>
 

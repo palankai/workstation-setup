@@ -1,6 +1,7 @@
 ---
+id: postman
 name: "Postman"
-description: "API development platform"
+description: "Postman, API development platform"
 tags: [dev, api, gui]
 dependencies: []
 homepage: https://www.postman.com/
@@ -9,6 +10,6 @@ legacy: components/dev/postman
 
 # Postman
 
-API development platform.
+Postman, API development platform.
 
 <https://www.postman.com/>

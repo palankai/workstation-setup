@@ -1,4 +1,5 @@
 ---
+id: zsh
 name: "Zsh & Oh My Zsh"
 description: "Oh My Zsh, Powerlevel10k config, Nerd Fonts and dotfile sourcing"
 tags: [fundamental, shell, zsh, fonts]

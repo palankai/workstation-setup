@@ -1,6 +1,7 @@
 ---
+id: racket
 name: "Racket"
-description: "Lisp/Scheme family language (minimal install)"
+description: "Racket, Lisp/Scheme family language (minimal install)"
 tags: [programming, lisp]
 dependencies: []
 homepage: https://racket-lang.org/
@@ -9,7 +10,7 @@ legacy: components/programming/lisp
 
 # Racket
 
-Lisp/Scheme family language (minimal install).
+Racket, Lisp/Scheme family language (minimal install).
 
 <https://racket-lang.org/>
 

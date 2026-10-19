@@ -1,4 +1,5 @@
 ---
+id: 1password-7
 name: "1Password 7"
 description: "Legacy 1Password 7 from the App Store"
 tags: [secrets, security, gui, mas]

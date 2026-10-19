@@ -1,15 +1,16 @@
 ---
+id: claude-code
 name: "Claude Code"
-description: "Anthropic's agentic coding CLI, with hooks, status line and settings linked"
+description: "Claude Code, Anthropic's agentic coding CLI, with hooks, status line and settings linked"
 tags: [ai, cli, agent]
-dependencies: [jq]
+dependencies: [jq-json-processor]
 homepage: https://claude.com/claude-code
 legacy: components/ai/claude-code
 ---
 
 # Claude Code
 
-Anthropic's agentic coding CLI, with hooks, status line and settings linked.
+Claude Code, Anthropic's agentic coding CLI, with hooks, status line and settings linked.
 
 <https://claude.com/claude-code>
 

@@ -1,4 +1,5 @@
 ---
+id: loupedeck
 name: "Loupedeck"
 description: "Loupedeck console software"
 tags: [peripherals, gui]

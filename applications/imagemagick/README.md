@@ -1,6 +1,7 @@
 ---
+id: imagemagick
 name: "ImageMagick"
-description: "Image manipulation tools"
+description: "ImageMagick, image manipulation tools"
 tags: [tools, image, cli]
 dependencies: []
 homepage: https://imagemagick.org
@@ -9,6 +10,6 @@ legacy: components/tools/imagemagic
 
 # ImageMagick
 
-Image manipulation tools.
+ImageMagick, image manipulation tools.
 
 <https://imagemagick.org>

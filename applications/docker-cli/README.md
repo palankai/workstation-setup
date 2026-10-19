@@ -1,4 +1,5 @@
 ---
+id: docker-cli
 name: "Docker CLI"
 description: "Docker CLI with buildx and compose plugins"
 tags: [tools, containers, docker, cli]

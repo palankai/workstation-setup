@@ -1,4 +1,5 @@
 ---
+id: wacom-tablet
 name: "Wacom Tablet"
 description: "Wacom tablet driver"
 tags: [peripherals, driver]

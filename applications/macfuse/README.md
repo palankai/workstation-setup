@@ -1,6 +1,7 @@
 ---
+id: macfuse
 name: "macFUSE"
-description: "File system integration (ext4fuse prerequisite)"
+description: "macFUSE, file system integration (ext4fuse prerequisite)"
 tags: [system, filesystem]
 dependencies: []
 homepage: https://macfuse.github.io/
@@ -9,7 +10,7 @@ legacy: components/system/ext4fuse
 
 # macFUSE
 
-File system integration (ext4fuse prerequisite).
+macFUSE, file system integration (ext4fuse prerequisite).
 
 <https://macfuse.github.io/>
 

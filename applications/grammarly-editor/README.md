@@ -1,4 +1,5 @@
 ---
+id: grammarly-editor
 name: "Grammarly Editor"
 description: "Grammarly editor app (legacy cask)"
 tags: [writing, gui, discontinued]

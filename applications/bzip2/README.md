@@ -1,6 +1,7 @@
 ---
+id: bzip2
 name: "bzip2"
-description: "High-quality data compressor"
+description: "bzip2, high-quality data compressor"
 tags: [tools, library, build, compression]
 dependencies: []
 homepage: https://sourceware.org/bzip2/
@@ -9,7 +10,7 @@ legacy: components/tools/bzip2
 
 # bzip2
 
-High-quality data compressor.
+bzip2, high-quality data compressor.
 
 <https://sourceware.org/bzip2/>
 

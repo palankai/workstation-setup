@@ -1,4 +1,5 @@
 ---
+id: rust-nightly
 name: "Rust Nightly"
 description: "Rust nightly toolchain"
 tags: [programming, rust]

@@ -1,4 +1,5 @@
 ---
+id: google-drive
 name: "Google Drive"
 description: "Client for the Google Drive storage service"
 tags: [cloud, storage, sync, google, gui]

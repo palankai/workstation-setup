@@ -1,6 +1,7 @@
 ---
+id: zlib
 name: "zlib"
-description: "Lossless data-compression library"
+description: "zlib, lossless data-compression library"
 tags: [tools, library, build, compression]
 dependencies: []
 homepage: https://zlib.net/
@@ -9,7 +10,7 @@ legacy: components/tools/zlib
 
 # zlib
 
-Lossless data-compression library.
+zlib, lossless data-compression library.
 
 <https://zlib.net/>
 

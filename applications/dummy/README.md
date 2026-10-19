@@ -1,6 +1,7 @@
 ---
+id: dummy
 name: "Dummy"
-description: "Test application to verify run and once semantics of the installer"
+description: "Dummy, test application to verify run and once semantics of the installer"
 tags: [test]
 dependencies: []
 legacy: components/dummy/dummy
@@ -8,4 +9,4 @@ legacy: components/dummy/dummy
 
 # Dummy
 
-Test application to verify run and once semantics of the installer.
+Dummy, test application to verify run and once semantics of the installer.

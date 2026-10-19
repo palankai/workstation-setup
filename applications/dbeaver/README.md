@@ -1,6 +1,7 @@
 ---
+id: dbeaver
 name: "DBeaver Community"
-description: "Universal database tool and SQL client"
+description: "DBeaver Community, universal database tool and SQL client"
 tags: [dev, database, sql, gui]
 dependencies: []
 homepage: https://dbeaver.io/
@@ -9,6 +10,6 @@ legacy: components/dev/dbeaver-community
 
 # DBeaver Community
 
-Universal database tool and SQL client.
+DBeaver Community, universal database tool and SQL client.
 
 <https://dbeaver.io/>

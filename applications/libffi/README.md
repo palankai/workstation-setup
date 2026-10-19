@@ -1,6 +1,7 @@
 ---
+id: libffi
 name: "libffi"
-description: "Portable Foreign Function Interface library"
+description: "libffi, portable Foreign Function Interface library"
 tags: [library, build]
 dependencies: []
 homepage: https://sourceware.org/libffi/
@@ -9,6 +10,6 @@ legacy: components/libraries/libffi
 
 # libffi
 
-Portable Foreign Function Interface library.
+libffi, portable Foreign Function Interface library.
 
 <https://sourceware.org/libffi/>

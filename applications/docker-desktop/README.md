@@ -1,4 +1,5 @@
 ---
+id: docker-desktop
 name: "Docker Desktop"
 description: "Docker Desktop with ECR credential helper, config linked"
 tags: [tools, containers, docker, gui]

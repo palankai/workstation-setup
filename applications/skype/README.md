@@ -1,6 +1,7 @@
 ---
+id: skype
 name: "Skype"
-description: "Video chat, voice call and instant messaging"
+description: "Skype, video chat, voice call and instant messaging"
 tags: [chat, video-call, microsoft, gui, discontinued]
 dependencies: []
 homepage: https://www.skype.com/
@@ -9,7 +10,7 @@ legacy: components/chat/skype
 
 # Skype
 
-Video chat, voice call and instant messaging.
+Skype, video chat, voice call and instant messaging.
 
 <https://www.skype.com/>
 

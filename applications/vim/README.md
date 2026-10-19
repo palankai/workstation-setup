@@ -1,4 +1,5 @@
 ---
+id: vim
 name: "Vim"
 description: "Vim config and temp folders (vim itself comes with linux-compatibility)"
 tags: [fundamental, shell, editor]

@@ -1,4 +1,5 @@
 ---
+id: sdl2
 name: "SDL2"
 description: "SDL2 with image, ttf, mixer, sound and gfx extensions (for Rust gaming)"
 tags: [library, gaming, rust]
