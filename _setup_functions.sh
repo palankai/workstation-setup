@@ -341,6 +341,81 @@ function ensure_prerequisites {
 }
 export -f ensure_prerequisites
 
+_insert_line_after() {
+  local file="$1" line_number="$2" line="$3"
+  if [[ -L $file ]]; then
+    echo "refusing to edit symlink: $file -> $(readlink "$file")" >&2
+    return 1
+  fi
+  local tmp
+  tmp="$(mktemp)" || return 1
+  awk -v n="$line_number" -v line="$line" '
+    BEGIN   { if (n == 0) print line }
+            { print }
+    NR == n { print line }
+    END     { if (n == -1) print line }
+  ' "$file" > "$tmp" && cat "$tmp" > "$file"
+  rm -f "$tmp"
+}
+
+export -f _insert_line_after
+
+
+function ensure_zprofile_source() {
+  local file="${1:-$HOME/.zprofile}"
+  local line='source $WORKSTATION_INSTALLATION_PATH/dotfiles/zprofile'
+  touch "$file"
+  grep -qxF -- "$line" "$file" || _insert_line_after "$file" -1 "$line"
+}
+export -f ensure_zprofile_source
+
+function ensure_zlogin_source() {
+  local file="${1:-$HOME/.zlogin}"
+  local line='source $WORKSTATION_INSTALLATION_PATH/dotfiles/zlogin'
+  touch "$file"
+  grep -qxF -- "$line" "$file" || _insert_line_after "$file" -1 "$line"
+}
+export -f ensure_zlogin_source
+
+
+
+function ensure_zshrc_source() {
+  local file="${1:-$HOME/.zshrc}"
+  local line='source $WORKSTATION_INSTALLATION_PATH/dotfiles/zshrc'
+
+  touch "$file"
+  grep -qxF -- "$line" "$file" || _insert_line_after "$file" -1 "$line"
+}
+
+export -f ensure_zshrc_source
+
+
+function ensure_zshenv_source() {
+  local file="${1:-$HOME/.zshenv}"
+  local config_line='source ~/.workstation-setup-config'
+  local zshenv_line='source $WORKSTATION_INSTALLATION_PATH/dotfiles/zshenv'
+
+  touch "$file"
+
+  local first_config last_zshenv
+  first_config="$(grep -nxF -- "$config_line" "$file" | head -n1 | cut -d: -f1)"
+  last_zshenv="$(grep -nxF -- "$zshenv_line" "$file" | tail -n1 | cut -d: -f1)"
+
+  if [[ -n $last_zshenv ]]; then
+    if [[ -z $first_config || $first_config -gt $last_zshenv ]]; then
+      _insert_line_after "$file" 0 "$config_line"
+    fi
+  elif [[ -n $first_config ]]; then
+    _insert_line_after "$file" -1 "$zshenv_line"
+  else
+    _insert_line_after "$file" 0 "$config_line"
+    _insert_line_after "$file" -1 "$zshenv_line"
+  fi
+}
+
+export -f ensure_zshenv_source
+
+
 # function run_steps {
 #     filter=${STEP_FILTER:-*}
 #     log_step "Running steps: '${filter}'"

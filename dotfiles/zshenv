@@ -1,6 +1,5 @@
 source ~/.workstation-setup-config
 
-
 # Rust / CARGO
 if [ -f $HOME/.cargo/env ]
 then

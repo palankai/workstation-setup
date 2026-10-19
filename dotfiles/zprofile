@@ -1,5 +1,3 @@
-source ~/.workstation-setup-config
-
 eval "$($BREW_HOME/bin/brew shellenv)"
 
 export PATH="$HOMEBREW_PREFIX/opt/curl/bin:$HOME/opt/bin:$HOME/.local/bin:$HOME/opt/gnubin${PATH+:$PATH}"
