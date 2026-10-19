@@ -127,11 +127,6 @@ source $WORKSTATION_INSTALLATION_PATH/dotfiles/functions.sh
 source $WORKSTATION_INSTALLATION_PATH/sensitive/profiles/$WORKSTATION.sh
 
 
-if [ -f $HOME/.zshrc_local ]; then
-    . $HOME/.zshrc_local
-fi
-
-
 # bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
@@ -165,10 +160,6 @@ export PATH="$PATH:/Users/csaba/.lmstudio/bin"
 
 # alias claude="/Users/csaba/.claude/local/claude"
 
-# Task Master aliases added on 03/07/2025
-alias tm='task-master'
-alias taskmaster='task-master'
-
 # Freetrade stuff
 disable r functions
 export PATH="./node_modules/.bin:$PATH"
@@ -181,4 +172,15 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 export PROTO_HOME="$HOME/.proto";
 export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH";
 
-#source ~/.safe-chain/scripts/init-posix.sh # Safe-chain Zsh initialization script
+
+#####################################################################
+# This needs to be the end in this order (remote then local)!       #
+#####################################################################
+
+if [ -f $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/zshrc ]; then
+    source $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/zshrc
+fi
+
+if [ -f $HOME/.zshrc_local ]; then
+    . $HOME/.zshrc_local
+fi

@@ -1,4 +1,5 @@
 source ~/.workstation-setup-config
+
 eval "$($BREW_HOME/bin/brew shellenv)"
 
 export PATH="$HOMEBREW_PREFIX/opt/curl/bin:$HOME/opt/bin:$HOME/.local/bin:$HOME/opt/gnubin${PATH+:$PATH}"
@@ -90,9 +91,6 @@ export GPG_TTY=$(tty)
 #gpgconf --launch gpg-agent
 #export SSH_AUTH_SOCK=$HOME/.gnupg/S.gpg-agent.ssh
 
-if [ -f ~/.zprofile.local ]; then
-      source ~/.zprofile.local
-fi
 #export PATH="$PATH:$HOME/opt/anaconda3/bin"
 # END gnu-tools
 
@@ -104,3 +102,15 @@ export PATH="$locize_INSTALL/bin:$PATH"
 # Added by OrbStack: command-line tools and integration
 # This won't be added again if you remove it.
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
+
+# Added by Obsidian
+export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"
+
+
+if [ -f $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/zprofile ]; then
+    source $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/zprofile
+fi
+
+if [ -f ~/.zprofile_local ]; then
+      source ~/.zprofile_local
+fi

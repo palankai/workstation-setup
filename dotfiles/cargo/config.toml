@@ -1,3 +1,7 @@
+[http]
+# aikido-endpoint-cargo-cert-config-start
+cainfo = "/Library/Application Support/AikidoSecurity/EndpointProtection/run/endpoint-protection-openssl-combined-ca.pem"
+# aikido-endpoint-cargo-cert-config-end
 [cargo-new]
 vcs = "none"
 

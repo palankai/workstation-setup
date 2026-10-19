@@ -39,6 +39,7 @@ function help() {
     echo "  install_components_ai_claude_code"
     echo "  install_components_ai_gemini"
     echo "  install_components_ai_github_copilot_cli"
+    echo "  install_components_ai_superset"
     echo "  install_components_cloud_google_cloud_proxy"
     echo "  install_components_cloud_google_firebase"
     echo "  install_components_cloud_google_gcloud"
@@ -70,10 +71,10 @@ function help() {
     echo "  install_components_tools_bat"
     echo "  install_components_tools_btop"
     echo "  install_components_tools_bzip2"
+    echo "  install_components_tools_docker_cli"
     echo "  install_components_tools_colima_docker"
     echo "  install_components_tools_containerisation_lima_guest_agaent"
     echo "  install_components_tools_csvkit"
-    echo "  install_components_tools_docker_cli"
     echo "  install_components_tools_fzf"
     echo "  install_components_tools_jq"
     echo "  install_components_tools_miller_csv"
@@ -96,6 +97,7 @@ function run_upgrade() {
     install_components_ai_claude_code
     install_components_ai_gemini
     install_components_ai_github_copilot_cli
+    install_components_ai_superset
     install_components_cloud_google_cloud_proxy
     install_components_cloud_google_firebase
     install_components_cloud_google_gcloud
@@ -127,10 +129,10 @@ function run_upgrade() {
     install_components_tools_bat
     install_components_tools_btop
     install_components_tools_bzip2
+    install_components_tools_docker_cli
     install_components_tools_colima_docker
     install_components_tools_containerisation_lima_guest_agaent
     install_components_tools_csvkit
-    install_components_tools_docker_cli
     install_components_tools_fzf
     install_components_tools_jq
     install_components_tools_miller_csv
@@ -400,9 +402,22 @@ function install_components_ai_claude_code() {
         echo "  [✓] Script (targets/freetrade/ai/claude-code/10-runonce.sh) executed successfully."
         popd > /dev/null
     }
+    function run_20_run_sh() {
+        # Source: targets/freetrade/ai/claude-code/20-run.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/ai/claude-code
+        mkdir -p $HOME/.claude/
+        ln -sf $(pwd)/config/hooks ~/.claude/hooks
+        ln -sf $(pwd)/config/statusline-command.sh ~/.claude/statusline-command.sh
+        ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/.claude/settings.json $HOME/.claude/settings.json
+        echo "Claude configuration completed. Hooks and settings have been linked."
+        echo "  [✓] Script (targets/freetrade/ai/claude-code/20-run.sh) executed successfully."
+        popd > /dev/null
+    }
 
     run_10_run_sh
     _run_once "install_ai_claude_code_10_runonce_sh" run_10_runonce_sh
+    run_20_run_sh
     echo "  Feature (ai/claude-code) installed successfully."
 }
 
@@ -432,6 +447,20 @@ EOF
 
     run_10_Brewfile
     echo "  Feature (ai/github-copilot-cli) installed successfully."
+}
+
+function install_components_ai_superset() {
+    echo "Installing feature: ai/superset"
+    function run_10_Brewfile() {
+        # Source: targets/freetrade/ai/superset/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            cask "superset"
+EOF
+        echo "  [✓] Brewfile (targets/freetrade/ai/superset/10-Brewfile) applied successfully."
+    }
+
+    run_10_Brewfile
+    echo "  Feature (ai/superset) installed successfully."
 }
 
 function install_components_cloud_google_cloud_proxy() {
@@ -974,6 +1003,33 @@ EOF
     echo "  Feature (tools/bzip2) installed successfully."
 }
 
+function install_components_tools_docker_cli() {
+    echo "Installing feature: tools/docker-cli"
+    function run_10_Brewfile() {
+        # Source: components/tools/docker-cli/10-Brewfile
+        brew bundle -q --file=- <<EOF
+            brew "docker"
+            brew "docker-buildx"
+            brew "docker-compose"
+EOF
+        echo "  [✓] Brewfile (components/tools/docker-cli/10-Brewfile) applied successfully."
+    }
+    function run_20_run_sh() {
+        # Source: components/tools/docker-cli/20-run.sh
+        pushd . > /dev/null
+        cd $HOME/opt/workstation-setup/components/tools/docker-cli
+        mkdir -p ~/.docker/cli-plugins
+        ln -sfn $(which docker-buildx) ~/.docker/cli-plugins/docker-buildx
+        ln -sfn $(which docker-compose) ~/.docker/cli-plugins/docker-compose
+        echo "  [✓] Script (components/tools/docker-cli/20-run.sh) executed successfully."
+        popd > /dev/null
+    }
+
+    run_10_Brewfile
+    run_20_run_sh
+    echo "  Feature (tools/docker-cli) installed successfully."
+}
+
 function install_components_tools_colima_docker() {
     echo "Installing feature: tools/colima-docker"
     function run_00_Brewfile() {
@@ -1025,33 +1081,6 @@ EOF
 
     run_Brewfile
     echo "  Feature (tools/csvkit) installed successfully."
-}
-
-function install_components_tools_docker_cli() {
-    echo "Installing feature: tools/docker-cli"
-    function run_10_Brewfile() {
-        # Source: targets/freetrade/tools/docker-cli/10-Brewfile
-        brew bundle -q --file=- <<EOF
-            brew "docker"
-            brew "docker-buildx"
-            brew "docker-compose"
-EOF
-        echo "  [✓] Brewfile (targets/freetrade/tools/docker-cli/10-Brewfile) applied successfully."
-    }
-    function run_20_run_sh() {
-        # Source: targets/freetrade/tools/docker-cli/20-run.sh
-        pushd . > /dev/null
-        cd $HOME/opt/workstation-setup/components/tools/docker-cli
-        mkdir -p ~/.docker/cli-plugins
-        ln -sfn $(which docker-buildx) ~/.docker/cli-plugins/docker-buildx
-        ln -sfn $(which docker-compose) ~/.docker/cli-plugins/docker-compose
-        echo "  [✓] Script (targets/freetrade/tools/docker-cli/20-run.sh) executed successfully."
-        popd > /dev/null
-    }
-
-    run_10_Brewfile
-    run_20_run_sh
-    echo "  Feature (tools/docker-cli) installed successfully."
 }
 
 function install_components_tools_fzf() {

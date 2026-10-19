@@ -1,3 +1,6 @@
+source ~/.workstation-setup-config
+
+
 # Rust / CARGO
 if [ -f $HOME/.cargo/env ]
 then
@@ -16,3 +19,16 @@ fi
 # then
 #        [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 # fi
+
+#####################################################################
+# This needs to be the end in this order (remote then local)!       #
+#####################################################################
+
+if [ -f $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/zshenv ]; then
+    source $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/zshenv
+fi
+
+if [ -f $HOME/.zshenv_local ]
+then
+    . "$HOME/.zshenv_local"
+fi

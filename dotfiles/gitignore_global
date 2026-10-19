@@ -19,3 +19,5 @@ test-reports
 .venv
 _local_*.rs
 .claude/settings.local.json
+
+**/.claude/settings.local.json
