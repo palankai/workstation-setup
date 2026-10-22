@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import { api, type Application, type ApplicationDetail } from '../api'
 import { displayDescription } from '../selection'
 import { Files } from './Files'
+import { AppHistory } from './Runs'
 
 interface Props {
   id: string
@@ -122,6 +123,8 @@ export function DetailPanel({ id, apps, selected, locked, impliedBy, onToggle, o
 
           <Relations title="Depends on" ids={app.dependencies} apps={apps} onOpen={onOpen} />
           <Relations title="Required by" ids={requiredBy.map((a) => a.id)} apps={apps} onOpen={onOpen} />
+
+          <AppHistory id={id} />
 
           {error && <p className="text-sm text-rose-600">{error}</p>}
           {detail && (

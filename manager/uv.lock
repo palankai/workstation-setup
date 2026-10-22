@@ -411,8 +411,12 @@ name = "workstation-manager"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "fastapi" },
     { name = "ruamel-yaml" },
+]
+
+[package.optional-dependencies]
+server = [
+    { name = "fastapi" },
     { name = "uvicorn" },
 ]
 
@@ -420,17 +424,20 @@ dependencies = [
 dev = [
     { name = "httpx2" },
     { name = "pytest" },
+    { name = "workstation-manager", extra = ["server"] },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "fastapi", specifier = ">=0.143.3" },
+    { name = "fastapi", marker = "extra == 'server'", specifier = ">=0.143.3" },
     { name = "ruamel-yaml", specifier = ">=0.19.1" },
-    { name = "uvicorn", specifier = ">=0.54.0" },
+    { name = "uvicorn", marker = "extra == 'server'", specifier = ">=0.54.0" },
 ]
+provides-extras = ["server"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "httpx2", specifier = ">=2.13.1" },
     { name = "pytest", specifier = ">=9.1.1" },
+    { name = "workstation-manager", extras = ["server"] },
 ]

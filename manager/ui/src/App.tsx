@@ -1,8 +1,9 @@
-import { AlertTriangle, Boxes, LayoutGrid, List, Loader2, RotateCcw, Save, Search, X } from 'lucide-react'
+import { AlertTriangle, Boxes, History, LayoutGrid, List, Loader2, RotateCcw, Save, Search, X } from 'lucide-react'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, type Application, type Profile, type SavedSearch } from './api'
 import { AppCard, AppRow } from './components/AppCard'
 import { DetailPanel } from './components/DetailPanel'
+import { RunsPanel } from './components/Runs'
 import { search } from './search'
 import { difference, impliedBy } from './selection'
 
@@ -44,6 +45,7 @@ export default function App() {
   const [activeTags, setActiveTags] = useState<Set<string>>(new Set())
   const [activeKind, setActiveKind] = useState<string | null>(null)
   const [detailId, setDetailId] = useState<string | null>(null)
+  const [runsOpen, setRunsOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -219,6 +221,7 @@ export default function App() {
   }, [layout])
 
   const closeDetail = useCallback(() => setDetailId(null), [])
+  const closeRuns = useCallback(() => setRunsOpen(false), [])
 
   return (
     <div className="flex min-h-screen">
@@ -227,10 +230,18 @@ export default function App() {
           <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
             <Boxes className="size-4.5" />
           </div>
-          <div>
+          <div className="flex-1">
             <p className="text-sm font-semibold leading-tight">Workstation</p>
             <p className="text-xs text-zinc-500">Application selector</p>
           </div>
+          <button
+            type="button"
+            title="Runs"
+            onClick={() => setRunsOpen(true)}
+            className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+          >
+            <History className="size-4.5" />
+          </button>
         </div>
 
         <section>
@@ -514,6 +525,8 @@ export default function App() {
           {toast}
         </div>
       )}
+
+      {runsOpen && <RunsPanel onClose={closeRuns} />}
 
       {detailId && (
         <DetailPanel

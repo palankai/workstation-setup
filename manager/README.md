@@ -9,20 +9,21 @@ Selects applications for a profile (`profiles/<name>.yaml`) from the catalog in 
 ## Run
 
 ```sh
-pnpm --dir ui install
-pnpm --dir ui build
-uv run workstation-manager serve --open
+ws serve --open    # or: uv run --extra server workstation-manager serve --open
 ```
 
-Serves on <http://127.0.0.1:8765>. The repository root is discovered from the current directory; override with `--root`.
+The built UI is committed in `ui/dist`, so serving needs no Node. Serves on <http://127.0.0.1:8765>. The repository root is discovered from the current directory; override with `--root`.
 
 ## Develop
 
 ```sh
-uv run workstation-manager serve   # API on :8765
+uv run workstation-manager serve   # API on :8765 (dev group includes the server extra)
 pnpm --dir ui dev                  # UI with hot reload, proxies /api to :8765
 uv run pytest
 ```
+
+After UI changes, run `pnpm --dir ui build` and commit `ui/dist` with the source; builds are deterministic,
+so `dist` only changes when the source does.
 
 ## Catalog
 
@@ -57,6 +58,32 @@ Only explicit selections are written, as `$ref` entries pointing at an applicati
 Applications with `fundamental: true` in their frontmatter are always installed and never written to profiles.
 Dependencies declared in an application's frontmatter are resolved at runtime and shown as "required by" in the UI.
 Saving keeps comments, blank lines, inline (non-`$ref`) entries and refs to unknown ids untouched.
+
+## Update (executor)
+
+`bin/ws` runs the manager from anywhere (symlink it into `~/.local/bin`). The profile comes from `--profile`,
+`$WORKSTATION` or `~/.workstation-setup-config`.
+
+```sh
+ws plan                      # what update would run
+ws update                    # brew update + upgrade, every application's steps, brew cleanup
+ws update git '#rust'        # only these (ids, #tag, kind:<kind>, is:<flag>) and their dependencies
+ws update --no-brew          # skip brew, including Brewfile steps
+ws update fd --force         # also applications the profile doesn't install
+ws update jq --no-deps       # without dependencies
+ws runs; ws report [RUN]     # past runs; results and failed output
+ws once list; ws once reset ID [STEP]
+```
+
+A failing application stops its own remaining steps and skips everything depending on it; the rest still runs
+(`--fail-fast` stops instead). Brewfile steps run `brew bundle` only when `brew bundle check` fails.
+`*.sh` steps run with bash, `*.py` steps with the manager's interpreter, so they can import
+`workstation_manager.helpers`. Steps run in their application folder with `APP_ID`, `APP_DIR` and
+`WORKSTATION_PROFILE` set.
+
+Machine state lives in `~/.local/state/workstation-setup/` (or `$XDG_STATE_HOME`), never in the repository:
+`state.yaml` records once steps (time and sha256 of the script that ran; a changed script is flagged by `plan`,
+not rerun), and `runs/<id>/` keeps `run.json` plus every step's full terminal output, also shown in the UI.
 
 ## Install order
 

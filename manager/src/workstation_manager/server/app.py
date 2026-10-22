@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 
 from ..core import (
@@ -11,6 +11,8 @@ from ..core import (
     ProfileState,
     Workspace,
 )
+from ..core.runs import clean_output, list_runs, load_run, output_file
+from ..core.state import default_state_dir
 
 
 class ApplicationSummary(BaseModel):
@@ -73,8 +75,11 @@ def _hidden(path: Path) -> bool:
     return any(part.startswith(".") or part == "__pycache__" for part in path.parts)
 
 
-def create_app(workspace: Workspace, static_dir: Path | None = None) -> FastAPI:
+def create_app(
+    workspace: Workspace, static_dir: Path | None = None, state_dir: Path | None = None
+) -> FastAPI:
     app = FastAPI(title="Workstation Manager")
+    state_dir = state_dir or default_state_dir()
 
     def summary(application: Application) -> ApplicationSummary:
         return ApplicationSummary(
@@ -152,6 +157,36 @@ def create_app(workspace: Workspace, static_dir: Path | None = None) -> FastAPI:
                 for s in workspace.settings().searches
             ]
         )
+
+    @app.get("/api/runs")
+    def runs() -> list[dict]:
+        """Run summaries, latest first; steps are left out."""
+        return [{k: v for k, v in run.items() if k != "steps"} for run in list_runs(state_dir)]
+
+    @app.get("/api/runs/{id}")
+    def run(id: str) -> dict:
+        found = load_run(state_dir, id)
+        if found is None:
+            raise HTTPException(404, f"Unknown run '{id}'")
+        return found
+
+    @app.get("/api/runs/{id}/output/{name}")
+    def run_output(id: str, name: str) -> PlainTextResponse:
+        file = output_file(state_dir, id, name)
+        if file is None:
+            raise HTTPException(404, f"No output '{name}' in run '{id}'")
+        return PlainTextResponse(clean_output(file.read_bytes()))
+
+    @app.get("/api/applications/{id}/history")
+    def application_history(id: str) -> list[dict]:
+        """This application's executed steps across runs, latest run first."""
+        get_application(id)
+        return [
+            {**step, "run": run["id"]}
+            for run in list_runs(state_dir)
+            for step in run["steps"]
+            if step["app"] == id
+        ]
 
     @app.get("/api/profiles")
     def profiles() -> list[str]:

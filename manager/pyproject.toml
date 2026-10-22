@@ -1,15 +1,20 @@
 [project]
 name = "workstation-manager"
 version = "0.1.0"
-description = "Select applications for workstation-setup profiles"
+description = "Select, install and update applications for workstation-setup profiles"
 readme = "README.md"
 authors = [
     { name = "Csaba Palankai", email = "csaba.palankai@gmail.com" }
 ]
 requires-python = ">=3.11"
+# Kept minimal: `update` must run on a fresh machine; the web UI is the `server` extra
 dependencies = [
-    "fastapi>=0.143.3",
     "ruamel-yaml>=0.19.1",
+]
+
+[project.optional-dependencies]
+server = [
+    "fastapi>=0.143.3",
     "uvicorn>=0.54.0",
 ]
 
@@ -22,6 +27,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "workstation-manager[server]",
     "httpx2>=2.13.1",
     "pytest>=9.1.1",
 ]

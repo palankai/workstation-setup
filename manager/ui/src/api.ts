@@ -52,6 +52,37 @@ export interface Settings {
   searches: SavedSearch[]
 }
 
+export type StepStatus = 'ok' | 'failed' | 'skipped'
+
+export interface RunStep {
+  app: string | null
+  step: string
+  kind: string
+  status: StepStatus
+  started: string
+  finished: string
+  exit_code: number | null
+  output: string | null
+  reason: string | null
+}
+
+export interface RunSummary {
+  id: string
+  profile: string
+  command: string[]
+  started: string
+  finished: string | null
+  status: 'running' | 'ok' | 'failed' | 'interrupted'
+}
+
+export interface Run extends RunSummary {
+  steps: RunStep[]
+}
+
+export interface HistoryStep extends RunStep {
+  run: string
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
@@ -71,6 +102,14 @@ export const api = {
   fileUrl: (id: string, path: string) =>
     `/api/applications/${encodeURIComponent(id)}/files/${path}`,
   settings: () => request<Settings>('/api/settings'),
+  runs: () => request<RunSummary[]>('/api/runs'),
+  run: (id: string) => request<Run>(`/api/runs/${encodeURIComponent(id)}`),
+  runOutput: async (id: string, name: string) => {
+    const response = await fetch(`/api/runs/${encodeURIComponent(id)}/output/${encodeURIComponent(name)}`)
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`)
+    return response.text()
+  },
+  history: (id: string) => request<HistoryStep[]>(`/api/applications/${encodeURIComponent(id)}/history`),
   profiles: () => request<string[]>('/api/profiles'),
   profile: (name: string) =>
     request<Profile>(`/api/profiles/${encodeURIComponent(name)}`),
