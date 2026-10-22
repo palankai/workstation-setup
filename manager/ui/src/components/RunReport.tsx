@@ -1,6 +1,6 @@
-import { ArrowLeft, ChevronRight, ChevronsDownUp, ChevronsUpDown, Loader2, PanelRightOpen, RefreshCw } from 'lucide-react'
+import { ArrowLeft, ChevronRight, ChevronsDownUp, ChevronsUpDown, ListX, Loader2, PanelRightOpen, RefreshCw } from 'lucide-react'
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
-import { api, type Application, type Run, type RunSummary, type StepStatus } from '../api'
+import { api, type Application, type Profile, type Run, type RunSummary, type StepStatus } from '../api'
 import { STATUS_TEXT, formatDuration, formatTime, groupSteps, secondsBetween, type StepGroup } from '../runs'
 import { StatusIcon, StepOutput } from './Runs'
 
@@ -25,13 +25,17 @@ interface Props {
   apps: Map<string, Application>
   onSelectRun: (id: string) => void
   onOpenApp: (id: string) => void
+  onProfileUpdated: (profile: Profile) => void
   onReload: () => void
   onClose: () => void
 }
 
-export function RunReport({ id, runs, apps, onSelectRun, onOpenApp, onReload, onClose }: Props) {
+export function RunReport({ id, runs, apps, onSelectRun, onOpenApp, onProfileUpdated, onReload, onClose }: Props) {
   const [loaded, setLoaded] = useState<{ run?: Run; error?: string }>()
   const [reload, setReload] = useState(0)
+  // The run's profile, for which of its uninstalled apps are still on the uninstall list
+  const [profile, setProfile] = useState<Profile>()
+  const [clearError, setClearError] = useState<string>()
   const [filter, setFilter] = useState<Filter>('all')
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
@@ -47,6 +51,35 @@ export function RunReport({ id, runs, apps, onSelectRun, onOpenApp, onReload, on
   }, [id, reload])
 
   const run = loaded?.run
+  const runProfile = run?.profile
+
+  useEffect(() => {
+    if (!runProfile) return
+    let cancelled = false
+    api
+      .profile(runProfile)
+      .then((p) => !cancelled && setProfile(p))
+      .catch(() => !cancelled && setProfile(undefined))
+    return () => {
+      cancelled = true
+    }
+  }, [runProfile, reload])
+
+  const clearable = useMemo(
+    () => (run?.uninstalled ?? []).filter((app) => profile?.uninstall.includes(app)),
+    [run, profile],
+  )
+  const clear = (ids: string[]) =>
+    profile &&
+    api
+      .keep(profile.name, ids)
+      .then((updated) => {
+        setClearError(undefined)
+        setProfile(updated)
+        onProfileUpdated(updated)
+      })
+      .catch((e: Error) => setClearError(e.message))
+
   const groups = useMemo(() => (run ? groupSteps(run.steps) : []), [run])
   const counts = useMemo(() => {
     const counts: Record<Filter, number> = { all: groups.length, ok: 0, failed: 0, skipped: 0 }
@@ -118,6 +151,22 @@ export function RunReport({ id, runs, apps, onSelectRun, onOpenApp, onReload, on
           </div>
           <p className="truncate font-mono text-xs text-zinc-500">ws {run.command.join(' ')}</p>
 
+          {clearable.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
+              <span className="min-w-0 flex-1">
+                Uninstalled, still on the uninstall list of {profile?.name}: {clearable.join(', ')}
+              </span>
+              <button
+                type="button"
+                onClick={() => void clear(clearable)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1 text-sm font-medium text-white hover:bg-rose-500"
+              >
+                <ListX className="size-4" /> Clear {clearable.length > 1 ? 'all ' : ''}from list
+              </button>
+            </div>
+          )}
+          {clearError && <p className="text-sm text-rose-600">{clearError}</p>}
+
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex flex-wrap gap-1">
               {FILTERS.map(({ id, label, active }) => (
@@ -159,6 +208,7 @@ export function RunReport({ id, runs, apps, onSelectRun, onOpenApp, onReload, on
                   open={expanded.has(group.key)}
                   onToggle={() => toggle(group.key)}
                   onOpenApp={group.app && apps.has(group.app) ? () => onOpenApp(group.app!) : undefined}
+                  onClear={group.app && clearable.includes(group.app) ? () => void clear([group.app!]) : undefined}
                 />
               ))}
             </ol>
@@ -176,6 +226,7 @@ function GroupRow({
   open,
   onToggle,
   onOpenApp,
+  onClear,
 }: {
   run: string
   group: StepGroup
@@ -183,7 +234,9 @@ function GroupRow({
   open: boolean
   onToggle: () => void
   onOpenApp?: () => void
+  onClear?: () => void
 }) {
+  const uninstall = group.steps.some((s) => s.kind === 'uninstall')
   const failed = group.steps.filter((s) => s.status === 'failed')
   const summary =
     group.status === 'skipped'
@@ -200,6 +253,11 @@ function GroupRow({
         <ChevronRight className={`size-4 shrink-0 text-zinc-400 transition ${open ? 'rotate-90' : ''}`} />
         <StatusIcon status={group.status} />
         <span className={`truncate font-medium ${group.app ? '' : 'font-mono text-xs'}`}>{name}</span>
+        {uninstall && (
+          <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-px text-[10px] font-semibold tracking-wide text-rose-700 uppercase dark:bg-rose-500/15 dark:text-rose-300">
+            uninstall
+          </span>
+        )}
         {onOpenApp && (
           <button
             type="button"
@@ -218,12 +276,25 @@ function GroupRow({
         >
           {summary}
         </span>
+        {onClear && (
+          <button
+            type="button"
+            title="Take off the uninstall list"
+            onClick={(e) => {
+              e.stopPropagation()
+              onClear()
+            }}
+            className="inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-xs text-rose-600 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10"
+          >
+            <ListX className="size-3.5" /> Clear from list
+          </button>
+        )}
         <span className="shrink-0 text-xs tabular-nums text-zinc-400">{formatDuration(group.seconds)}</span>
       </div>
       {open &&
         group.steps.map((step, index) => (
           <div key={index} className="border-t border-zinc-200 dark:border-zinc-800">
-            {group.app && step.kind !== 'app' && (
+            {group.app && step.step !== '*' && (
               <div className="flex items-center gap-2 px-3 py-1 text-xs text-zinc-500">
                 <StatusIcon status={step.status} />
                 <span className="font-mono">{step.step}</span>

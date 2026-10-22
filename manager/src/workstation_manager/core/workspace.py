@@ -13,12 +13,18 @@ class WorkspaceError(Exception):
     pass
 
 
+class UninstallError(Exception):
+    pass
+
+
 @dataclass(frozen=True)
 class ProfileState:
     profile: Profile
     fundamentals: list[str]
     selected: list[str]
     implied: list[str]
+    # Marked for uninstall; never selected or needed by what's installed
+    uninstall: list[str]
     missing: list[str]
     install_order: list[str]
 
@@ -66,16 +72,19 @@ class Workspace:
         selected = [
             ref for ref in profile.refs if ref in catalog and ref not in fundamentals
         ]
-        missing = [ref for ref in profile.refs if ref not in catalog]
+        refs = [*profile.refs, *profile.uninstall]
+        missing = list(dict.fromkeys(ref for ref in refs if ref not in catalog))
         install_order = catalog.resolve([*fundamentals, *selected])
         implied = [
             id for id in install_order if id not in selected and id not in fundamentals
         ]
+        uninstall = [ref for ref in profile.uninstall if ref in catalog]
         return ProfileState(
-            profile, fundamentals, selected, implied, missing, install_order
+            profile, fundamentals, selected, implied, uninstall, missing, install_order
         )
 
     def update_selection(self, name: str, ids: list[str]) -> ProfileState:
+        """Whatever the new selection installs comes off the uninstall list."""
         catalog = self.catalog()
         for id in ids:
             catalog.get(id)
@@ -83,5 +92,43 @@ class Workspace:
         unknown = [ref for ref in profile.refs if ref not in catalog]
         explicit = [id for id in ids if not catalog.get(id).fundamental]
         profile.set_selection([*explicit, *unknown])
+        installed = set(catalog.resolve([*catalog.fundamentals, *explicit]))
+        profile.set_uninstall(ref for ref in profile.uninstall if ref not in installed)
+        profile.save()
+        return self.state(name, catalog)
+
+    def mark_uninstall(self, name: str, ids: list[str]) -> ProfileState:
+        """Deselects the applications and puts them on the uninstall list.
+
+        Fails for fundamentals and for anything the rest of the profile still needs.
+        """
+        catalog = self.catalog()
+        ids = [catalog.get(id).id for id in dict.fromkeys(ids)]
+        if fundamentals := [id for id in ids if catalog.get(id).fundamental]:
+            raise UninstallError(f"Fundamental, always installed: {', '.join(fundamentals)}")
+        state = self.state(name, catalog)
+        roots = [*state.fundamentals, *(id for id in state.selected if id not in ids)]
+        installed = catalog.resolve(roots)
+        if needed := [id for id in ids if id in installed]:
+            raise UninstallError(
+                "Still needed: "
+                + "; ".join(
+                    f"{id} by {', '.join(r for r in roots if id in catalog.resolve([r]))}"
+                    for id in needed
+                )
+            )
+        profile = state.profile
+        profile.set_selection(ref for ref in profile.refs if ref not in ids)
+        profile.set_uninstall([*profile.uninstall, *ids])
+        profile.save()
+        return self.state(name, catalog)
+
+    def keep(self, name: str, ids: list[str]) -> ProfileState:
+        """Takes applications off the uninstall list; they stay unselected."""
+        catalog = self.catalog()
+        for id in ids:
+            catalog.get(id)
+        profile = self.profile(name)
+        profile.set_uninstall(ref for ref in profile.uninstall if ref not in ids)
         profile.save()
         return self.state(name, catalog)

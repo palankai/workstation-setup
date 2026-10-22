@@ -7,8 +7,8 @@ import urllib.request
 import webbrowser
 from pathlib import Path
 
-from .core import CatalogError, ProfileError, Workspace, WorkspaceError, set_flag
-from .core.runs import RUNS, RunLog, list_runs, load_run
+from .core import CatalogError, ProfileError, UninstallError, Workspace, WorkspaceError, set_flag
+from .core.runs import RUNS, RunLog, list_runs, load_run, uninstalled
 from .core.state import State, StateError, default_state_dir
 from .core.query import search
 from .executor.report import format_run, format_search, summary_line
@@ -55,7 +55,8 @@ def main(argv: list[str] | None = None) -> None:
     selection.add_argument(
         "query",
         nargs="*",
-        help="application ids, #tag, kind:<kind>, is:<flag>; default: the whole profile",
+        help="application ids, #tag, kind:<kind>, is:<flag>; default: the whole profile, "
+        "with every uninstall it marks",
     )
     selection.add_argument("--profile", help="default: $WORKSTATION or ~/.workstation-setup-config")
     selection.add_argument(
@@ -70,8 +71,9 @@ def main(argv: list[str] | None = None) -> None:
         "update",
         parents=[selection],
         help="install and update applications",
-        description="Without a query: brew update and upgrade, every application's steps, "
-        "then brew cleanup. With a query: only the matching applications' steps.",
+        description="Without a query: brew update, uninstalls, brew upgrade, every application's "
+        "steps, then brew autoremove and cleanup. With a query: only the matching applications' "
+        "steps, or uninstall steps for those marked for uninstall.",
     )
     update.add_argument(
         "--no-brew", action="store_true", help="skip brew entirely, including Brewfile steps"
@@ -90,7 +92,8 @@ def main(argv: list[str] | None = None) -> None:
         "search",
         help="list applications, one line each",
         description="Every word must appear in the id, name, description or tags; "
-        "#tag, kind:<kind> and is:<flag> filter. ✓ marks what the profile installs.",
+        "#tag, kind:<kind> and is:<flag> filter. ✓ marks what the profile installs, "
+        "✗ what it uninstalls (is:uninstall).",
     )
     search.add_argument("query", nargs="*")
     search.add_argument("--profile", help="default: $WORKSTATION or ~/.workstation-setup-config")
@@ -108,6 +111,24 @@ def main(argv: list[str] | None = None) -> None:
         aliases=["unselect"],
         parents=[profile_option],
         help="remove applications from the profile",
+    )
+    uninstall = commands.add_parser(
+        "uninstall",
+        help="mark applications for uninstall: deselects them, and every update uninstalls them",
+        description="Marked applications stay on the profile's uninstall list until cleared, "
+        "so every machine on the profile uninstalls them. select or keep takes them off.",
+    )
+    uninstall.add_argument("ids", nargs="*", metavar="id")
+    uninstall.add_argument("--profile", help="default: $WORKSTATION or ~/.workstation-setup-config")
+    uninstall.add_argument(
+        "--clear",
+        action="store_true",
+        help="take off the list every application whose last uninstall succeeded",
+    )
+    commands.add_parser(
+        "keep",
+        parents=[profile_option],
+        help="take applications off the uninstall list, without selecting them",
     )
     application_ids = argparse.ArgumentParser(add_help=False)
     application_ids.add_argument("ids", nargs="+", metavar="id")
@@ -147,6 +168,10 @@ def main(argv: list[str] | None = None) -> None:
             run_search(workspace, args)
         elif args.command in ("select", "deselect", "unselect"):
             run_select(workspace, args, select=args.command == "select")
+        elif args.command == "uninstall":
+            run_uninstall(workspace, state_dir, args)
+        elif args.command == "keep":
+            run_keep(workspace, args)
         elif args.command in FLAG_COMMANDS:
             run_flag(workspace, args)
         elif args.command == "once":
@@ -156,7 +181,7 @@ def main(argv: list[str] | None = None) -> None:
                 print(summary_line(run))
         elif args.command == "report":
             run_report(state_dir, args)
-    except (WorkspaceError, CatalogError, ProfileError, StateError, PlanError) as e:
+    except (WorkspaceError, CatalogError, ProfileError, StateError, PlanError, UninstallError) as e:
         sys.exit(f"error: {e}")
     except KeyboardInterrupt:
         sys.exit(130)
@@ -209,7 +234,22 @@ def run_update(
     print(format_run(log.data, state_dir, problems_only=True))
     if args.open:
         show_report(workspace, log.id)
+    elif done := log.data["uninstalled"]:
+        offer_clear(workspace, profile, done)
     return 0 if status == "ok" else 1
+
+
+def offer_clear(workspace: Workspace, profile: str, ids: list[str]) -> None:
+    if not sys.stdin.isatty():
+        print("Take them off the uninstall list with: ws uninstall --clear")
+        return
+    try:
+        answer = input(f"Take {', '.join(ids)} off the uninstall list? [y/N] ")
+    except EOFError:
+        answer = ""
+    if answer.strip().lower() in ("y", "yes"):
+        workspace.keep(profile, ids)
+        print(f"Cleared from the uninstall list: {', '.join(ids)}")
 
 
 def show_report(workspace: Workspace, run_id: str) -> None:
@@ -228,13 +268,14 @@ def show_report(workspace: Workspace, run_id: str) -> None:
 def run_search(workspace: Workspace, args: argparse.Namespace) -> None:
     catalog = workspace.catalog()
     try:
-        installed = set(workspace.state(resolve_profile(args.profile), catalog).install_order)
+        state = workspace.state(resolve_profile(args.profile), catalog)
+        installed, marked = set(state.install_order), set(state.uninstall)
     except ProfileError:
         if args.profile:
             raise
-        installed = set()
-    found = search(catalog, args.query, keep=installed)
-    lines = format_search(found, installed, sys.stdout.isatty())
+        installed, marked = set(), set()
+    found = search(catalog, args.query, keep=installed | marked, uninstall=marked)
+    lines = format_search(found, installed, sys.stdout.isatty(), marked)
     print("\n".join(lines) if lines else "No applications match.")
 
 
@@ -242,7 +283,8 @@ def run_select(workspace: Workspace, args: argparse.Namespace, select: bool) -> 
     profile = resolve_profile(args.profile)
     catalog = workspace.catalog()
     ids = list(dict.fromkeys(catalog.get(id).id for id in args.ids))
-    current = workspace.state(profile, catalog).selected
+    before = workspace.state(profile, catalog)
+    current = before.selected
     if select:
         fundamentals = [id for id in ids if catalog.get(id).fundamental]
         unchanged = [id for id in ids if id in current]
@@ -260,10 +302,54 @@ def run_select(workspace: Workspace, args: argparse.Namespace, select: bool) -> 
         print(f"Already {'selected' if select else 'not selected'}: {', '.join(unchanged)}")
     if fundamentals:
         print(f"Always installed (fundamental): {', '.join(fundamentals)}")
+    if select and changed:
+        marked = workspace.state(profile).uninstall
+        if kept := [id for id in before.uninstall if id not in marked]:
+            print(f"No longer marked for uninstall: {', '.join(kept)}")
     if not select:
         installed = set(workspace.state(profile).install_order)
         if still := [id for id in ids if id in installed]:
             print(f"Still installed as a fundamental or dependency: {', '.join(still)}")
+
+
+def run_uninstall(workspace: Workspace, state_dir: Path, args: argparse.Namespace) -> None:
+    profile = resolve_profile(args.profile)
+    if args.clear:
+        if args.ids:
+            raise UninstallError("--clear takes no ids; ws keep ID takes single applications off")
+        marked = workspace.state(profile).uninstall
+        if done := uninstalled(state_dir, profile, marked):
+            workspace.keep(profile, done)
+            print(f"Cleared from the uninstall list: {', '.join(done)}")
+        if pending := [id for id in marked if id not in done]:
+            print(f"Still marked, not uninstalled yet: {', '.join(pending)}")
+        if not marked:
+            print("Nothing marked for uninstall")
+        return
+    if not args.ids:
+        raise UninstallError("Give application ids, or --clear")
+    catalog = workspace.catalog()
+    ids = list(dict.fromkeys(catalog.get(id).id for id in args.ids))
+    before = workspace.state(profile, catalog)
+    workspace.mark_uninstall(profile, ids)
+    if changed := [id for id in ids if id not in before.uninstall]:
+        print(f"Marked for uninstall in {profile}: {', '.join(changed)}")
+    if unchanged := [id for id in ids if id in before.uninstall]:
+        print(f"Already marked: {', '.join(unchanged)}")
+    if deselected := [id for id in ids if id in before.selected]:
+        print(f"Deselected: {', '.join(deselected)}")
+
+
+def run_keep(workspace: Workspace, args: argparse.Namespace) -> None:
+    profile = resolve_profile(args.profile)
+    catalog = workspace.catalog()
+    ids = list(dict.fromkeys(catalog.get(id).id for id in args.ids))
+    marked = workspace.state(profile, catalog).uninstall
+    if changed := [id for id in ids if id in marked]:
+        workspace.keep(profile, changed)
+        print(f"No longer marked for uninstall in {profile}: {', '.join(changed)}")
+    if unchanged := [id for id in ids if id not in marked]:
+        print(f"Not marked for uninstall: {', '.join(unchanged)}")
 
 
 def run_flag(workspace: Workspace, args: argparse.Namespace) -> None:

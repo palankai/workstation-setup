@@ -54,6 +54,8 @@ class RunLog:
             "finished": None,
             "status": "running",
             "steps": [],
+            # Applications whose uninstall steps all succeeded
+            "uninstalled": [],
         }
         self._write()
 
@@ -63,6 +65,10 @@ class RunLog:
 
     def add(self, result: StepResult) -> None:
         self.data["steps"].append(asdict(result))
+        self._write()
+
+    def add_uninstalled(self, app: str) -> None:
+        self.data["uninstalled"].append(app)
         self._write()
 
     def finish(self, status: RunStatus) -> None:
@@ -87,7 +93,22 @@ def list_runs(state_dir: Path) -> list[dict]:
             runs.append(json.loads(run_file.read_text()))
         except (OSError, json.JSONDecodeError):
             continue
-    return sorted(runs, key=lambda run: run["started"], reverse=True)
+    return sorted(runs, key=lambda run: (run["started"], run["id"]), reverse=True)
+
+
+def uninstalled(state_dir: Path, profile: str, ids: list[str]) -> list[str]:
+    """Those of ids whose latest uninstall attempt in the profile's runs succeeded."""
+    result = []
+    for id in ids:
+        for run in list_runs(state_dir):
+            if run["profile"] != profile:
+                continue
+            if id in run.get("uninstalled", ()):
+                result.append(id)
+                break
+            if any(s["app"] == id and s["kind"] == "uninstall" for s in run["steps"]):
+                break
+    return result
 
 
 def load_run(state_dir: Path, id: str) -> dict | None:

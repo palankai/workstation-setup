@@ -51,7 +51,8 @@ searches:
 
 Each word must match: exact/prefix matches on id and name rank first, then tags and description words,
 then fzf-style subsequences (`slvsrch` → `ag-silver-searcher`) and typos (`pyhton`).
-`#rust` or `tag:rust` filters by tag, `kind:cli` by kind, `is:fundamental`, `is:deprecated`, `is:archived`, `is:trial` by flag.
+`#rust` or `tag:rust` filters by tag, `kind:cli` by kind, `is:fundamental`, `is:deprecated`, `is:archived`, `is:trial` by flag,
+and `is:uninstall` by the profile's uninstall list.
 
 ## Profiles
 
@@ -60,6 +61,18 @@ Applications with `fundamental: true` in their frontmatter are always installed 
 Dependencies declared in an application's frontmatter are resolved at runtime and shown as "required by" in the UI.
 Saving keeps comments, blank lines, inline (non-`$ref`) entries and refs to unknown ids untouched.
 
+### Uninstall
+
+A profile's `uninstall:` list (`$ref` entries, like `applications:`) holds applications every update uninstalls.
+It's in the repository, so every machine on the profile uninstalls them, and entries stay until cleared:
+
+- Marking (`ws uninstall ID`, or the app panel's Uninstall button) deselects the application. Fundamentals, and
+  anything a still installed application depends on, can't be marked; their dependencies are left alone.
+- Selecting takes it, and every dependency it pulls in, off the list. `ws keep ID` (or the button again) takes it
+  off without selecting it.
+- Once uninstalled, clear it: from the run report (per application or all), `ws uninstall --clear` (those whose
+  last uninstall succeeded), or the prompt after `ws update`.
+
 ## Update (executor)
 
 `bin/ws` runs the manager from anywhere (symlink it into `~/.local/bin`). The profile comes from `--profile`,
@@ -67,8 +80,9 @@ Saving keeps comments, blank lines, inline (non-`$ref`) entries and refs to unkn
 
 ```sh
 ws plan                      # what update would run
-ws update                    # brew update + upgrade, every application's steps, brew cleanup
-ws update git '#rust'        # only these (ids, #tag, kind:<kind>, is:<flag>) and their dependencies
+ws update                    # brew update, uninstalls, brew upgrade, every application's steps, brew autoremove + cleanup
+ws update git '#rust'        # only these (ids, #tag, kind:<kind>, is:<flag>) and their dependencies;
+                             # matching ones marked for uninstall are uninstalled
 ws update --no-brew          # skip brew, including Brewfile steps
 ws update --brew-only        # only brew update, upgrade and cleanup
 ws update fd --force         # also applications the profile doesn't install
@@ -77,13 +91,16 @@ ws update --open             # afterwards, open the report in the web UI (serves
 ws runs; ws report [RUN]     # past runs; results and failed output
 ws search chat '#ai'         # one line per application; ✓ marks what the profile installs
 ws select ID...; ws deselect ID...      # change the profile, like ticking a card (unselect works too)
+ws uninstall ID...; ws keep ID...       # mark for uninstall (deselects), or take off the list
+ws uninstall --clear                    # take off the list what uninstalled successfully
 ws deprecate|undeprecate ID...          # set or clear the flag, like the app panel's buttons
 ws archive|unarchive ID...
 ws once list; ws once reset ID [STEP]
 ```
 
 A failing application stops its own remaining steps and skips everything depending on it; the rest still runs
-(`--fail-fast` stops instead). Brewfile steps run `brew bundle` only when `brew bundle check` fails.
+(`--fail-fast` stops instead). A failing uninstall affects nothing else, and the application stays on the list.
+A successful one forgets its once steps, so a reinstall runs them again. Brewfile steps run `brew bundle` only when `brew bundle check` fails.
 `*.sh` steps are sourced by bash like the old generated scripts did: `set -e`, with
 `~/.workstation-setup-config`, `_config.sh` and `_setup_functions.sh` sourced first. `*.py` steps run with the
 manager's interpreter and the repository on `PYTHONPATH`, so they can import `workstation_manager.helpers` and `lib`.
@@ -104,3 +121,6 @@ the lowest `order` (default `100`, then `id`) goes next. Keep numbers sparse: be
 
 Inside an application folder, top-level `*Brewfile`, `*run.sh`/`*run.py` (every upgrade) and
 `*once.sh`/`*once.py` (first install only) files are the install steps, run in file name order.
+`*uninstall.sh`/`*uninstall.py` are the uninstall steps; an application without them can't be uninstalled
+(`no uninstall steps`), nothing is derived from its Brewfile. Uninstall steps should be idempotent: they run on
+every update until the application is cleared from the list.

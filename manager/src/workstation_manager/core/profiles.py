@@ -8,6 +8,9 @@ from ruamel.yaml import YAML, YAMLError
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 
 REF = "$ref"
+SELECTION = "applications"
+# Applications to uninstall on every update, until they're cleared from the list
+UNINSTALL = "uninstall"
 SUFFIX = ".yaml"
 NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
 
@@ -37,45 +40,59 @@ class Profile:
         self.path = path
         self._document = document
 
-    @property
-    def _entries(self) -> CommentedSeq:
-        entries = self._document.get("applications")
+    def _entries(self, key: str = SELECTION) -> CommentedSeq:
+        entries = self._document.get(key)
         if entries is None:
-            entries = self._document["applications"] = CommentedSeq()
+            entries = self._document[key] = CommentedSeq()
         return entries
+
+    def _refs(self, key: str) -> list[str]:
+        return [ref for ref in map(_ref_of, self._document.get(key) or ()) if ref is not None]
 
     @property
     def refs(self) -> list[str]:
-        return [ref for ref in map(_ref_of, self._entries) if ref is not None]
+        return self._refs(SELECTION)
+
+    @property
+    def uninstall(self) -> list[str]:
+        return self._refs(UNINSTALL)
 
     @property
     def inline(self) -> list[InlineEntry]:
         return [
             InlineEntry(label=_label_of(entry), data=dict(entry))
-            for entry in self._entries
+            for entry in self._entries()
             if _ref_of(entry) is None
         ]
 
     def set_selection(self, ids: Iterable[str]) -> None:
         """Make the $ref entries match ids; inline entries and comments are kept."""
+        self._set_refs(SELECTION, ids)
+
+    def set_uninstall(self, ids: Iterable[str]) -> None:
+        self._set_refs(UNINSTALL, ids)
+        if not self._document[UNINSTALL]:
+            del self._document[UNINSTALL]
+
+    def _set_refs(self, key: str, ids: Iterable[str]) -> None:
         wanted = list(dict.fromkeys(ids))
-        entries = self._entries
+        entries = self._entries(key)
         for index in reversed(range(len(entries))):
             ref = _ref_of(entries[index])
             if ref is not None and ref not in wanted:
                 _delete_keeping_comment(entries, index)
-        existing = set(self.refs)
+        existing = set(self._refs(key))
         for id in wanted:
             if id not in existing:
-                entries.insert(self._insert_position(id), CommentedMap({REF: id}))
+                entries.insert(self._insert_position(entries, id), CommentedMap({REF: id}))
 
-    def _insert_position(self, id: str) -> int:
+    @staticmethod
+    def _insert_position(entries: CommentedSeq, id: str) -> int:
         """Sorted position within the last block of sorted refs.
 
         Blocks end at a comment or blank line, or where sorting breaks, so
         hand-ordered blocks above (like fundamentals) are left alone.
         """
-        entries = self._entries
         start = len(entries)
         previous = None
         for index in reversed(range(len(entries))):
@@ -160,7 +177,8 @@ def load_profile(root: Path, name: str) -> Profile:
         document = CommentedMap()
     if not isinstance(document, CommentedMap):
         raise ProfileError(f"{path}: profile must be a mapping")
-    entries = document.get("applications")
-    if entries is not None and not isinstance(entries, CommentedSeq):
-        raise ProfileError(f"{path}: 'applications' must be a list")
+    for key in (SELECTION, UNINSTALL):
+        entries = document.get(key)
+        if entries is not None and not isinstance(entries, CommentedSeq):
+            raise ProfileError(f"{path}: '{key}' must be a list")
     return Profile(name, path, document)

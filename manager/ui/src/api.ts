@@ -37,6 +37,7 @@ export interface Profile {
   fundamentals: string[]
   selected: string[]
   implied: string[]
+  uninstall: string[]
   missing: string[]
   inline: InlineEntry[]
   install_order: string[]
@@ -77,6 +78,8 @@ export interface RunSummary {
 
 export interface Run extends RunSummary {
   steps: RunStep[]
+  /** Missing in runs from before uninstall existed */
+  uninstalled?: string[]
 }
 
 export interface HistoryStep extends RunStep {
@@ -122,5 +125,15 @@ export const api = {
     request<Profile>(`/api/profiles/${encodeURIComponent(name)}`, {
       method: 'PUT',
       body: JSON.stringify({ selected }),
+    }),
+  markUninstall: (name: string, ids: string[]) =>
+    request<Profile>(`/api/profiles/${encodeURIComponent(name)}/uninstall`, {
+      method: 'POST',
+      body: JSON.stringify({ ids }),
+    }),
+  keep: (name: string, ids: string[]) =>
+    request<Profile>(`/api/profiles/${encodeURIComponent(name)}/keep`, {
+      method: 'POST',
+      body: JSON.stringify({ ids }),
     }),
 }

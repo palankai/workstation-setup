@@ -1,4 +1,4 @@
-import { Archive, Check, ExternalLink, Link2, Lock, OctagonAlert, Plus, X } from 'lucide-react'
+import { Archive, Check, ExternalLink, Link2, Lock, OctagonAlert, Plus, Trash2, X } from 'lucide-react'
 import { type ReactNode, useEffect, useState } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -13,7 +13,11 @@ interface Props {
   selected: boolean
   locked: boolean
   impliedBy: string[]
+  marked: boolean
+  // What else being installed needs this app, so it can't be uninstalled
+  neededBy: string[]
   onToggle: () => void
+  onUninstall: (uninstall: boolean) => void
   onOpen: (id: string) => void
   onUpdate: (app: Application) => void
   onClose: () => void
@@ -32,7 +36,20 @@ function readmeBody(readme: string, app: Application) {
     .join('\n\n')
 }
 
-export function DetailPanel({ id, apps, selected, locked, impliedBy, onToggle, onOpen, onUpdate, onClose }: Props) {
+export function DetailPanel({
+  id,
+  apps,
+  selected,
+  locked,
+  impliedBy,
+  marked,
+  neededBy,
+  onToggle,
+  onUninstall,
+  onOpen,
+  onUpdate,
+  onClose,
+}: Props) {
   const [loaded, setLoaded] = useState<{ id: string; detail?: ApplicationDetail; error?: string }>()
   const detail = loaded?.id === id ? loaded.detail : undefined
   const error = loaded?.id === id ? loaded.error : undefined
@@ -108,6 +125,23 @@ export function DetailPanel({ id, apps, selected, locked, impliedBy, onToggle, o
                 {selected ? 'Selected' : 'Select'}
               </button>
             )}
+            {!locked && (
+              <FlagButton
+                active={marked}
+                disabled={!marked && neededBy.length > 0}
+                icon={<Trash2 className="size-4" />}
+                label={marked ? 'Uninstalling' : 'Uninstall'}
+                title={
+                  marked
+                    ? 'Every update uninstalls it until cleared; click to keep it (stays unselected)'
+                    : neededBy.length > 0
+                      ? `Needed by ${neededBy.join(', ')}`
+                      : 'Deselect and uninstall on every update until cleared'
+                }
+                activeClass="border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-300"
+                onClick={() => onUninstall(!marked)}
+              />
+            )}
             {app.homepage && (
               <a
                 href={app.homepage}
@@ -181,6 +215,7 @@ export function DetailPanel({ id, apps, selected, locked, impliedBy, onToggle, o
 
 function FlagButton({
   active,
+  disabled = false,
   icon,
   label,
   title,
@@ -188,6 +223,7 @@ function FlagButton({
   onClick,
 }: {
   active: boolean
+  disabled?: boolean
   icon: ReactNode
   label: string
   title: string
@@ -199,9 +235,10 @@ function FlagButton({
       type="button"
       title={title}
       aria-pressed={active}
+      disabled={disabled}
       onClick={onClick}
       className={[
-        'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition',
+        'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition disabled:cursor-not-allowed disabled:opacity-50',
         active
           ? activeClass
           : 'border-zinc-200 text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-700 dark:hover:text-zinc-200',

@@ -14,11 +14,12 @@ APPLICATION_STEREOTYPE = "application"
 EDITABLE_FLAGS = ("deprecated", "archived")
 DEFAULT_ORDER = 100
 
-StepKind = Literal["brewfile", "run", "once"]
+StepKind = Literal["brewfile", "run", "once", "uninstall"]
 STEP_KINDS: tuple[tuple[StepKind, re.Pattern[str]], ...] = (
     ("brewfile", re.compile(r"Brewfile$")),
     ("once", re.compile(r"once\.(sh|py)$")),
     ("run", re.compile(r"run\.(sh|py)$")),
+    ("uninstall", re.compile(r"uninstall\.(sh|py)$")),
 )
 
 

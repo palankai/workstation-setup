@@ -19,6 +19,11 @@ def test_api(workspace):  # noqa: F811
     assert response.json()["inline"][0]["label"] == "VSCode"
     assert client.put("/api/profiles/dev", json={"selected": ["nope"]}).status_code == 422
 
+    response = client.post("/api/profiles/dev/uninstall", json={"ids": ["fd"]})
+    assert response.json()["uninstall"] == ["fd"]
+    assert client.post("/api/profiles/dev/uninstall", json={"ids": ["jq"]}).status_code == 422
+    assert client.post("/api/profiles/dev/keep", json={"ids": ["fd"]}).json()["uninstall"] == []
+
     response = client.patch("/api/applications/jq", json={"deprecated": True})
     assert (response.json()["deprecated"], response.json()["archived"]) == (True, False)
     assert client.patch("/api/applications/jq", json={"deprecated": False}).json()["deprecated"] is False

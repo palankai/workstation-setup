@@ -45,6 +45,12 @@ def test_query_parses_filters_and_ids():
         parse_query(["is:nope"])
 
 
+def test_is_uninstall_matches_marked_applications(workspace: Workspace):  # noqa: F811
+    catalog = workspace.catalog()
+    assert select(catalog, parse_query(["is:uninstall"]), uninstall={"fd"}) == ["fd"]
+    assert [a.id for a in search(catalog, ["is:uninstall"], uninstall={"fd"})] == ["fd"]
+
+
 def test_select_matches_kind_prefix_and_hides_archived(workspace: Workspace):  # noqa: F811
     write_app(workspace.root, "old", "old", kind="Desktop App", extra="archived: true\n")
     write_app(workspace.root, "slack", "slack", kind="Desktop App")
@@ -145,7 +151,9 @@ def test_brew_steps_are_captured(state: State, tmp_path: Path, monkeypatch):
     log = RunLog(state.directory / RUNS, "dev", ["--brew-only"])
     assert Executor(tmp_path, state, log).execute(Plan("dev", [], full=True)) == "ok"
     steps = log.data["steps"]
-    assert [s["step"] for s in steps] == ["brew update", "brew upgrade", "brew cleanup"]
+    assert [s["step"] for s in steps] == [
+        "brew update", "brew upgrade", "brew autoremove", "brew cleanup"
+    ]
     assert (log.directory / steps[1]["output"]).read_text() == "brew upgrade\n"
 
 
@@ -190,3 +198,55 @@ def test_runs_are_listed_latest_first(state: State):
 def test_clean_output_strips_colours_and_progress():
     raw = b"\x1b[32mok\x1b[0m\r\n10%\r50%\r100%\ndone\r\n"
     assert clean_output(raw) == "ok\n100%\ndone\n"
+
+
+def test_uninstalls_run_dependents_first_and_skip_install_steps(workspace: Workspace, state: State):  # noqa: F811
+    write_app(workspace.root, "slack", "slack", "[fd]")
+    catalog = workspace.catalog()
+    for id in ("fd", "slack"):
+        script(catalog.get(id).path, "10-run.sh", "echo install\n")
+        script(catalog.get(id).path, "90-uninstall.sh", "echo removed $APP_ID\n")
+    script(catalog.get("bat").path, "90-uninstall.sh", "echo never\n")
+    workspace.mark_uninstall("dev", ["fd", "slack"])
+
+    plan = make_plan(workspace, state, "dev", [])
+    assert [p.application.id for p in plan.uninstalls] == ["slack", "fd"]
+    assert all(s.step.kind != "uninstall" for p in plan.apps for s in p.steps)
+
+    state.record_once("fd", "10-once.sh", "abc")
+    status, data = run(workspace, state, [])
+    assert status == "ok"
+    assert [(s["app"], s["step"]) for s in data["steps"][:2]] == [
+        ("slack", "90-uninstall.sh"), ("fd", "90-uninstall.sh")
+    ]
+    assert data["uninstalled"] == ["slack", "fd"]
+    assert state.once_record("fd", "10-once.sh") is None
+
+
+def test_failed_uninstall_affects_nothing_else(workspace: Workspace, state: State):  # noqa: F811
+    catalog = workspace.catalog()
+    script(catalog.get("bat").path, "90-uninstall.sh", "exit 2\n")
+    script(catalog.get("jq").path, "10-run.sh", "echo jq\n")
+    workspace.mark_uninstall("dev", ["bat", "fd"])
+    status, data = run(workspace, state, [])
+    assert status == "failed" and data["uninstalled"] == []
+    results = {s["app"]: s for s in data["steps"]}
+    assert results["bat"]["status"] == "failed"
+    assert (results["fd"]["status"], results["fd"]["reason"]) == ("skipped", "no uninstall steps")
+    assert results["jq"]["status"] == "ok"
+
+
+def test_query_uninstalls_matching_marked_applications(workspace: Workspace, state: State):  # noqa: F811
+    script(workspace.catalog().get("fd").path, "90-uninstall.sh", "echo bye\n")
+    workspace.mark_uninstall("dev", ["fd"])
+    plan = make_plan(workspace, state, "dev", ["fd", "bat"])
+    assert [p.application.id for p in plan.uninstalls] == ["fd"]
+    assert ids(plan) == ["bat"]
+    assert make_plan(workspace, state, "dev", ["is:uninstall"]).apps == []
+
+
+def test_plan_rejects_uninstalling_what_is_installed(workspace: Workspace, state: State):  # noqa: F811
+    path = workspace.profiles_dir / "dev.yaml"
+    path.write_text(path.read_text() + "uninstall:\n  - $ref: bat\n")
+    with pytest.raises(PlanError, match="still installed"):
+        make_plan(workspace, state, "dev", [])

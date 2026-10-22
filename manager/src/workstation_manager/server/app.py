@@ -10,6 +10,7 @@ from ..core import (
     CatalogError,
     ProfileError,
     ProfileState,
+    UninstallError,
     Workspace,
     set_flag,
 )
@@ -54,6 +55,7 @@ class ProfileView(BaseModel):
     fundamentals: list[str]
     selected: list[str]
     implied: list[str]
+    uninstall: list[str]
     missing: list[str]
     inline: list[InlineEntryView]
     install_order: list[str]
@@ -76,6 +78,10 @@ class FlagsUpdate(BaseModel):
 
 class SelectionUpdate(BaseModel):
     selected: list[str]
+
+
+class ApplicationIds(BaseModel):
+    ids: list[str]
 
 
 def _hidden(path: Path) -> bool:
@@ -111,6 +117,7 @@ def create_app(
             fundamentals=state.fundamentals,
             selected=state.selected,
             implied=state.implied,
+            uninstall=state.uninstall,
             missing=state.missing,
             inline=[
                 InlineEntryView(label=e.label, data=e.data)
@@ -219,6 +226,26 @@ def create_app(
     def update_profile(name: str, update: SelectionUpdate) -> ProfileView:
         try:
             return profile_view(workspace.update_selection(name, update.selected))
+        except ProfileError as e:
+            raise HTTPException(404, str(e)) from None
+        except CatalogError as e:
+            raise HTTPException(422, str(e)) from None
+
+    @app.post("/api/profiles/{name}/uninstall")
+    def mark_uninstall(name: str, update: ApplicationIds) -> ProfileView:
+        """Deselects the applications and marks them for uninstall."""
+        try:
+            return profile_view(workspace.mark_uninstall(name, update.ids))
+        except ProfileError as e:
+            raise HTTPException(404, str(e)) from None
+        except (CatalogError, UninstallError) as e:
+            raise HTTPException(422, str(e)) from None
+
+    @app.post("/api/profiles/{name}/keep")
+    def keep(name: str, update: ApplicationIds) -> ProfileView:
+        """Takes applications off the uninstall list."""
+        try:
+            return profile_view(workspace.keep(name, update.ids))
         except ProfileError as e:
             raise HTTPException(404, str(e)) from None
         except CatalogError as e:

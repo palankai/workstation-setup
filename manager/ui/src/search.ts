@@ -83,7 +83,8 @@ export interface ParsedQuery {
 /** "CLI Tool" → "cli-tool", so `kind:cli` can match it. */
 export const kindSlug = (kind: string) => kind.toLowerCase().replace(/\s+/g, '-')
 
-const FLAGS: Record<string, (app: Application) => boolean> = {
+const FLAGS: Record<string, (app: Application, marked: Set<string>) => boolean> = {
+  uninstall: (app, marked) => marked.has(app.id),
   fundamental: (app) => app.fundamental,
   deprecated: (app) => app.deprecated,
   archived: (app) => app.archived,
@@ -92,7 +93,7 @@ const FLAGS: Record<string, (app: Application) => boolean> = {
 
 /**
  * `#rust` or `tag:rust` filter by tag, `kind:cli` by kind (both prefix), `is:fundamental` by flag
- * (also deprecated, archived, trial); everything else is a search term.
+ * (also deprecated, archived, trial, and uninstall for the profile's); everything else is a search term.
  */
 export function parseQuery(query: string): ParsedQuery {
   const parsed: ParsedQuery = { terms: [], tags: [], kinds: [], flags: [] }
@@ -107,11 +108,11 @@ export function parseQuery(query: string): ParsedQuery {
   return parsed
 }
 
-function matchesFilters(app: Application, { tags, kinds, flags }: ParsedQuery): boolean {
+function matchesFilters(app: Application, { tags, kinds, flags }: ParsedQuery, marked: Set<string>): boolean {
   return (
     tags.every((wanted) => app.tags.some((tag) => tag.startsWith(wanted))) &&
     kinds.every((wanted) => kindSlug(app.kind).startsWith(wanted)) &&
-    flags.every((flag) => FLAGS[flag]?.(app) ?? false)
+    flags.every((flag) => FLAGS[flag]?.(app, marked) ?? false)
   )
 }
 
@@ -123,12 +124,13 @@ export function search(
   apps: Application[],
   query: string,
   keep: (app: Application) => boolean = () => false,
+  marked: Set<string> = new Set(),
 ): Application[] {
   const parsed = parseQuery(query)
   const { terms } = parsed
   const showArchived = parsed.flags.includes('archived')
   const tagged = apps.filter(
-    (app) => (!app.archived || showArchived || keep(app)) && matchesFilters(app, parsed),
+    (app) => (!app.archived || showArchived || keep(app)) && matchesFilters(app, parsed, marked),
   )
   if (!terms.length) return tagged
   return tagged

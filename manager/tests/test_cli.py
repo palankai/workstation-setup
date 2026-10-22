@@ -44,3 +44,35 @@ def test_flag_commands(workspace: Workspace, capsys):  # noqa: F811
 def test_unknown_id_is_an_error(workspace: Workspace):  # noqa: F811
     with pytest.raises(SystemExit, match="Unknown application id 'nope'"):
         ws(workspace, "archive", "nope")
+
+
+def test_uninstall_keep_and_clear(workspace: Workspace, capsys, tmp_path, monkeypatch):  # noqa: F811
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "state"))
+    ws(workspace, "uninstall", "bat", "fd", "--profile", "dev")
+    out = capsys.readouterr().out
+    assert "Marked for uninstall in dev: bat, fd" in out
+    assert "Deselected: bat" in out
+    assert workspace.state("dev").uninstall == ["bat", "fd"]
+
+    ws(workspace, "keep", "fd", "--profile", "dev")
+    assert "No longer marked for uninstall in dev: fd" in capsys.readouterr().out
+    assert "fd" not in workspace.profile("dev").refs
+
+    with pytest.raises(SystemExit, match="0"):
+        ws(workspace, "update", "--no-brew", "--profile", "dev", "bat")
+    assert "bat: no uninstall steps" in capsys.readouterr().out
+    ws(workspace, "uninstall", "--clear", "--profile", "dev")
+    assert "Still marked, not uninstalled yet: bat" in capsys.readouterr().out
+
+    (workspace.catalog().get("bat").path / "90-uninstall.sh").write_text("true\n")
+    with pytest.raises(SystemExit, match="0"):
+        ws(workspace, "update", "--no-brew", "--profile", "dev", "bat")
+    out = capsys.readouterr().out
+    assert "Uninstalled: bat" in out and "ws uninstall --clear" in out
+    ws(workspace, "uninstall", "--clear", "--profile", "dev")
+    assert "Cleared from the uninstall list: bat" in capsys.readouterr().out
+    assert workspace.state("dev").uninstall == []
+
+    ws(workspace, "select", "bat", "--profile", "dev")
+    with pytest.raises(SystemExit, match="Fundamental"):
+        ws(workspace, "uninstall", "vim", "--profile", "dev")

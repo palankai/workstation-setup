@@ -3,7 +3,7 @@
 from .catalog import EDITABLE_FLAGS, Application, Catalog, CatalogError, Step, load_catalog, set_flag
 from .profiles import InlineEntry, Profile, ProfileError, list_profiles, load_profile
 from .settings import SavedSearch, Settings, load_settings
-from .workspace import ProfileState, Workspace, WorkspaceError
+from .workspace import ProfileState, UninstallError, Workspace, WorkspaceError
 
 __all__ = [
     "EDITABLE_FLAGS",
@@ -17,6 +17,7 @@ __all__ = [
     "SavedSearch",
     "Settings",
     "Step",
+    "UninstallError",
     "Workspace",
     "WorkspaceError",
     "list_profiles",

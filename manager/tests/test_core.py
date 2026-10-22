@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from workstation_manager.core import CatalogError, ProfileError, Workspace, set_flag
+from workstation_manager.core import CatalogError, ProfileError, UninstallError, Workspace, set_flag
 
 PROFILE = """\
 applications:
@@ -258,3 +258,36 @@ def test_fundamentals_are_always_installed_first(workspace: Workspace):
 def test_fundamentals_are_not_written_to_profiles(workspace: Workspace):
     workspace.update_selection("dev", ["vim", "bat"])
     assert workspace.profile("dev").refs == ["bat"]
+
+
+def test_mark_uninstall_deselects_and_lists(workspace: Workspace):
+    state = workspace.mark_uninstall("dev", ["bat", "fd"])
+    assert state.uninstall == ["bat", "fd"]
+    assert "bat" not in state.selected
+    text = (workspace.profiles_dir / "dev.yaml").read_text()
+    assert text.endswith("uninstall:\n  - $ref: bat\n  - $ref: fd\n")
+    assert "# fundamentals" in text and "VSCode" in text
+
+
+def test_keep_leaves_selection_alone_and_drops_empty_list(workspace: Workspace):
+    workspace.mark_uninstall("dev", ["bat"])
+    state = workspace.keep("dev", ["bat"])
+    assert state.uninstall == [] and "bat" not in state.selected
+    assert "uninstall" not in (workspace.profiles_dir / "dev.yaml").read_text()
+
+
+def test_uninstall_refuses_fundamentals_and_needed_applications(workspace: Workspace):
+    with pytest.raises(UninstallError, match="Fundamental"):
+        workspace.mark_uninstall("dev", ["vim"])
+    workspace.update_selection("dev", ["claude-code"])
+    with pytest.raises(UninstallError, match="jq by claude-code"):
+        workspace.mark_uninstall("dev", ["jq"])
+    # Uninstalling the dependent leaves the dependency alone
+    state = workspace.mark_uninstall("dev", ["claude-code"])
+    assert state.uninstall == ["claude-code"] and "jq" not in state.install_order
+
+
+def test_selecting_takes_it_and_its_dependencies_off_the_uninstall_list(workspace: Workspace):
+    workspace.mark_uninstall("dev", ["jq", "fd"])
+    state = workspace.update_selection("dev", ["claude-code"])
+    assert state.uninstall == ["fd"]

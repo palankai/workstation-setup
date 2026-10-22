@@ -1,4 +1,4 @@
-import { Check, Link2, Lock } from 'lucide-react'
+import { Check, Link2, Lock, Trash2 } from 'lucide-react'
 import type { Application } from '../api'
 import { displayDescription } from '../selection'
 
@@ -6,15 +6,18 @@ export type CardState = {
   selected: boolean
   locked: boolean
   implied: string[]
+  // Marked for uninstall in the profile
+  uninstall: boolean
   change: 'added' | 'removed' | null
 }
 
-type Variant = 'locked' | 'selected' | 'implied' | 'idle'
+type Variant = 'locked' | 'selected' | 'implied' | 'uninstall' | 'idle'
 
 const CARD: Record<Variant, string> = {
   locked: 'border-zinc-300 bg-zinc-100/80 dark:border-zinc-700 dark:bg-zinc-800/50',
   selected: 'border-indigo-500/70 bg-indigo-50/70 shadow-sm dark:border-indigo-400/60 dark:bg-indigo-500/10',
   implied: 'border-dashed border-amber-400/80 bg-amber-50/50 dark:border-amber-400/50 dark:bg-amber-500/5',
+  uninstall: 'border-dashed border-rose-300 bg-rose-50/40 dark:border-rose-500/40 dark:bg-rose-500/5',
   idle: 'border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900',
 }
 
@@ -22,6 +25,7 @@ const ROW: Record<Variant, string> = {
   locked: 'bg-zinc-100/80 dark:bg-zinc-800/50',
   selected: 'bg-indigo-50/70 dark:bg-indigo-500/10',
   implied: 'bg-amber-50/50 dark:bg-amber-500/5',
+  uninstall: 'bg-rose-50/40 dark:bg-rose-500/5',
   idle: 'bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800/60',
 }
 
@@ -29,6 +33,7 @@ const CHECKBOX: Record<Variant, string> = {
   locked: 'border-zinc-400 bg-zinc-400 text-white dark:border-zinc-500 dark:bg-zinc-600',
   selected: 'border-indigo-600 bg-indigo-600 text-white dark:border-indigo-400 dark:bg-indigo-500',
   implied: 'border-zinc-300 bg-white hover:border-indigo-400 dark:border-zinc-600 dark:bg-zinc-800',
+  uninstall: 'border-rose-300 bg-white text-rose-500 hover:border-indigo-400 dark:border-rose-500/50 dark:bg-zinc-800',
   idle: 'border-zinc-300 bg-white hover:border-indigo-400 dark:border-zinc-600 dark:bg-zinc-800',
 }
 
@@ -41,8 +46,11 @@ interface Props {
   onTag: (tag: string) => void
 }
 
-function variantOf({ selected, locked, implied }: CardState): Variant {
-  return locked ? 'locked' : selected ? 'selected' : implied.length > 0 ? 'implied' : 'idle'
+function variantOf({ selected, locked, implied, uninstall }: CardState): Variant {
+  if (locked) return 'locked'
+  if (selected) return 'selected'
+  if (implied.length > 0) return 'implied'
+  return uninstall ? 'uninstall' : 'idle'
 }
 
 export function AppCard({ app, state, activeTags, onToggle, onDetails, onTag }: Props) {
@@ -127,7 +135,9 @@ function Checkbox({ variant, onToggle, className = '' }: { variant: Variant; onT
     <button
       type="button"
       disabled={locked}
-      title={locked ? 'Fundamental: always installed' : undefined}
+      title={
+        locked ? 'Fundamental: always installed' : variant === 'uninstall' ? 'Marked for uninstall; tick to select again' : undefined
+      }
       onClick={(e) => {
         e.stopPropagation()
         onToggle()
@@ -140,6 +150,8 @@ function Checkbox({ variant, onToggle, className = '' }: { variant: Variant; onT
     >
       {locked ? (
         <Lock className="size-3" strokeWidth={3} />
+      ) : variant === 'uninstall' ? (
+        <Trash2 className="size-3" strokeWidth={2.5} />
       ) : (
         variant === 'selected' && <Check className="size-3.5" strokeWidth={3} />
       )}
@@ -154,6 +166,9 @@ function Badges({ app, state }: { app: Application; state: CardState }) {
     <>
       {state.locked && (
         <span className={`${BADGE} bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300`}>always</span>
+      )}
+      {state.uninstall && (
+        <span className={`${BADGE} bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300`}>uninstall</span>
       )}
       {app.archived && (
         <span className={`${BADGE} bg-zinc-200 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400`}>archived</span>

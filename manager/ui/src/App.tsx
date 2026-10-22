@@ -8,12 +8,13 @@ import { STATUS_TEXT, relativeTime } from './runs'
 import { search } from './search'
 import { difference, impliedBy } from './selection'
 
-type View = 'all' | 'selected' | 'available' | 'changes'
+type View = 'all' | 'selected' | 'available' | 'uninstall' | 'changes'
 
 const VIEWS: { id: View; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'selected', label: 'Will install' },
   { id: 'available', label: 'Not selected' },
+  { id: 'uninstall', label: 'Will uninstall' },
   { id: 'changes', label: 'Changes' },
 ]
 
@@ -93,6 +94,7 @@ export default function App() {
   const byId = useMemo(() => new Map(apps.map((app) => [app.id, app])), [apps])
   const saved = useMemo(() => new Set(profile?.selected ?? []), [profile])
   const fundamentals = useMemo(() => new Set(profile?.fundamentals ?? []), [profile])
+  const marked = useMemo(() => new Set(profile?.uninstall ?? []), [profile])
   const implied = useMemo(() => impliedBy(byId, new Set([...fundamentals, ...draft])), [byId, fundamentals, draft])
   const installs = useCallback(
     (id: string) => draft.has(id) || fundamentals.has(id) || implied.has(id),
@@ -112,14 +114,19 @@ export default function App() {
     (app: Application) => {
       if (view === 'selected') return installs(app.id)
       if (view === 'available') return !installs(app.id)
+      if (view === 'uninstall') return marked.has(app.id)
       if (view === 'changes') return changeOf(app.id) !== null
       return true
     },
-    [view, installs, changeOf],
+    [view, installs, marked, changeOf],
   )
 
-  const installed = useCallback((app: Application) => installs(app.id), [installs])
-  const matching = useMemo(() => search(apps, query, installed).filter(inView), [apps, query, installed, inView])
+  // Archived apps still show when they'd be installed or uninstalled
+  const kept = useCallback((app: Application) => installs(app.id) || marked.has(app.id), [installs, marked])
+  const matching = useMemo(
+    () => search(apps, query, kept, marked).filter(inView),
+    [apps, query, kept, marked, inView],
+  )
   const tagged = useMemo(
     () => matching.filter((app) => [...activeTags].every((tag) => app.tags.includes(tag))),
     [matching, activeTags],
@@ -134,8 +141,8 @@ export default function App() {
     return [...counts]
   }, [apps, tagged])
   const searchCounts = useMemo(
-    () => new Map(searches.map(({ query }) => [query, search(apps, query, installed).length])),
-    [apps, searches, installed],
+    () => new Map(searches.map(({ query }) => [query, search(apps, query, kept, marked).length])),
+    [apps, searches, kept, marked],
   )
   const tagCounts = useMemo(() => {
     const counts = new Map<string, number>()
@@ -145,14 +152,15 @@ export default function App() {
   }, [visible, activeTags])
 
   const viewCounts = useMemo(() => {
-    const searched = search(apps, query, installed)
+    const searched = search(apps, query, kept, marked)
     return {
       all: searched.length,
       selected: searched.filter((app) => installs(app.id)).length,
       available: searched.filter((app) => !installs(app.id)).length,
+      uninstall: searched.filter((app) => marked.has(app.id)).length,
       changes: added.length + removed.length,
     }
-  }, [apps, query, installed, installs, added, removed])
+  }, [apps, query, kept, marked, installs, added, removed])
   const installCount = draft.size + fundamentals.size + implied.size
 
   const toggle = useCallback((id: string) => {
@@ -191,6 +199,30 @@ export default function App() {
   }, [apps, draft, dirty, profile, saving])
 
   const discard = () => setDraft(new Set(saved))
+
+  /** Saved right away; the server deselects what it marks, so the draft drops it too. */
+  const setUninstall = async (id: string, uninstall: boolean) => {
+    if (!profile) return
+    try {
+      const updated = uninstall ? await api.markUninstall(profile.name, [id]) : await api.keep(profile.name, [id])
+      setProfile(updated)
+      if (uninstall) {
+        setDraft((current) => {
+          const next = new Set(current)
+          next.delete(id)
+          return next
+        })
+      }
+      setToast(uninstall ? `Marked ${id} for uninstall` : `Kept ${id}: off the uninstall list`)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const profileUpdated = useCallback(
+    (updated: Profile) => setProfile((current) => (current?.name === updated.name ? updated : current)),
+    [],
+  )
 
   const switchProfile = (name: string) => {
     if (dirty && !window.confirm(`Discard ${added.length + removed.length} unsaved change(s)?`)) return
@@ -415,6 +447,7 @@ export default function App() {
                 apps={byId}
                 onSelectRun={setRunId}
                 onOpenApp={setDetailId}
+                onProfileUpdated={profileUpdated}
                 onReload={refreshRuns}
                 onClose={showApps}
               />
@@ -459,7 +492,7 @@ export default function App() {
                       e.currentTarget.blur()
                     }
                   }}
-                  placeholder="Fuzzy search name, id or description · #tag · kind:cli · is:archived"
+                  placeholder="Fuzzy search name, id or description · #tag · kind:cli · is:archived · is:uninstall"
                   className="w-full rounded-xl border border-zinc-300 bg-white py-2.5 pr-20 pl-10 text-sm shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-zinc-700 dark:bg-zinc-900"
                 />
                 {query ? (
@@ -547,6 +580,7 @@ export default function App() {
                         selected: draft.has(app.id),
                         locked: fundamentals.has(app.id),
                         implied: implied.get(app.id) ?? [],
+                        uninstall: marked.has(app.id),
                         change: changeOf(app.id),
                       }}
                       onToggle={() => toggle(app.id)}
@@ -612,7 +646,10 @@ export default function App() {
           selected={draft.has(detailId)}
           locked={fundamentals.has(detailId)}
           impliedBy={implied.get(detailId) ?? []}
+          marked={marked.has(detailId)}
+          neededBy={impliedBy(byId, new Set([...fundamentals, ...draft].filter((id) => id !== detailId))).get(detailId) ?? []}
           onToggle={() => toggle(detailId)}
+          onUninstall={(uninstall) => void setUninstall(detailId, uninstall)}
           onOpen={setDetailId}
           onUpdate={updateApp}
           onClose={closeDetail}

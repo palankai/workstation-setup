@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from .catalog import Application, Catalog, CatalogError
 
 FLAGS = ("fundamental", "deprecated", "archived", "trial")
+# Not a frontmatter flag: whether the profile marks the application for uninstall
+UNINSTALL = "uninstall"
 
 
 @dataclass
@@ -42,20 +44,27 @@ def parse_query(terms: list[str]) -> Query:
         else:
             query.ids.append(term)
     for flag in query.flags:
-        if flag not in FLAGS:
-            raise CatalogError(f"Unknown flag 'is:{flag}', expected one of {', '.join(FLAGS)}")
+        if flag not in (*FLAGS, UNINSTALL):
+            raise CatalogError(
+                f"Unknown flag 'is:{flag}', expected one of {', '.join((*FLAGS, UNINSTALL))}"
+            )
     return query
 
 
-def matches(application: Application, query: Query) -> bool:
+def matches(application: Application, query: Query, uninstall: Collection[str] = ()) -> bool:
     return (
         all(any(tag.startswith(t) for tag in application.tags) for t in query.tags)
         and all(kind_slug(application.kind).startswith(k) for k in query.kinds)
-        and all(getattr(application, flag) for flag in query.flags)
+        and all(
+            application.id in uninstall if flag == UNINSTALL else getattr(application, flag)
+            for flag in query.flags
+        )
     )
 
 
-def select(catalog: Catalog, query: Query, keep: Collection[str] = ()) -> list[str]:
+def select(
+    catalog: Catalog, query: Query, keep: Collection[str] = (), uninstall: Collection[str] = ()
+) -> list[str]:
     """Ids named explicitly plus every application matching all filters.
 
     Archived applications only match filters with `is:archived` or when in `keep`.
@@ -66,12 +75,14 @@ def select(catalog: Catalog, query: Query, keep: Collection[str] = ()) -> list[s
         selected += [
             a.id
             for a in catalog
-            if (not a.archived or show_archived or a.id in keep) and matches(a, query)
+            if (not a.archived or show_archived or a.id in keep) and matches(a, query, uninstall)
         ]
     return list(dict.fromkeys(selected))
 
 
-def search(catalog: Catalog, terms: list[str], keep: Collection[str] = ()) -> list[Application]:
+def search(
+    catalog: Catalog, terms: list[str], keep: Collection[str] = (), uninstall: Collection[str] = ()
+) -> list[Application]:
     """Like the UI search box, minus fuzzy matching: every word must appear in the id,
     name, description or tags, and every filter must match."""
     query = parse_query(terms)
@@ -85,6 +96,6 @@ def search(catalog: Catalog, terms: list[str], keep: Collection[str] = ()) -> li
         a
         for a in catalog
         if (not a.archived or show_archived or a.id in keep)
-        and matches(a, query)
+        and matches(a, query, uninstall)
         and all(word in text(a) for word in words)
     ]

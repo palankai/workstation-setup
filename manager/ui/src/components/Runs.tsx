@@ -43,7 +43,7 @@ function HistoryEntry({ step }: { step: HistoryStep }) {
       >
         <ChevronRight className={`size-4 shrink-0 text-zinc-400 transition ${open ? 'rotate-90' : ''}`} />
         <StatusIcon status={step.status} />
-        <span className="min-w-0 flex-1 truncate font-mono text-xs">{step.kind === 'app' ? 'skipped' : step.step}</span>
+        <span className="min-w-0 flex-1 truncate font-mono text-xs">{step.step === '*' ? (step.kind === 'uninstall' ? 'uninstall' : 'skipped') : step.step}</span>
         {step.status === 'failed' && (
           <span className="text-xs text-rose-600 dark:text-rose-400">{step.reason ?? `exit ${step.exit_code}`}</span>
         )}
