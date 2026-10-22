@@ -44,8 +44,8 @@ function HistoryEntry({ step }: { step: HistoryStep }) {
         <ChevronRight className={`size-4 shrink-0 text-zinc-400 transition ${open ? 'rotate-90' : ''}`} />
         <StatusIcon status={step.status} />
         <span className="min-w-0 flex-1 truncate font-mono text-xs">{step.kind === 'app' ? 'skipped' : step.step}</span>
-        {step.status === 'failed' && step.exit_code !== null && (
-          <span className="text-xs text-rose-600 dark:text-rose-400">exit {step.exit_code}</span>
+        {step.status === 'failed' && (
+          <span className="text-xs text-rose-600 dark:text-rose-400">{step.reason ?? `exit ${step.exit_code}`}</span>
         )}
         <span className="shrink-0 text-xs text-zinc-400">
           {formatTime(step.started)} · {formatDuration(secondsBetween(step.started, step.finished))}

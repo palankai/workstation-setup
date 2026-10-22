@@ -69,6 +69,7 @@ ws plan                      # what update would run
 ws update                    # brew update + upgrade, every application's steps, brew cleanup
 ws update git '#rust'        # only these (ids, #tag, kind:<kind>, is:<flag>) and their dependencies
 ws update --no-brew          # skip brew, including Brewfile steps
+ws update --brew-only        # only brew update, upgrade and cleanup
 ws update fd --force         # also applications the profile doesn't install
 ws update jq --no-deps       # without dependencies
 ws update --open             # afterwards, open the report in the web UI (serves it if not running)
@@ -78,8 +79,10 @@ ws once list; ws once reset ID [STEP]
 
 A failing application stops its own remaining steps and skips everything depending on it; the rest still runs
 (`--fail-fast` stops instead). Brewfile steps run `brew bundle` only when `brew bundle check` fails.
-`*.sh` steps run with bash, `*.py` steps with the manager's interpreter, so they can import
-`workstation_manager.helpers`. Steps run in their application folder with `APP_ID`, `APP_DIR` and
+`*.sh` steps are sourced by bash like the old generated scripts did: `set -e`, with
+`~/.workstation-setup-config`, `_config.sh` and `_setup_functions.sh` sourced first. `*.py` steps run with the
+manager's interpreter and the repository on `PYTHONPATH`, so they can import `workstation_manager.helpers` and `lib`.
+Ctrl-C stops the whole run: the current step gets SIGINT, then SIGTERM and SIGKILL if it doesn't exit. Steps run in their application folder with `APP_ID`, `APP_DIR` and
 `WORKSTATION_PROFILE` set.
 
 Machine state lives in `~/.local/state/workstation-setup/` (or `$XDG_STATE_HOME`), never in the repository:

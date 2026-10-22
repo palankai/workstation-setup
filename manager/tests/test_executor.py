@@ -7,7 +7,7 @@ from workstation_manager.core import CatalogError, Workspace
 from workstation_manager.core.query import parse_query, select
 from workstation_manager.core.runs import RUNS, RunLog, clean_output, list_runs
 from workstation_manager.core.state import State
-from workstation_manager.executor.update import Executor, PlanError, make_plan
+from workstation_manager.executor.update import Executor, Plan, PlanError, make_plan
 
 from .test_core import workspace, write_app  # noqa: F401
 
@@ -28,7 +28,7 @@ def ids(plan) -> list[str]:
 def run(workspace: Workspace, state: State, terms: list[str], **options) -> tuple[str, dict]:  # noqa: F811
     plan = make_plan(workspace, state, "dev", terms)
     log = RunLog(state.directory / RUNS, "dev", terms)
-    status = Executor(state, log, brew=False, **options).execute(plan)
+    status = Executor(workspace.root, state, log, brew=False, **options).execute(plan)
     return status, log.data
 
 
@@ -117,6 +117,29 @@ def test_fail_fast_stops(workspace: Workspace, state: State):  # noqa: F811
     script(catalog.get("jq").path, "10-run.sh", "echo jq\n")
     _, data = run(workspace, state, ["bat", "jq"], fail_fast=True)
     assert [s["app"] for s in data["steps"]] == ["bat"]
+
+
+def test_brew_steps_are_captured(state: State, tmp_path: Path, monkeypatch):
+    bin = tmp_path / "bin"
+    bin.mkdir()
+    (bin / "brew").write_text('#!/bin/sh\necho "brew $1"\n')
+    (bin / "brew").chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bin}:/usr/bin:/bin")
+    log = RunLog(state.directory / RUNS, "dev", ["--brew-only"])
+    assert Executor(tmp_path, state, log).execute(Plan("dev", [], full=True)) == "ok"
+    steps = log.data["steps"]
+    assert [s["step"] for s in steps] == ["brew update", "brew upgrade", "brew cleanup"]
+    assert (log.directory / steps[1]["output"]).read_text() == "brew upgrade\n"
+
+
+def test_shell_steps_get_setup_functions_and_set_e(workspace: Workspace, state: State):  # noqa: F811
+    (workspace.root / "_setup_functions.sh").write_text('function greet { echo "hello $1"; }\n')
+    app = workspace.catalog().get("bat").path
+    script(app, "10-run.sh", 'greet "$APP_ID"\nfalse\necho "not reached"\n')
+    _, data = run(workspace, state, ["bat"])
+    step = data["steps"][0]
+    assert step["status"] == "failed"
+    assert (state.directory / RUNS / data["id"] / step["output"]).read_text() == "hello bat\n"
 
 
 def test_brewfile_steps_are_skipped_without_brew(workspace: Workspace, state: State):  # noqa: F811

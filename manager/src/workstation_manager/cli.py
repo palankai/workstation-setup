@@ -11,7 +11,7 @@ from .core import CatalogError, ProfileError, Workspace, WorkspaceError
 from .core.runs import RUNS, RunLog, list_runs, load_run
 from .core.state import State, StateError, default_state_dir
 from .executor.report import format_run, summary_line
-from .executor.update import Executor, PlanError, format_plan, make_plan
+from .executor.update import Executor, Plan, PlanError, format_plan, make_plan
 
 UI_DIST = Path(__file__).resolve().parents[2] / "ui" / "dist"
 HOST = "127.0.0.1"
@@ -67,6 +67,11 @@ def main(argv: list[str] | None = None) -> None:
     )
     update.add_argument(
         "--no-brew", action="store_true", help="skip brew entirely, including Brewfile steps"
+    )
+    update.add_argument(
+        "--brew-only",
+        action="store_true",
+        help="only brew update, upgrade and cleanup; no application steps",
     )
     update.add_argument("--fail-fast", action="store_true", help="stop at the first failure")
     update.add_argument(
@@ -135,12 +140,25 @@ def run_update(
 ) -> int:
     state = State(state_dir)
     profile = resolve_profile(args.profile)
-    plan = make_plan(workspace, state, profile, args.query, args.force, args.no_deps)
+    if getattr(args, "brew_only", False):
+        if args.query or args.no_brew:
+            raise PlanError("--brew-only can't be combined with a query or --no-brew")
+        plan = Plan(profile, [], full=True)
+    else:
+        plan = make_plan(workspace, state, profile, args.query, args.force, args.no_deps)
     if args.command == "plan":
         print(format_plan(plan))
         return 0
     log = RunLog(state_dir / RUNS, profile, command)
-    status = Executor(state, log, brew=not args.no_brew, fail_fast=args.fail_fast).execute(plan)
+    executor = Executor(
+        workspace.root, state, log, brew=not args.no_brew, fail_fast=args.fail_fast
+    )
+    try:
+        status = executor.execute(plan)
+    except KeyboardInterrupt:
+        print("\nInterrupted")
+        print(format_run(log.data, state_dir, problems_only=True))
+        return 130
     print()
     print(format_run(log.data, state_dir, problems_only=True))
     if args.open:

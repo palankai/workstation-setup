@@ -14,6 +14,7 @@ OnceStatus = Literal["pending", "done", "changed"]
 
 BREW_BEFORE = (("brew update", ["brew", "update"]), ("brew upgrade", ["brew", "upgrade"]))
 BREW_AFTER = (("brew cleanup", ["brew", "cleanup"]),)
+STEP_SH = Path(__file__).with_name("step.sh")
 BUNDLE = 'brew bundle check --file="$1" >/dev/null 2>&1 || brew bundle install --file="$1"'
 
 
@@ -113,7 +114,15 @@ def format_plan(plan: Plan) -> str:
 
 
 class Executor:
-    def __init__(self, state: State, log: RunLog, brew: bool = True, fail_fast: bool = False):
+    def __init__(
+        self,
+        repo: Path,
+        state: State,
+        log: RunLog,
+        brew: bool = True,
+        fail_fast: bool = False,
+    ):
+        self.repo = repo
         self.state = state
         self.log = log
         self.brew = brew
@@ -181,9 +190,11 @@ class Executor:
                 argv = ["bash", "-c", BUNDLE, "bundle", str(file)]
                 extra = {**env, "HOMEBREW_NO_AUTO_UPDATE": "1"}
             elif file.suffix == ".py":
-                argv, extra = [sys.executable, str(file)], env
+                # The repository on the path, as the generated scripts did, for its `lib` package
+                python_path = os.pathsep.join(filter(None, [str(self.repo), os.environ.get("PYTHONPATH")]))
+                argv, extra = [sys.executable, str(file)], {**env, "PYTHONPATH": python_path}
             else:
-                argv, extra = ["bash", str(file)], env
+                argv, extra = ["bash", str(STEP_SH), str(self.repo), str(file)], env
             sha256 = file_sha256(file)
             if not self._run(app.id, step.file, step.kind, argv, app.path, extra):
                 return False
@@ -208,6 +219,11 @@ class Executor:
             except OSError as e:
                 output.write(f"{e}\n".encode())
                 code = 127
+            except KeyboardInterrupt:
+                self.log.add(
+                    StepResult(app, name, kind, "failed", started, now(), None, path.name, "interrupted")
+                )
+                raise
         ok = code == 0
         self.log.add(
             StepResult(app, name, kind, "ok" if ok else "failed", started, now(), code, path.name)

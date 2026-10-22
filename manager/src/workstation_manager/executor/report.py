@@ -55,7 +55,7 @@ def format_run(
         steps = [s for s in steps if s["status"] != "ok"]
     for step in steps:
         line = f"  {ICONS[step['status']]} {step_label(step)}"
-        if step["status"] == "failed":
+        if step["status"] == "failed" and step["exit_code"] is not None:
             line += f" (exit {step['exit_code']})"
         if step["reason"]:
             line += f": {step['reason']}"

@@ -189,7 +189,7 @@ function GroupRow({
     group.status === 'skipped'
       ? (group.steps[0].reason ?? 'skipped')
       : failed.length
-        ? `failed: ${failed.map((s) => `${s.step} (exit ${s.exit_code})`).join(', ')}`
+        ? `failed: ${failed.map((s) => `${s.step} (${s.reason ?? `exit ${s.exit_code}`})`).join(', ')}`
         : `${group.steps.length} step${group.steps.length === 1 ? '' : 's'}`
 
   return (
@@ -228,7 +228,9 @@ function GroupRow({
                 <StatusIcon status={step.status} />
                 <span className="font-mono">{step.step}</span>
                 <span>{step.kind}</span>
-                {step.status === 'failed' && <span className={STATUS_TEXT.failed}>exit {step.exit_code}</span>}
+                {step.status === 'failed' && (
+                  <span className={STATUS_TEXT.failed}>{step.reason ?? `exit ${step.exit_code}`}</span>
+                )}
                 <span className="ml-auto tabular-nums">{formatDuration(secondsBetween(step.started, step.finished))}</span>
               </div>
             )}
