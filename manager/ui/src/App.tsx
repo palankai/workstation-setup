@@ -1,9 +1,10 @@
 import { AlertTriangle, Boxes, History, LayoutGrid, List, Loader2, RotateCcw, Save, Search, X } from 'lucide-react'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { api, type Application, type Profile, type SavedSearch } from './api'
+import { api, type Application, type Profile, type RunSummary, type SavedSearch } from './api'
 import { AppCard, AppRow } from './components/AppCard'
 import { DetailPanel } from './components/DetailPanel'
-import { RunsPanel } from './components/Runs'
+import { RunReport } from './components/RunReport'
+import { STATUS_TEXT, relativeTime } from './runs'
 import { search } from './search'
 import { difference, impliedBy } from './selection'
 
@@ -28,15 +29,13 @@ function storedLayout(): Layout {
   }
 }
 
-function initialProfile() {
-  return new URLSearchParams(window.location.search).get('profile')
-}
+const initialParam = (name: string) => () => new URLSearchParams(window.location.search).get(name)
 
 export default function App() {
   const [apps, setApps] = useState<Application[]>([])
   const [profiles, setProfiles] = useState<string[]>([])
   const [searches, setSearches] = useState<SavedSearch[]>([])
-  const [profileName, setProfileName] = useState<string | null>(initialProfile)
+  const [profileName, setProfileName] = useState<string | null>(initialParam('profile'))
   const [profile, setProfile] = useState<Profile | null>(null)
   const [draft, setDraft] = useState<Set<string>>(new Set())
   const [query, setQuery] = useState('')
@@ -45,18 +44,21 @@ export default function App() {
   const [activeTags, setActiveTags] = useState<Set<string>>(new Set())
   const [activeKind, setActiveKind] = useState<string | null>(null)
   const [detailId, setDetailId] = useState<string | null>(null)
-  const [runsOpen, setRunsOpen] = useState(false)
+  const [runs, setRuns] = useState<RunSummary[]>([])
+  // A run id or "latest"; when set, the main area shows that run's report
+  const [runId, setRunId] = useState<string | null>(initialParam('run'))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    Promise.all([api.applications(), api.profiles(), api.settings()])
-      .then(([apps, profiles, settings]) => {
+    Promise.all([api.applications(), api.profiles(), api.settings(), api.runs()])
+      .then(([apps, profiles, settings, runs]) => {
         setApps(apps.sort((a, b) => a.name.localeCompare(b.name)))
         setProfiles(profiles)
         setSearches(settings.searches)
+        setRuns(runs)
         setProfileName((current) => (current && profiles.includes(current) ? current : profiles[0] ?? null))
       })
       .catch((e: Error) => setError(e.message))
@@ -75,6 +77,18 @@ export default function App() {
       })
       .catch((e: Error) => setError(e.message))
   }, [profileName])
+
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (runId) url.searchParams.set('run', runId)
+    else url.searchParams.delete('run')
+    window.history.replaceState(null, '', url)
+  }, [runId])
+
+  const refreshRuns = useCallback(() => api.runs().then(setRuns), [])
+  const openLastRun = () => refreshRuns().then(() => setRunId('latest'))
+  const reportId = runId === 'latest' ? runs[0]?.id : runId
+  const showApps = () => setRunId(null)
 
   const byId = useMemo(() => new Map(apps.map((app) => [app.id, app])), [apps])
   const saved = useMemo(() => new Set(profile?.selected ?? []), [profile])
@@ -221,7 +235,6 @@ export default function App() {
   }, [layout])
 
   const closeDetail = useCallback(() => setDetailId(null), [])
-  const closeRuns = useCallback(() => setRunsOpen(false), [])
 
   return (
     <div className="flex min-h-screen">
@@ -230,19 +243,32 @@ export default function App() {
           <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
             <Boxes className="size-4.5" />
           </div>
-          <div className="flex-1">
+          <div>
             <p className="text-sm font-semibold leading-tight">Workstation</p>
             <p className="text-xs text-zinc-500">Application selector</p>
           </div>
+        </div>
+
+        {runs.length > 0 && (
           <button
             type="button"
-            title="Runs"
-            onClick={() => setRunsOpen(true)}
-            className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+            onClick={() => void openLastRun()}
+            className={[
+              'flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition',
+              runId
+                ? 'border-indigo-300 bg-indigo-50 dark:border-indigo-500/40 dark:bg-indigo-500/15'
+                : 'border-zinc-200 hover:border-indigo-300 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800',
+            ].join(' ')}
           >
-            <History className="size-4.5" />
+            <History className="size-4 shrink-0 text-zinc-500" />
+            <span className="min-w-0">
+              <span className="block text-sm font-medium">Last run report</span>
+              <span className="block truncate text-xs text-zinc-500">
+                <span className={STATUS_TEXT[runs[0].status]}>{runs[0].status}</span> · {relativeTime(runs[0].started)}
+              </span>
+            </span>
           </button>
-        </div>
+        )}
 
         <section>
           <SidebarTitle>Profile</SidebarTitle>
@@ -267,7 +293,10 @@ export default function App() {
               <SidebarButton
                 key={kind}
                 active={activeKind === kind}
-                onClick={() => setActiveKind((current) => (current === kind ? null : kind))}
+                onClick={() => {
+                  showApps()
+                  setActiveKind((current) => (current === kind ? null : kind))
+                }}
               >
                 <span>{kind}</span>
                 <Count>{count}</Count>
@@ -286,7 +315,10 @@ export default function App() {
                   <SidebarButton
                     key={saved.name}
                     active={active}
-                    onClick={() => setQuery(active ? '' : saved.query)}
+                    onClick={() => {
+                      showApps()
+                      setQuery(active ? '' : saved.query)
+                    }}
                   >
                     <span title={saved.query} className={saved.builtin ? 'italic' : undefined}>
                       {saved.name}
@@ -303,7 +335,14 @@ export default function App() {
           <SidebarTitle>Show</SidebarTitle>
           <div className="space-y-0.5">
             {VIEWS.map(({ id, label }) => (
-              <SidebarButton key={id} active={view === id} onClick={() => setView(id)}>
+              <SidebarButton
+                key={id}
+                active={view === id}
+                onClick={() => {
+                  showApps()
+                  setView(id)
+                }}
+              >
                 <span>{label}</span>
                 <Count>{viewCounts[id]}</Count>
               </SidebarButton>
@@ -343,7 +382,10 @@ export default function App() {
               <button
                 key={tag}
                 type="button"
-                onClick={() => toggleTag(tag)}
+                onClick={() => {
+                  showApps()
+                  toggleTag(tag)
+                }}
                 className={[
                   'rounded-md px-1.5 py-0.5 text-xs transition',
                   activeTags.has(tag)
@@ -359,128 +401,161 @@ export default function App() {
       </aside>
 
       <main className="min-w-0 flex-1">
-        <div className="sticky top-0 z-30 border-b border-zinc-200 bg-zinc-50/80 px-6 py-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
-          <div className="mx-auto flex max-w-6xl items-center gap-3">
-            <select
-              value={profileName ?? ''}
-              onChange={(e) => switchProfile(e.target.value)}
-              className="rounded-lg border border-zinc-300 bg-white px-2 py-2 text-sm lg:hidden dark:border-zinc-700 dark:bg-zinc-900"
-            >
-              {profiles.map((name) => (
-                <option key={name}>{name}</option>
-              ))}
-            </select>
-            <label className="relative flex-1">
-              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400" />
-              <input
-                ref={searchRef}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    setQuery('')
-                    e.currentTarget.blur()
-                  }
-                }}
-                placeholder="Fuzzy search name, id or description · #tag · kind:cli · is:archived"
-                className="w-full rounded-xl border border-zinc-300 bg-white py-2.5 pr-20 pl-10 text-sm shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-zinc-700 dark:bg-zinc-900"
+        {runId ? (
+          <div className="mx-auto max-w-6xl px-4 pt-6 pb-32 sm:px-6">
+            {reportId ? (
+              <RunReport
+                key={reportId}
+                id={reportId}
+                runs={runs}
+                apps={byId}
+                onSelectRun={setRunId}
+                onOpenApp={setDetailId}
+                onReload={refreshRuns}
+                onClose={showApps}
               />
-              {query ? (
+            ) : (
+              <p className="py-24 text-center text-sm text-zinc-500">
+                No runs yet. Run <code className="font-mono">ws update</code> in a terminal.
+              </p>
+            )}
+          </div>
+        ) : (
+          <>
+          <div className="sticky top-0 z-30 border-b border-zinc-200 bg-zinc-50/80 px-6 py-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
+            <div className="mx-auto flex max-w-6xl items-center gap-3">
+              <select
+                value={profileName ?? ''}
+                onChange={(e) => switchProfile(e.target.value)}
+                className="rounded-lg border border-zinc-300 bg-white px-2 py-2 text-sm lg:hidden dark:border-zinc-700 dark:bg-zinc-900"
+              >
+                {profiles.map((name) => (
+                  <option key={name}>{name}</option>
+                ))}
+              </select>
+              {runs.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setQuery('')}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 rounded p-0.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                  title="Last run report"
+                  onClick={() => void openLastRun()}
+                  className="rounded-lg border border-zinc-300 p-2 text-zinc-500 lg:hidden dark:border-zinc-700"
                 >
+                  <History className="size-4" />
+                </button>
+              )}
+              <label className="relative flex-1">
+                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400" />
+                <input
+                  ref={searchRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setQuery('')
+                      e.currentTarget.blur()
+                    }
+                  }}
+                  placeholder="Fuzzy search name, id or description · #tag · kind:cli · is:archived"
+                  className="w-full rounded-xl border border-zinc-300 bg-white py-2.5 pr-20 pl-10 text-sm shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-zinc-700 dark:bg-zinc-900"
+                />
+                {query ? (
+                  <button
+                    type="button"
+                    onClick={() => setQuery('')}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 rounded p-0.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                  >
+                    <X className="size-4" />
+                  </button>
+                ) : (
+                  <kbd className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 rounded border border-zinc-200 px-1.5 font-mono text-[11px] text-zinc-400 dark:border-zinc-700">
+                    /
+                  </kbd>
+                )}
+              </label>
+            </div>
+            <div className="mx-auto mt-3 flex max-w-6xl items-center gap-2 text-xs text-zinc-500">
+              <span>
+                {visible.length} of {apps.length} applications
+              </span>
+              {activeKind && (
+                <button
+                  type="button"
+                  onClick={() => setActiveKind(null)}
+                  className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-1.5 py-0.5 text-white dark:bg-indigo-500"
+                >
+                  {activeKind} <X className="size-3" />
+                </button>
+              )}
+              {[...activeTags].map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-1.5 py-0.5 text-white dark:bg-indigo-500"
+                >
+                  {tag} <X className="size-3" />
+                </button>
+              ))}
+              <div className="ml-auto flex rounded-lg border border-zinc-200 bg-white p-0.5 dark:border-zinc-700 dark:bg-zinc-900">
+                <LayoutButton active={layout === 'grid'} title="Cards" onClick={() => setLayout('grid')}>
+                  <LayoutGrid className="size-3.5" />
+                </LayoutButton>
+                <LayoutButton active={layout === 'list'} title="Compact list" onClick={() => setLayout('list')}>
+                  <List className="size-3.5" />
+                </LayoutButton>
+              </div>
+            </div>
+          </div>
+
+          <div className="mx-auto max-w-6xl px-6 pt-6 pb-32">
+            {error && (
+              <div className="mb-6 flex items-start gap-2 rounded-lg border border-rose-300 bg-rose-50 p-3 text-sm text-rose-800 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                <span className="flex-1">{error}</span>
+                <button type="button" onClick={() => setError(null)}>
                   <X className="size-4" />
                 </button>
-              ) : (
-                <kbd className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 rounded border border-zinc-200 px-1.5 font-mono text-[11px] text-zinc-400 dark:border-zinc-700">
-                  /
-                </kbd>
-              )}
-            </label>
-          </div>
-          <div className="mx-auto mt-3 flex max-w-6xl items-center gap-2 text-xs text-zinc-500">
-            <span>
-              {visible.length} of {apps.length} applications
-            </span>
-            {activeKind && (
-              <button
-                type="button"
-                onClick={() => setActiveKind(null)}
-                className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-1.5 py-0.5 text-white dark:bg-indigo-500"
-              >
-                {activeKind} <X className="size-3" />
-              </button>
+              </div>
             )}
-            {[...activeTags].map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => toggleTag(tag)}
-                className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-1.5 py-0.5 text-white dark:bg-indigo-500"
+
+            {loading && !error ? (
+              <div className="flex justify-center py-24 text-zinc-400">
+                <Loader2 className="size-6 animate-spin" />
+              </div>
+            ) : visible.length === 0 ? (
+              <p className="py-24 text-center text-sm text-zinc-500">No applications match.</p>
+            ) : (
+              <div
+                className={
+                  layout === 'list'
+                    ? 'divide-y divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800'
+                    : 'grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3'
+                }
               >
-                {tag} <X className="size-3" />
-              </button>
-            ))}
-            <div className="ml-auto flex rounded-lg border border-zinc-200 bg-white p-0.5 dark:border-zinc-700 dark:bg-zinc-900">
-              <LayoutButton active={layout === 'grid'} title="Cards" onClick={() => setLayout('grid')}>
-                <LayoutGrid className="size-3.5" />
-              </LayoutButton>
-              <LayoutButton active={layout === 'list'} title="Compact list" onClick={() => setLayout('list')}>
-                <List className="size-3.5" />
-              </LayoutButton>
-            </div>
+                {visible.map((app) => {
+                  const Item = layout === 'list' ? AppRow : AppCard
+                  return (
+                    <Item
+                      key={app.id}
+                      app={app}
+                      activeTags={activeTags}
+                      state={{
+                        selected: draft.has(app.id),
+                        locked: fundamentals.has(app.id),
+                        implied: implied.get(app.id) ?? [],
+                        change: changeOf(app.id),
+                      }}
+                      onToggle={() => toggle(app.id)}
+                      onDetails={() => setDetailId(app.id)}
+                      onTag={toggleTag}
+                    />
+                  )
+                })}
+              </div>
+            )}
           </div>
-        </div>
-
-        <div className="mx-auto max-w-6xl px-6 pt-6 pb-32">
-          {error && (
-            <div className="mb-6 flex items-start gap-2 rounded-lg border border-rose-300 bg-rose-50 p-3 text-sm text-rose-800 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200">
-              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-              <span className="flex-1">{error}</span>
-              <button type="button" onClick={() => setError(null)}>
-                <X className="size-4" />
-              </button>
-            </div>
-          )}
-
-          {loading && !error ? (
-            <div className="flex justify-center py-24 text-zinc-400">
-              <Loader2 className="size-6 animate-spin" />
-            </div>
-          ) : visible.length === 0 ? (
-            <p className="py-24 text-center text-sm text-zinc-500">No applications match.</p>
-          ) : (
-            <div
-              className={
-                layout === 'list'
-                  ? 'divide-y divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800'
-                  : 'grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3'
-              }
-            >
-              {visible.map((app) => {
-                const Item = layout === 'list' ? AppRow : AppCard
-                return (
-                  <Item
-                    key={app.id}
-                    app={app}
-                    activeTags={activeTags}
-                    state={{
-                      selected: draft.has(app.id),
-                      locked: fundamentals.has(app.id),
-                      implied: implied.get(app.id) ?? [],
-                      change: changeOf(app.id),
-                    }}
-                    onToggle={() => toggle(app.id)}
-                    onDetails={() => setDetailId(app.id)}
-                    onTag={toggleTag}
-                  />
-                )
-              })}
-            </div>
-          )}
-        </div>
+          </>
+        )}
       </main>
 
       {dirty && !loading && (
@@ -525,8 +600,6 @@ export default function App() {
           {toast}
         </div>
       )}
-
-      {runsOpen && <RunsPanel onClose={closeRuns} />}
 
       {detailId && (
         <DetailPanel

@@ -9,7 +9,7 @@ Selects applications for a profile (`profiles/<name>.yaml`) from the catalog in 
 ## Run
 
 ```sh
-ws serve --open    # or: uv run --extra server workstation-manager serve --open
+ws serve             # opens the browser; --no-open to not, --report [RUN] to open on a run report
 ```
 
 The built UI is committed in `ui/dist`, so serving needs no Node. Serves on <http://127.0.0.1:8765>. The repository root is discovered from the current directory; override with `--root`.
@@ -71,6 +71,7 @@ ws update git '#rust'        # only these (ids, #tag, kind:<kind>, is:<flag>) an
 ws update --no-brew          # skip brew, including Brewfile steps
 ws update fd --force         # also applications the profile doesn't install
 ws update jq --no-deps       # without dependencies
+ws update --open             # afterwards, open the report in the web UI (serves it if not running)
 ws runs; ws report [RUN]     # past runs; results and failed output
 ws once list; ws once reset ID [STEP]
 ```
@@ -83,7 +84,9 @@ A failing application stops its own remaining steps and skips everything dependi
 
 Machine state lives in `~/.local/state/workstation-setup/` (or `$XDG_STATE_HOME`), never in the repository:
 `state.yaml` records once steps (time and sha256 of the script that ran; a changed script is flagged by `plan`,
-not rerun), and `runs/<id>/` keeps `run.json` plus every step's full terminal output, also shown in the UI.
+not rerun), and `runs/<id>/` keeps `run.json` plus every step's full terminal output. The UI's run report (sidebar
+"Last run report", or `/?run=<id>` / `/?run=latest`) lists one collapsible line per application and run-wide
+step, filterable by status.
 
 ## Install order
 

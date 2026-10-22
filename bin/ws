@@ -1,7 +1,7 @@
 #!/bin/sh
 # Workstation manager from anywhere; symlink into ~/.local/bin
 manager="$(cd "$(dirname "$(readlink -f "$0")")/../manager" && pwd)"
-if [ "$1" = serve ]; then
-    exec uv run --quiet --no-dev --extra server --project "$manager" workstation-manager "$@"
-fi
-exec uv run --quiet --no-dev --project "$manager" workstation-manager "$@"
+extra=""
+[ "$1" = serve ] && extra="--extra server"
+for arg; do [ "$arg" = --open ] && extra="--extra server"; done
+exec uv run --quiet --no-dev $extra --project "$manager" workstation-manager "$@"

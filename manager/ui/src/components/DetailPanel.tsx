@@ -124,8 +124,6 @@ export function DetailPanel({ id, apps, selected, locked, impliedBy, onToggle, o
           <Relations title="Depends on" ids={app.dependencies} apps={apps} onOpen={onOpen} />
           <Relations title="Required by" ids={requiredBy.map((a) => a.id)} apps={apps} onOpen={onOpen} />
 
-          <AppHistory id={id} />
-
           {error && <p className="text-sm text-rose-600">{error}</p>}
           {detail && (
             <>
@@ -144,6 +142,8 @@ export function DetailPanel({ id, apps, selected, locked, impliedBy, onToggle, o
               <Files detail={detail} />
             </>
           )}
+
+          <AppHistory id={id} />
         </div>
       </aside>
     </div>
