@@ -13,6 +13,7 @@ from .core.state import State, StateError, default_state_dir
 from .core.query import search
 from .executor.report import format_run, format_search, summary_line
 from .executor.update import Executor, Plan, PlanError, format_plan, make_plan
+from .migrate import migrate
 
 UI_DIST = Path(__file__).resolve().parents[2] / "ui" / "dist"
 HOST = "127.0.0.1"
@@ -146,6 +147,16 @@ def main(argv: list[str] | None = None) -> None:
     reset.add_argument("id")
     reset.add_argument("step", nargs="?", help="default: every once step of the application")
 
+    migrate_command = commands.add_parser(
+        "migrate",
+        help="move this machine from the old setup: once steps, links into components/",
+        description="Records once steps the old setup already ran (targets/<profile>/.once), "
+        "points links into old component folders at the applications, and undoes `ln -sf` "
+        "nesting. Safe to run again, and on machines without the old setup.",
+    )
+    migrate_command.add_argument("--profile", help="default: $WORKSTATION or ~/.workstation-setup-config")
+    migrate_command.add_argument("-n", "--dry-run", action="store_true", help="only show what it would do")
+
     runs = commands.add_parser("runs", help="list recent update runs")
     runs.add_argument("-n", "--limit", type=int, default=20)
 
@@ -176,6 +187,10 @@ def main(argv: list[str] | None = None) -> None:
             run_flag(workspace, args)
         elif args.command == "once":
             run_once(workspace, State(state_dir), args)
+        elif args.command == "migrate":
+            profile = resolve_profile(args.profile)
+            lines = migrate(workspace, State(state_dir), profile, Path.home(), args.dry_run)
+            print("\n".join(lines) if lines else "Nothing to migrate")
         elif args.command == "runs":
             for run in list_runs(state_dir)[: args.limit]:
                 print(summary_line(run))

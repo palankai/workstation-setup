@@ -97,6 +97,7 @@ ws uninstall --clear                    # take off the list what uninstalled suc
 ws deprecate|undeprecate ID...          # set or clear the flag, like the app panel's buttons
 ws archive|unarchive ID...
 ws once list; ws once reset ID [STEP]
+ws migrate [-n]              # from the old setup: record its once steps, relink components/ → applications/
 ```
 
 A failing application stops its own remaining steps and skips everything depending on it; the rest still runs
