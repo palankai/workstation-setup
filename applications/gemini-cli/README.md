@@ -8,6 +8,7 @@ tags: [ai, agent, google]
 dependencies: []
 homepage: https://geminicli.com
 legacy: components/ai/gemini
+deprecated: true
 ---
 
 # Gemini CLI
