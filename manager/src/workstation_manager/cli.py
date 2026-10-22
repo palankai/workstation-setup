@@ -7,7 +7,7 @@ import urllib.request
 import webbrowser
 from pathlib import Path
 
-from .core import CatalogError, ProfileError, Workspace, WorkspaceError
+from .core import CatalogError, ProfileError, Workspace, WorkspaceError, set_flag
 from .core.runs import RUNS, RunLog, list_runs, load_run
 from .core.state import State, StateError, default_state_dir
 from .core.query import search
@@ -20,6 +20,13 @@ PORT = 8765
 # The repository this package lives in, used when the cwd isn't inside one
 PACKAGE_ROOT = Path(__file__).resolve().parents[3]
 MACHINE_CONFIG = Path.home() / ".workstation-setup-config"
+# Command → (flag, value), the CLI side of the UI's toggle buttons
+FLAG_COMMANDS = {
+    "deprecate": ("deprecated", True),
+    "undeprecate": ("deprecated", False),
+    "archive": ("archived", True),
+    "unarchive": ("archived", False),
+}
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -88,6 +95,29 @@ def main(argv: list[str] | None = None) -> None:
     search.add_argument("query", nargs="*")
     search.add_argument("--profile", help="default: $WORKSTATION or ~/.workstation-setup-config")
 
+    profile_option = argparse.ArgumentParser(add_help=False)
+    profile_option.add_argument("ids", nargs="+", metavar="id")
+    profile_option.add_argument(
+        "--profile", help="default: $WORKSTATION or ~/.workstation-setup-config"
+    )
+    commands.add_parser(
+        "select", parents=[profile_option], help="add applications to the profile"
+    )
+    commands.add_parser(
+        "deselect",
+        aliases=["unselect"],
+        parents=[profile_option],
+        help="remove applications from the profile",
+    )
+    application_ids = argparse.ArgumentParser(add_help=False)
+    application_ids.add_argument("ids", nargs="+", metavar="id")
+    for name, (flag, value) in FLAG_COMMANDS.items():
+        commands.add_parser(
+            name,
+            parents=[application_ids],
+            help=f"{'set' if value else 'clear'} '{flag}' in the applications' frontmatter",
+        )
+
     once = commands.add_parser("once", help="once step records on this machine")
     once_commands = once.add_subparsers(dest="once_command", required=True)
     once_commands.add_parser("list", help="show recorded once steps")
@@ -115,6 +145,10 @@ def main(argv: list[str] | None = None) -> None:
             sys.exit(run_update(workspace, state_dir, args, command))
         elif args.command == "search":
             run_search(workspace, args)
+        elif args.command in ("select", "deselect", "unselect"):
+            run_select(workspace, args, select=args.command == "select")
+        elif args.command in FLAG_COMMANDS:
+            run_flag(workspace, args)
         elif args.command == "once":
             run_once(workspace, State(state_dir), args)
         elif args.command == "runs":
@@ -202,6 +236,48 @@ def run_search(workspace: Workspace, args: argparse.Namespace) -> None:
     found = search(catalog, args.query, keep=installed)
     lines = format_search(found, installed, sys.stdout.isatty())
     print("\n".join(lines) if lines else "No applications match.")
+
+
+def run_select(workspace: Workspace, args: argparse.Namespace, select: bool) -> None:
+    profile = resolve_profile(args.profile)
+    catalog = workspace.catalog()
+    ids = list(dict.fromkeys(catalog.get(id).id for id in args.ids))
+    current = workspace.state(profile, catalog).selected
+    if select:
+        fundamentals = [id for id in ids if catalog.get(id).fundamental]
+        unchanged = [id for id in ids if id in current]
+        changed = [id for id in ids if id not in current and id not in fundamentals]
+        selection = [*current, *changed]
+    else:
+        fundamentals = []
+        unchanged = [id for id in ids if id not in current]
+        changed = [id for id in ids if id in current]
+        selection = [id for id in current if id not in changed]
+    if changed:
+        workspace.update_selection(profile, selection)
+        print(f"{'Selected' if select else 'Deselected'} in {profile}: {', '.join(changed)}")
+    if unchanged:
+        print(f"Already {'selected' if select else 'not selected'}: {', '.join(unchanged)}")
+    if fundamentals:
+        print(f"Always installed (fundamental): {', '.join(fundamentals)}")
+    if not select:
+        installed = set(workspace.state(profile).install_order)
+        if still := [id for id in ids if id in installed]:
+            print(f"Still installed as a fundamental or dependency: {', '.join(still)}")
+
+
+def run_flag(workspace: Workspace, args: argparse.Namespace) -> None:
+    flag, value = FLAG_COMMANDS[args.command]
+    catalog = workspace.catalog()
+    applications = [catalog.get(id) for id in dict.fromkeys(args.ids)]
+    changed = [a.id for a in applications if getattr(a, flag) != value]
+    for application in applications:
+        if application.id in changed:
+            set_flag(application.path / "README.md", flag, value)
+    if changed:
+        print(f"{'Set' if value else 'Cleared'} {flag}: {', '.join(changed)}")
+    if unchanged := [a.id for a in applications if a.id not in changed]:
+        print(f"Already {'' if value else 'not '}{flag}: {', '.join(unchanged)}")
 
 
 def run_once(workspace: Workspace, state: State, args: argparse.Namespace) -> None:

@@ -76,6 +76,9 @@ ws update jq --no-deps       # without dependencies
 ws update --open             # afterwards, open the report in the web UI (serves it if not running)
 ws runs; ws report [RUN]     # past runs; results and failed output
 ws search chat '#ai'         # one line per application; ✓ marks what the profile installs
+ws select ID...; ws deselect ID...      # change the profile, like ticking a card (unselect works too)
+ws deprecate|undeprecate ID...          # set or clear the flag, like the app panel's buttons
+ws archive|unarchive ID...
 ws once list; ws once reset ID [STEP]
 ```
 
