@@ -70,6 +70,7 @@ It's in the repository, so every machine on the profile uninstalls them, and ent
   anything a still installed application depends on, can't be marked; their dependencies are left alone.
 - Selecting takes it, and every dependency it pulls in, off the list. `ws keep ID` (or the button again) takes it
   off without selecting it.
+- In the UI, marking and unmarking are unsaved changes like ticking cards: Save writes both lists, Discard undoes.
 - Once uninstalled, clear it: from the run report (per application or all), `ws uninstall --clear` (those whose
   last uninstall succeeded), or the prompt after `ws update`.
 

@@ -121,15 +121,10 @@ export const api = {
   profiles: () => request<string[]>('/api/profiles'),
   profile: (name: string) =>
     request<Profile>(`/api/profiles/${encodeURIComponent(name)}`),
-  saveProfile: (name: string, selected: string[]) =>
+  saveProfile: (name: string, selected: string[], uninstall: string[]) =>
     request<Profile>(`/api/profiles/${encodeURIComponent(name)}`, {
       method: 'PUT',
-      body: JSON.stringify({ selected }),
-    }),
-  markUninstall: (name: string, ids: string[]) =>
-    request<Profile>(`/api/profiles/${encodeURIComponent(name)}/uninstall`, {
-      method: 'POST',
-      body: JSON.stringify({ ids }),
+      body: JSON.stringify({ selected, uninstall }),
     }),
   keep: (name: string, ids: string[]) =>
     request<Profile>(`/api/profiles/${encodeURIComponent(name)}/keep`, {

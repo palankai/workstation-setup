@@ -20,6 +20,18 @@ export function impliedBy(
   return result
 }
 
+/** The app and everything it depends on, transitively. */
+export function withDependencies(apps: Map<string, Application>, id: string): Set<string> {
+  const result = new Set<string>()
+  const visit = (id: string) => {
+    if (result.has(id)) return
+    result.add(id)
+    for (const dependency of apps.get(id)?.dependencies ?? []) visit(dependency)
+  }
+  visit(id)
+  return result
+}
+
 export function difference<T>(a: Set<T>, b: Set<T>): T[] {
   return [...a].filter((item) => !b.has(item))
 }

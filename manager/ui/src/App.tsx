@@ -6,7 +6,7 @@ import { DetailPanel } from './components/DetailPanel'
 import { RunReport } from './components/RunReport'
 import { STATUS_TEXT, relativeTime } from './runs'
 import { search } from './search'
-import { difference, impliedBy } from './selection'
+import { difference, impliedBy, withDependencies } from './selection'
 
 type View = 'all' | 'selected' | 'available' | 'uninstall' | 'changes'
 
@@ -39,6 +39,8 @@ export default function App() {
   const [profileName, setProfileName] = useState<string | null>(initialParam('profile'))
   const [profile, setProfile] = useState<Profile | null>(null)
   const [draft, setDraft] = useState<Set<string>>(new Set())
+  // The uninstall list being edited; saved together with the selection
+  const [marked, setMarked] = useState<Set<string>>(new Set())
   const [query, setQuery] = useState('')
   const [view, setView] = useState<View>('all')
   const [layout, setLayout] = useState<Layout>(storedLayout)
@@ -75,6 +77,7 @@ export default function App() {
       .then((p) => {
         setProfile(p)
         setDraft(new Set(p.selected))
+        setMarked(new Set(p.uninstall))
       })
       .catch((e: Error) => setError(e.message))
   }, [profileName])
@@ -94,7 +97,7 @@ export default function App() {
   const byId = useMemo(() => new Map(apps.map((app) => [app.id, app])), [apps])
   const saved = useMemo(() => new Set(profile?.selected ?? []), [profile])
   const fundamentals = useMemo(() => new Set(profile?.fundamentals ?? []), [profile])
-  const marked = useMemo(() => new Set(profile?.uninstall ?? []), [profile])
+  const savedMarked = useMemo(() => new Set(profile?.uninstall ?? []), [profile])
   const implied = useMemo(() => impliedBy(byId, new Set([...fundamentals, ...draft])), [byId, fundamentals, draft])
   const installs = useCallback(
     (id: string) => draft.has(id) || fundamentals.has(id) || implied.has(id),
@@ -102,12 +105,19 @@ export default function App() {
   )
   const added = useMemo(() => difference(draft, saved), [draft, saved])
   const removed = useMemo(() => difference(saved, draft), [draft, saved])
-  const dirty = added.length > 0 || removed.length > 0
+  const marking = useMemo(() => difference(marked, savedMarked), [marked, savedMarked])
+  const unmarking = useMemo(() => difference(savedMarked, marked), [marked, savedMarked])
+  const changeCount = new Set([...added, ...removed, ...marking, ...unmarking]).size
+  const dirty = changeCount > 0
   const loading = !profile || profile.name !== profileName
 
   const changeOf = useCallback(
-    (id: string) => (draft.has(id) && !saved.has(id) ? 'added' : !draft.has(id) && saved.has(id) ? 'removed' : null),
-    [draft, saved],
+    (id: string) => {
+      if (draft.has(id) !== saved.has(id)) return draft.has(id) ? 'added' : 'removed'
+      if (marked.has(id) !== savedMarked.has(id)) return marked.has(id) ? 'marked' : 'kept'
+      return null
+    },
+    [draft, saved, marked, savedMarked],
   )
 
   const inView = useCallback(
@@ -158,20 +168,29 @@ export default function App() {
       selected: searched.filter((app) => installs(app.id)).length,
       available: searched.filter((app) => !installs(app.id)).length,
       uninstall: searched.filter((app) => marked.has(app.id)).length,
-      changes: added.length + removed.length,
+      changes: changeCount,
     }
-  }, [apps, query, kept, marked, installs, added, removed])
+  }, [apps, query, kept, marked, installs, changeCount])
   const installCount = draft.size + fundamentals.size + implied.size
 
-  const toggle = useCallback((id: string) => {
-    if (fundamentals.has(id)) return
-    setDraft((current) => {
-      const next = new Set(current)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }, [fundamentals])
+  const toggle = useCallback(
+    (id: string) => {
+      if (fundamentals.has(id)) return
+      const selecting = !draft.has(id)
+      setDraft((current) => {
+        const next = new Set(current)
+        if (selecting) next.add(id)
+        else next.delete(id)
+        return next
+      })
+      if (selecting) {
+        // What it installs comes off the uninstall list, as the server does for `ws select`
+        const installed = withDependencies(byId, id)
+        setMarked((current) => new Set([...current].filter((marked) => !installed.has(marked))))
+      }
+    },
+    [fundamentals, draft, byId],
+  )
 
   const toggleTag = useCallback((tag: string) => {
     setActiveTags((current) => {
@@ -186,46 +205,47 @@ export default function App() {
     if (!profile || !dirty || saving) return
     setSaving(true)
     try {
-      const ordered = apps.filter((app) => draft.has(app.id)).map((app) => app.id)
-      const updated = await api.saveProfile(profile.name, ordered)
+      const ordered = (ids: Set<string>) => apps.filter((app) => ids.has(app.id)).map((app) => app.id)
+      const updated = await api.saveProfile(profile.name, ordered(draft), ordered(marked))
       setProfile(updated)
       setDraft(new Set(updated.selected))
+      setMarked(new Set(updated.uninstall))
       setToast(`Saved profiles/${updated.name}.yaml`)
     } catch (e) {
       setError((e as Error).message)
     } finally {
       setSaving(false)
     }
-  }, [apps, draft, dirty, profile, saving])
+  }, [apps, draft, marked, dirty, profile, saving])
 
-  const discard = () => setDraft(new Set(saved))
+  const discard = () => {
+    setDraft(new Set(saved))
+    setMarked(new Set(savedMarked))
+  }
 
-  /** Saved right away; the server deselects what it marks, so the draft drops it too. */
-  const setUninstall = async (id: string, uninstall: boolean) => {
-    if (!profile) return
-    try {
-      const updated = uninstall ? await api.markUninstall(profile.name, [id]) : await api.keep(profile.name, [id])
-      setProfile(updated)
-      if (uninstall) {
-        setDraft((current) => {
-          const next = new Set(current)
-          next.delete(id)
-          return next
-        })
-      }
-      setToast(uninstall ? `Marked ${id} for uninstall` : `Kept ${id}: off the uninstall list`)
-    } catch (e) {
-      setError((e as Error).message)
+  /** Marking deselects; unmarking leaves the app unselected. */
+  const setUninstall = (id: string, uninstall: boolean) => {
+    if (uninstall) {
+      setDraft((current) => new Set([...current].filter((selected) => selected !== id)))
+      setMarked((current) => new Set([...current, id]))
+    } else {
+      setMarked((current) => new Set([...current].filter((marked) => marked !== id)))
     }
   }
 
+  /** The run report cleared apps from the saved list; unsaved marks stay. */
   const profileUpdated = useCallback(
-    (updated: Profile) => setProfile((current) => (current?.name === updated.name ? updated : current)),
-    [],
+    (updated: Profile) => {
+      if (updated.name !== profile?.name) return
+      const cleared = new Set(difference(savedMarked, new Set(updated.uninstall)))
+      setProfile(updated)
+      setMarked((current) => new Set([...current].filter((id) => !cleared.has(id))))
+    },
+    [profile, savedMarked],
   )
 
   const switchProfile = (name: string) => {
-    if (dirty && !window.confirm(`Discard ${added.length + removed.length} unsaved change(s)?`)) return
+    if (dirty && !window.confirm(`Discard ${changeCount} unsaved change(s)?`)) return
     setProfileName(name)
   }
 
@@ -602,6 +622,12 @@ export default function App() {
             <p className="text-sm">
               <span className="font-medium text-emerald-600 dark:text-emerald-400">+{added.length}</span>{' '}
               <span className="font-medium text-rose-600 dark:text-rose-400">−{removed.length}</span>{' '}
+              {(marking.length > 0 || unmarking.length > 0) && (
+                <span className="text-zinc-500">
+                  · uninstall <span className="font-medium text-rose-600 dark:text-rose-400">+{marking.length}</span>{' '}
+                  <span className="font-medium text-zinc-600 dark:text-zinc-300">−{unmarking.length}</span>{' '}
+                </span>
+              )}
               <span className="text-zinc-500">
                 unsaved in <span className="font-medium text-zinc-700 dark:text-zinc-200">{profile?.name}</span>
               </span>
@@ -649,7 +675,7 @@ export default function App() {
           marked={marked.has(detailId)}
           neededBy={impliedBy(byId, new Set([...fundamentals, ...draft].filter((id) => id !== detailId))).get(detailId) ?? []}
           onToggle={() => toggle(detailId)}
-          onUninstall={(uninstall) => void setUninstall(detailId, uninstall)}
+          onUninstall={(uninstall) => setUninstall(detailId, uninstall)}
           onOpen={setDetailId}
           onUpdate={updateApp}
           onClose={closeDetail}

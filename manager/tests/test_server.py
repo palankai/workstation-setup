@@ -19,9 +19,12 @@ def test_api(workspace):  # noqa: F811
     assert response.json()["inline"][0]["label"] == "VSCode"
     assert client.put("/api/profiles/dev", json={"selected": ["nope"]}).status_code == 422
 
-    response = client.post("/api/profiles/dev/uninstall", json={"ids": ["fd"]})
+    response = client.put("/api/profiles/dev", json={"selected": ["claude-code"], "uninstall": ["fd"]})
     assert response.json()["uninstall"] == ["fd"]
-    assert client.post("/api/profiles/dev/uninstall", json={"ids": ["jq"]}).status_code == 422
+    rejected = client.put("/api/profiles/dev", json={"selected": ["claude-code"], "uninstall": ["jq"]})
+    assert (rejected.status_code, rejected.json()["detail"]) == (422, "Still needed: jq by claude-code")
+    assert client.put("/api/profiles/dev", json={"selected": ["fd"]}).json()["uninstall"] == []
+    client.put("/api/profiles/dev", json={"selected": [], "uninstall": ["fd"]})
     assert client.post("/api/profiles/dev/keep", json={"ids": ["fd"]}).json()["uninstall"] == []
 
     response = client.patch("/api/applications/jq", json={"deprecated": True})

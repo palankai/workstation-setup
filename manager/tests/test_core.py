@@ -291,3 +291,17 @@ def test_selecting_takes_it_and_its_dependencies_off_the_uninstall_list(workspac
     workspace.mark_uninstall("dev", ["jq", "fd"])
     state = workspace.update_selection("dev", ["claude-code"])
     assert state.uninstall == ["fd"]
+
+
+def test_save_profile_rejects_marking_what_is_selected(workspace: Workspace):
+    with pytest.raises(UninstallError, match="bat is selected"):
+        workspace.save_profile("dev", ["bat"], ["bat"])
+
+
+def test_save_profile_keeps_unknown_refs_on_both_lists(workspace: Workspace):
+    path = workspace.profiles_dir / "dev.yaml"
+    path.write_text(PROFILE + "uninstall:\n  - $ref: gone\n")
+    workspace.save_profile("dev", ["bat"], ["fd"])
+    profile = workspace.profile("dev")
+    assert profile.uninstall == ["fd", "gone"]
+    assert workspace.state("dev").missing == ["gone"]

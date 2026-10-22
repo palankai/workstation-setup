@@ -8,7 +8,8 @@ export type CardState = {
   implied: string[]
   // Marked for uninstall in the profile
   uninstall: boolean
-  change: 'added' | 'removed' | null
+  // Unsaved: selection added or removed, or uninstall marked or kept (taken off the list)
+  change: 'added' | 'removed' | 'marked' | 'kept' | null
 }
 
 type Variant = 'locked' | 'selected' | 'implied' | 'uninstall' | 'idle'
@@ -161,6 +162,13 @@ function Checkbox({ variant, onToggle, className = '' }: { variant: Variant; onT
 
 const BADGE = 'shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold tracking-wide uppercase'
 
+const CHANGE: Record<NonNullable<CardState['change']>, string> = {
+  added: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+  removed: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
+  marked: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
+  kept: 'bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300',
+}
+
 function Badges({ app, state }: { app: Application; state: CardState }) {
   return (
     <>
@@ -181,18 +189,7 @@ function Badges({ app, state }: { app: Application; state: CardState }) {
       {app.trial && (
         <span className={`${BADGE} bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300`}>trial</span>
       )}
-      {state.change && (
-        <span
-          className={[
-            BADGE,
-            state.change === 'added'
-              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
-              : 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
-          ].join(' ')}
-        >
-          {state.change}
-        </span>
-      )}
+      {state.change && <span className={`${BADGE} ${CHANGE[state.change]}`}>{state.change}</span>}
     </>
   )
 }

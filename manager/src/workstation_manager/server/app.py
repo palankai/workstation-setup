@@ -78,6 +78,8 @@ class FlagsUpdate(BaseModel):
 
 class SelectionUpdate(BaseModel):
     selected: list[str]
+    # Left out, applications the selection installs just come off the list
+    uninstall: list[str] | None = None
 
 
 class ApplicationIds(BaseModel):
@@ -225,17 +227,9 @@ def create_app(
     @app.put("/api/profiles/{name}")
     def update_profile(name: str, update: SelectionUpdate) -> ProfileView:
         try:
-            return profile_view(workspace.update_selection(name, update.selected))
-        except ProfileError as e:
-            raise HTTPException(404, str(e)) from None
-        except CatalogError as e:
-            raise HTTPException(422, str(e)) from None
-
-    @app.post("/api/profiles/{name}/uninstall")
-    def mark_uninstall(name: str, update: ApplicationIds) -> ProfileView:
-        """Deselects the applications and marks them for uninstall."""
-        try:
-            return profile_view(workspace.mark_uninstall(name, update.ids))
+            if update.uninstall is None:
+                return profile_view(workspace.update_selection(name, update.selected))
+            return profile_view(workspace.save_profile(name, update.selected, update.uninstall))
         except ProfileError as e:
             raise HTTPException(404, str(e)) from None
         except (CatalogError, UninstallError) as e:
