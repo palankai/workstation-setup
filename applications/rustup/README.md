@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: rustup
 name: "Rust (rustup)"
+kind: Toolchain
 description: "Rust (rustup), Rust toolchain installer, with cargo config linked"
 tags: [programming, rust, version-manager]
 dependencies: []

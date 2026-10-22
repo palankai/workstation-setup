@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: nodejs
 name: "Node.js"
+kind: Toolchain
 description: "Node.js, JavaScript runtime environment"
 tags: [programming, javascript, node]
 dependencies: []

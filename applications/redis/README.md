@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: redis
 name: "Redis"
+kind: Service
 description: "Redis, persistent key-value database"
 tags: [database, server]
 dependencies: []

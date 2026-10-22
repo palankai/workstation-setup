@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: docker-desktop
 name: "Docker Desktop"
+kind: Desktop App
 description: "Docker Desktop with ECR credential helper, config linked"
-tags: [tools, containers, docker, gui]
+tags: [tools, containers, docker]
 dependencies: []
 homepage: https://www.docker.com/products/docker-desktop
 legacy: components/tools/docker

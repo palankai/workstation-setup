@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: 1password
 name: "1Password"
+kind: Desktop App
 description: "1Password, password manager"
-tags: [secrets, security, gui]
+tags: [secrets, security]
 dependencies: []
 homepage: https://1password.com/
 legacy: components/secrets/1password-latest

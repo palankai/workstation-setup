@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: libvirt
 name: "libvirt & virt-manager"
+kind: Library
 description: "libvirt & virt-manager, virtualization API with virt-manager and virt-viewer"
-tags: [library, virtualisation]
+tags: [virtualisation]
 dependencies: []
 homepage: https://libvirt.org/
 legacy: components/libraries/libvirt

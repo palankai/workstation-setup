@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: github-copilot-cli
 name: "GitHub Copilot CLI"
+kind: CLI Tool
 description: "GitHub Copilot CLI, Copilot coding agent in the terminal"
-tags: [ai, cli, agent, github]
+tags: [ai, agent, github]
 dependencies: []
 homepage: https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli
 legacy: components/ai/github-copilot-cli

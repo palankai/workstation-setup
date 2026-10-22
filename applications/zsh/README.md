@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: zsh
 name: "Zsh & Oh My Zsh"
+kind: CLI Tool
 description: "Oh My Zsh, Powerlevel10k config, Nerd Fonts and dotfile sourcing"
-tags: [fundamental, shell, zsh, fonts]
+tags: [shell, zsh, fonts]
 dependencies: []
 fundamental: true
 order: 40

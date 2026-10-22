@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: lima-guest-agents
 name: "Lima Guest Agents"
+kind: Library
 description: "Lima Guest Agents, additional guest agents for Lima"
 tags: [tools, containers, virtualisation]
 dependencies: []

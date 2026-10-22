@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: home-folders
 name: "Home Folders"
+kind: Setup
 description: "Home Folders, standard home directory layout (~/opt, ~/Git, ~/.local/bin, ...)"
-tags: [fundamental, shell]
+tags: [shell]
 dependencies: []
 fundamental: true
 order: 10

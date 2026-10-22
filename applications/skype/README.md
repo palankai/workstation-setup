@@ -1,11 +1,14 @@
 ---
+stereotype: application
 id: skype
 name: "Skype"
+kind: Desktop App
 description: "Skype, video chat, voice call and instant messaging"
-tags: [chat, video-call, microsoft, gui, discontinued]
+tags: [chat, video-call, microsoft]
 dependencies: []
 homepage: https://www.skype.com/
 legacy: components/chat/skype
+deprecated: true
 ---
 
 # Skype

@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: rust-embedded-avr
 name: "Rust Embedded: AVR"
+kind: Toolchain
 description: "Rust Embedded: AVR, AVR toolchain (binutils, gcc, avrdude) for Rust on Arduino"
 tags: [programming, rust, embedded, electronics]
 dependencies: []

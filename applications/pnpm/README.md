@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: pnpm
 name: "pnpm"
+kind: Toolchain
 description: "pnpm, fast, disk space efficient package manager"
 tags: [programming, javascript, node]
 dependencies: []

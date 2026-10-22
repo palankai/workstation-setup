@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: licecap
 name: "LICEcap"
+kind: Desktop App
 description: "LICEcap, simple animated screen captures to GIF"
-tags: [screen-capture, gui]
+tags: [screen-capture]
 dependencies: []
 homepage: https://www.cockos.com/licecap/
 legacy: components/desktop/licecap

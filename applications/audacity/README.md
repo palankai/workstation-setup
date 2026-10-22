@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: audacity
 name: "Audacity"
+kind: Desktop App
 description: "Audacity, multi-track audio editor and recorder"
-tags: [creative, audio, gui]
+tags: [creative, audio]
 dependencies: []
 homepage: https://www.audacityteam.org/
 legacy: components/creative/audacity

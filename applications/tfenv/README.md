@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: tfenv
 name: "tfenv"
+kind: Toolchain
 description: "tfenv, Terraform version manager"
 tags: [programming, infrastructure, hashicorp, version-manager]
 dependencies: []

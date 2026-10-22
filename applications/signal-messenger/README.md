@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: signal-messenger
 name: "Signal"
+kind: Desktop App
 description: "Signal, instant messaging focusing on security"
-tags: [chat, security, gui]
+tags: [chat, security]
 dependencies: []
 homepage: https://signal.org/
 legacy: components/chat/signal

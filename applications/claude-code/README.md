@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: claude-code
 name: "Claude Code"
+kind: CLI Tool
 description: "Claude Code, Anthropic's agentic coding CLI, with hooks, status line and settings linked"
-tags: [ai, cli, agent]
+tags: [ai, agent]
 dependencies: [jq-json-processor]
 homepage: https://claude.com/claude-code
 legacy: components/ai/claude-code

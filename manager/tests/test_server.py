@@ -12,6 +12,7 @@ def test_api(workspace):  # noqa: F811
     assert client.get("/api/applications/nope").status_code == 404
     assert client.get("/api/applications/jq/files/../../profiles/dev.yaml").status_code == 404
     assert client.get("/api/profiles").json() == ["dev"]
+    assert client.get("/api/settings").json()["searches"][0]["query"] == "is:fundamental"
 
     response = client.put("/api/profiles/dev", json={"selected": ["claude-code"]})
     assert response.json()["implied"] == ["jq"]

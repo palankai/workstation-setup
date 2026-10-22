@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: ghostty
 name: "Ghostty"
+kind: Desktop App
 description: "Ghostty, GPU-accelerated terminal emulator with native UI, config linked"
-tags: [terminal, gui]
+tags: [terminal]
 dependencies: []
 homepage: https://ghostty.org/
 legacy: components/terminal/ghostty

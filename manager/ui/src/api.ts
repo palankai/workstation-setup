@@ -1,11 +1,15 @@
 export interface Application {
   id: string
   name: string
+  kind: string
   description: string
   tags: string[]
   dependencies: string[]
   homepage: string | null
   fundamental: boolean
+  deprecated: boolean
+  archived: boolean
+  trial: boolean
   order: number
   folder: string
 }
@@ -38,6 +42,16 @@ export interface Profile {
   install_order: string[]
 }
 
+export interface SavedSearch {
+  name: string
+  query: string
+  builtin: boolean
+}
+
+export interface Settings {
+  searches: SavedSearch[]
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
@@ -56,6 +70,7 @@ export const api = {
     request<ApplicationDetail>(`/api/applications/${encodeURIComponent(id)}`),
   fileUrl: (id: string, path: string) =>
     `/api/applications/${encodeURIComponent(id)}/files/${path}`,
+  settings: () => request<Settings>('/api/settings'),
   profiles: () => request<string[]>('/api/profiles'),
   profile: (name: string) =>
     request<Profile>(`/api/profiles/${encodeURIComponent(name)}`),

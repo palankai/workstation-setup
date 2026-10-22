@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: steam
 name: "Steam"
+kind: Desktop App
 description: "Steam, video game digital distribution service"
-tags: [gaming, gui]
+tags: [gaming]
 dependencies: []
 homepage: https://store.steampowered.com/about/
 legacy: components/gaming/steam

@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: ruby
 name: "Ruby"
+kind: Toolchain
 description: "Ruby programming language"
 tags: [programming, ruby]
 dependencies: []

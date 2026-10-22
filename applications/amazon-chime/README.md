@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: amazon-chime
 name: "Amazon Chime"
+kind: Desktop App
 description: "Amazon Chime, Amazon's communications service"
-tags: [chat, video-call, gui]
+tags: [chat, video-call]
 dependencies: []
 homepage: https://chime.aws/
 legacy: components/chat/amazon-chime

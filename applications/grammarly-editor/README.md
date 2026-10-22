@@ -1,11 +1,14 @@
 ---
+stereotype: application
 id: grammarly-editor
 name: "Grammarly Editor"
+kind: Desktop App
 description: "Grammarly editor app (legacy cask)"
-tags: [writing, gui, discontinued]
+tags: [writing]
 dependencies: []
 homepage: https://www.grammarly.com/
 legacy: components/desktop/grammarly-editor
+deprecated: true
 ---
 
 # Grammarly Editor

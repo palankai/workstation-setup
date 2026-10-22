@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: golang
 name: "Go"
+kind: Toolchain
 description: "Go (golang) programming language with gopls"
 tags: [programming, go, lsp]
 dependencies: []

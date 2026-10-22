@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: cmake
 name: "CMake"
+kind: Toolchain
 description: "CMake, build, test and package software"
 tags: [tools, build]
 dependencies: []

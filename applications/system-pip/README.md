@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: system-pip
 name: "pip"
+kind: Toolchain
 description: "pip, upgrade pip for the system Python"
 tags: [programming, python]
 dependencies: []

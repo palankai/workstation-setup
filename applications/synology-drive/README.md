@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: synology-drive
 name: "Synology Drive"
+kind: Desktop App
 description: "Synology Drive, sync and backup to Synology NAS drives"
-tags: [cloud, storage, sync, gui]
+tags: [cloud, storage, sync]
 dependencies: []
 homepage: https://www.synology.com/
 legacy: components/cloud/synology-drive

@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: racket
 name: "Racket"
+kind: Toolchain
 description: "Racket, Lisp/Scheme family language (minimal install)"
 tags: [programming, lisp]
 dependencies: []

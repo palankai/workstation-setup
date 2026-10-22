@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: wacom-tablet
 name: "Wacom Tablet"
+kind: Driver
 description: "Wacom tablet driver"
 tags: [peripherals, driver]
 dependencies: []

@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: hashicorp-consul
 name: "Consul"
+kind: CLI Tool
 description: "HashiCorp Consul, service discovery and configuration"
-tags: [database, hashicorp, cli]
+tags: [database, hashicorp]
 dependencies: []
 homepage: https://www.consul.io/
 legacy: components/database/consul

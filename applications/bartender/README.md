@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: bartender
 name: "Bartender"
+kind: Desktop App
 description: "Bartender, menu bar icon organiser"
-tags: [system, menu-bar, gui]
+tags: [system, menu-bar]
 dependencies: []
 homepage: https://www.macbartender.com/
 legacy: components/system/bartender

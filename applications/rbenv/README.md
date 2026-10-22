@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: rbenv
 name: "rbenv"
+kind: Toolchain
 description: "rbenv, Ruby version manager"
 tags: [programming, ruby, version-manager]
 dependencies: []

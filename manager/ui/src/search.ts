@@ -76,25 +76,60 @@ function scoreToken(app: Application, token: string): number {
 export interface ParsedQuery {
   terms: string[]
   tags: string[]
+  kinds: string[]
+  flags: string[]
 }
 
-/** `#rust` or `tag:rust` filter by tag (prefix); everything else is a search term. */
+/** "CLI Tool" → "cli-tool", so `kind:cli` can match it. */
+export const kindSlug = (kind: string) => kind.toLowerCase().replace(/\s+/g, '-')
+
+const FLAGS: Record<string, (app: Application) => boolean> = {
+  fundamental: (app) => app.fundamental,
+  deprecated: (app) => app.deprecated,
+  archived: (app) => app.archived,
+  trial: (app) => app.trial,
+}
+
+/**
+ * `#rust` or `tag:rust` filter by tag, `kind:cli` by kind (both prefix), `is:fundamental` by flag
+ * (also deprecated, archived, trial); everything else is a search term.
+ */
 export function parseQuery(query: string): ParsedQuery {
-  const parsed: ParsedQuery = { terms: [], tags: [] }
+  const parsed: ParsedQuery = { terms: [], tags: [], kinds: [], flags: [] }
   for (const token of query.toLowerCase().split(/\s+/).filter(Boolean)) {
-    const tag = token.match(/^(?:#|tag:)(.*)$/)
-    if (!tag) parsed.terms.push(token)
-    else if (tag[1]) parsed.tags.push(tag[1])
+    const filter = token.match(/^(#|tag:|kind:|is:)(.*)$/)
+    if (!filter) parsed.terms.push(token)
+    else if (!filter[2]) continue
+    else if (filter[1] === 'kind:') parsed.kinds.push(filter[2])
+    else if (filter[1] === 'is:') parsed.flags.push(filter[2])
+    else parsed.tags.push(filter[2])
   }
   return parsed
 }
 
-/** Every term and tag filter must match; better matches on id/name rank first. */
-export function search(apps: Application[], query: string): Application[] {
-  const { terms, tags } = parseQuery(query)
-  const tagged = tags.length
-    ? apps.filter((app) => tags.every((wanted) => app.tags.some((tag) => tag.startsWith(wanted))))
-    : apps
+function matchesFilters(app: Application, { tags, kinds, flags }: ParsedQuery): boolean {
+  return (
+    tags.every((wanted) => app.tags.some((tag) => tag.startsWith(wanted))) &&
+    kinds.every((wanted) => kindSlug(app.kind).startsWith(wanted)) &&
+    flags.every((flag) => FLAGS[flag]?.(app) ?? false)
+  )
+}
+
+/**
+ * Every term and filter must match; better matches on id/name rank first.
+ * Archived apps only show up for `is:archived`, or when `keep` says so (e.g. they'd be installed).
+ */
+export function search(
+  apps: Application[],
+  query: string,
+  keep: (app: Application) => boolean = () => false,
+): Application[] {
+  const parsed = parseQuery(query)
+  const { terms } = parsed
+  const showArchived = parsed.flags.includes('archived')
+  const tagged = apps.filter(
+    (app) => (!app.archived || showArchived || keep(app)) && matchesFilters(app, parsed),
+  )
   if (!terms.length) return tagged
   return tagged
     .map((app) => {

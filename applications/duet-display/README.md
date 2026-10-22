@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: duet-display
 name: "Duet Display"
+kind: Desktop App
 description: "Duet Display, remote desktop and second display tool"
-tags: [system, display, gui]
+tags: [system, display]
 dependencies: []
 homepage: https://www.duetdisplay.com/
 legacy: components/system/duet

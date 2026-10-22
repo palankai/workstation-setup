@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: yarn
 name: "Yarn"
+kind: Toolchain
 description: "Yarn, JavaScript package manager"
 tags: [programming, javascript, node]
 dependencies: []

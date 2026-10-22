@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: git
 name: "Git"
+kind: CLI Tool
 description: "Git with git-extras, git-lfs and GitHub CLI"
-tags: [fundamental, shell, git, github, cli]
+tags: [shell, git, github]
 dependencies: []
 fundamental: true
 order: 50

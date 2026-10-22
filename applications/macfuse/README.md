@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: macfuse
 name: "macFUSE"
+kind: Driver
 description: "macFUSE, file system integration (ext4fuse prerequisite)"
 tags: [system, filesystem]
 dependencies: []

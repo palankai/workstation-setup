@@ -9,6 +9,7 @@ from ruamel.yaml import YAML, YAMLError
 
 README = "README.md"
 FRONTMATTER_DELIMITER = "---"
+APPLICATION_STEREOTYPE = "application"
 DEFAULT_ORDER = 100
 
 StepKind = Literal["brewfile", "run", "once"]
@@ -35,12 +36,20 @@ class Step:
 class Application:
     id: str
     name: str
+    # Free-text title such as "CLI Tool"; the set of kinds is whatever applications declare
+    kind: str
     description: str
     tags: tuple[str, ...]
     dependencies: tuple[str, ...]
     homepage: str | None
     # Installed on every profile and can't be deselected
     fundamental: bool
+    # No longer maintained upstream or superseded
+    deprecated: bool
+    # Kept for reference only; hidden from searches unless asked for
+    archived: bool
+    # Not installed regularly; just a badge
+    trial: bool
     # Tie-breaker for install order once dependencies are met; lower goes first
     order: int
     steps: tuple[Step, ...]
@@ -78,6 +87,10 @@ class Catalog:
     @property
     def fundamentals(self) -> list[str]:
         return [a.id for a in self if a.fundamental]
+
+    @property
+    def kinds(self) -> list[str]:
+        return sorted({a.kind for a in self})
 
     def get(self, id: str) -> Application:
         try:
@@ -127,32 +140,49 @@ class Catalog:
 
 def load_catalog(root: Path) -> Catalog:
     """Load every application under root; folders can be nested freely."""
-    return Catalog(
-        root, [load_application(readme) for readme in sorted(root.rglob(README))]
-    )
+    return Catalog(root, find_applications(root))
 
 
-def load_application(readme: Path) -> Application:
-    meta, body = split_frontmatter(readme)
+def find_applications(folder: Path) -> Iterator[Application]:
+    """A folder whose README declares the application stereotype is an application;
+    any other folder is a container that's searched for more applications."""
+    readme = folder / README
+    if readme.is_file():
+        meta, body = split_frontmatter(readme)
+        if meta.get("stereotype") == APPLICATION_STEREOTYPE:
+            yield load_application(readme, meta, body)
+            return
+    for child in sorted(folder.iterdir()):
+        if child.is_dir() and not child.name.startswith((".", "__")):
+            yield from find_applications(child)
+
+
+def load_application(readme: Path, meta: dict, body: str) -> Application:
     try:
         id = meta["id"]
         name = meta["name"]
+        kind = meta["kind"]
     except KeyError as e:
         raise CatalogError(f"{readme}: missing '{e.args[0]}' in frontmatter") from None
-    fundamental = meta.get("fundamental", False)
-    if not isinstance(fundamental, bool):
-        raise CatalogError(f"{readme}: 'fundamental' must be true or false")
+    if not isinstance(kind, str) or not kind.strip():
+        raise CatalogError(f"{readme}: 'kind' must be a non-empty string")
+    flags = {}
+    for flag in ("fundamental", "deprecated", "archived", "trial"):
+        flags[flag] = meta.get(flag, False)
+        if not isinstance(flags[flag], bool):
+            raise CatalogError(f"{readme}: '{flag}' must be true or false")
     order = meta.get("order", DEFAULT_ORDER)
     if not isinstance(order, int) or isinstance(order, bool):
         raise CatalogError(f"{readme}: 'order' must be an integer")
     return Application(
         id=str(id),
         name=str(name),
+        kind=kind.strip(),
         description=str(meta.get("description", "")),
         tags=tuple(str(t) for t in meta.get("tags") or ()),
         dependencies=tuple(str(d) for d in meta.get("dependencies") or ()),
         homepage=meta.get("homepage"),
-        fundamental=fundamental,
+        **flags,
         order=order,
         steps=find_steps(readme.parent),
         path=readme.parent,
@@ -171,9 +201,11 @@ def find_steps(folder: Path) -> tuple[Step, ...]:
 
 
 def split_frontmatter(readme: Path) -> tuple[dict, str]:
-    lines = readme.read_text().splitlines(keepends=True)
+    """Returns an empty mapping when the README has no frontmatter."""
+    text = readme.read_text()
+    lines = text.splitlines(keepends=True)
     if not lines or lines[0].strip() != FRONTMATTER_DELIMITER:
-        raise CatalogError(f"{readme}: missing frontmatter")
+        return {}, text
     for end, line in enumerate(lines[1:], start=1):
         if line.strip() == FRONTMATTER_DELIMITER:
             break

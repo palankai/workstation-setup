@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: heroku-cli
 name: "Heroku CLI"
+kind: CLI Tool
 description: "Heroku command-line interface"
-tags: [cloud, cli]
+tags: [cloud]
 dependencies: []
 homepage: https://devcenter.heroku.com/articles/heroku-cli
 legacy: components/cloud/heroku

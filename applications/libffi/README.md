@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: libffi
 name: "libffi"
+kind: Library
 description: "libffi, portable Foreign Function Interface library"
-tags: [library, build]
+tags: [build]
 dependencies: []
 homepage: https://sourceware.org/libffi/
 legacy: components/libraries/libffi

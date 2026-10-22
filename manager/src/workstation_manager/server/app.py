@@ -16,11 +16,15 @@ from ..core import (
 class ApplicationSummary(BaseModel):
     id: str
     name: str
+    kind: str
     description: str
     tags: list[str]
     dependencies: list[str]
     homepage: str | None
     fundamental: bool
+    deprecated: bool
+    archived: bool
+    trial: bool
     order: int
     folder: str
 
@@ -51,6 +55,16 @@ class ProfileView(BaseModel):
     install_order: list[str]
 
 
+class SavedSearchView(BaseModel):
+    name: str
+    query: str
+    builtin: bool
+
+
+class SettingsView(BaseModel):
+    searches: list[SavedSearchView]
+
+
 class SelectionUpdate(BaseModel):
     selected: list[str]
 
@@ -66,11 +80,15 @@ def create_app(workspace: Workspace, static_dir: Path | None = None) -> FastAPI:
         return ApplicationSummary(
             id=application.id,
             name=application.name,
+            kind=application.kind,
             description=application.description,
             tags=list(application.tags),
             dependencies=list(application.dependencies),
             homepage=application.homepage,
             fundamental=application.fundamental,
+            deprecated=application.deprecated,
+            archived=application.archived,
+            trial=application.trial,
             order=application.order,
             folder=str(application.path.relative_to(workspace.applications_dir)),
         )
@@ -125,6 +143,15 @@ def create_app(workspace: Workspace, static_dir: Path | None = None) -> FastAPI:
         if not file.is_relative_to(root) or not file.is_file():
             raise HTTPException(404, f"No file '{path}' in '{id}'")
         return FileResponse(file)
+
+    @app.get("/api/settings")
+    def settings() -> SettingsView:
+        return SettingsView(
+            searches=[
+                SavedSearchView(name=s.name, query=s.query, builtin=s.builtin)
+                for s in workspace.settings().searches
+            ]
+        )
 
     @app.get("/api/profiles")
     def profiles() -> list[str]:

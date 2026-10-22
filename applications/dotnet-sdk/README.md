@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: dotnet-sdk
 name: ".NET SDK"
+kind: Toolchain
 description: ".NET SDK, Microsoft .NET developer platform"
 tags: [programming, dotnet, microsoft]
 dependencies: []

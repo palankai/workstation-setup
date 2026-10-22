@@ -18,12 +18,17 @@ applications:
 
 
 def write_app(
-    root: Path, folder: str, id: str, dependencies: str = "[]", extra: str = ""
+    root: Path,
+    folder: str,
+    id: str,
+    dependencies: str = "[]",
+    extra: str = "",
+    kind: str = "CLI Tool",
 ) -> Path:
     path = root / "applications" / folder
     path.mkdir(parents=True)
     (path / "README.md").write_text(
-        f"---\nid: {id}\nname: {id.title()}\n"
+        f"---\nstereotype: application\nid: {id}\nname: {id.title()}\nkind: {kind}\n"
         f"dependencies: {dependencies}\n{extra}---\n\n# {id}\n"
     )
     return path
@@ -46,6 +51,51 @@ def test_catalog_finds_nested_folders_by_id(workspace: Workspace):
     assert catalog.get("claude-code").path.name == "claude"
     assert len(catalog) == 8
     assert catalog.fundamentals == ["home-folders", "vim"]
+
+
+def test_container_readmes_are_not_applications(workspace: Workspace):
+    (workspace.root / "applications" / "ai" / "README.md").write_text("# AI tools\n")
+    group = workspace.root / "applications" / "web"
+    group.mkdir()
+    (group / "README.md").write_text("---\ntitle: Web\n---\n")
+    write_app(workspace.root, "web/browser", "browser")
+    catalog = workspace.catalog()
+    assert "browser" in catalog and len(catalog) == 9
+
+
+def test_applications_are_not_searched_for_nested_applications(workspace: Workspace):
+    write_app(workspace.root, "jq/nested", "nested")
+    assert "nested" not in workspace.catalog()
+
+
+def test_kinds_come_from_applications(workspace: Workspace):
+    write_app(workspace.root, "slack", "slack", kind="Desktop App")
+    assert workspace.catalog().kinds == ["CLI Tool", "Desktop App"]
+
+
+def test_kind_is_required(workspace: Workspace):
+    path = workspace.root / "applications" / "nokind"
+    path.mkdir()
+    (path / "README.md").write_text("---\nstereotype: application\nid: nokind\nname: X\n---\n")
+    with pytest.raises(CatalogError, match="missing 'kind'"):
+        workspace.catalog()
+
+
+def test_settings_have_builtin_searches_first(workspace: Workspace):
+    builtins = ["Fundamentals", "Deprecated", "Trial", "Archived"]
+    assert [s.name for s in workspace.settings().searches] == builtins
+    (workspace.applications_dir / "settings.yaml").write_text(
+        "searches:\n  - name: Rust\n    query: '#rust'\n"
+    )
+    searches = workspace.settings().searches
+    assert [s.name for s in searches] == [*builtins, "Rust"]
+    assert (searches[-1].query, searches[-1].builtin) == ("#rust", False)
+
+
+def test_invalid_saved_search_is_rejected(workspace: Workspace):
+    (workspace.applications_dir / "settings.yaml").write_text("searches:\n  - name: X\n")
+    with pytest.raises(CatalogError, match="'name' and a 'query'"):
+        workspace.settings()
 
 
 def test_catalog_rejects_duplicate_ids(workspace: Workspace):
@@ -75,6 +125,20 @@ def test_resolve_uses_order_but_dependencies_win(workspace: Workspace):
 def test_invalid_order_is_rejected(workspace: Workspace):
     write_app(workspace.root, "bad", "bad", extra="order: soon\n")
     with pytest.raises(CatalogError, match="'order' must be an integer"):
+        workspace.catalog()
+
+
+def test_status_flags_default_to_false(workspace: Workspace):
+    write_app(workspace.root, "old", "old", extra="deprecated: true\narchived: true\n")
+    catalog = workspace.catalog()
+    old, jq = catalog.get("old"), catalog.get("jq")
+    assert (old.deprecated, old.archived, old.trial) == (True, True, False)
+    assert (jq.deprecated, jq.archived, jq.trial) == (False, False, False)
+
+
+def test_invalid_flag_is_rejected(workspace: Workspace):
+    write_app(workspace.root, "bad", "bad", extra="trial: maybe\n")
+    with pytest.raises(CatalogError, match="'trial' must be true or false"):
         workspace.catalog()
 
 

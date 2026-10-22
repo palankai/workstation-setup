@@ -3,6 +3,7 @@ from pathlib import Path
 
 from .catalog import Catalog, load_catalog
 from .profiles import Profile, list_profiles, load_profile
+from .settings import Settings, load_settings
 
 APPLICATIONS = "applications"
 PROFILES = "profiles"
@@ -48,6 +49,9 @@ class Workspace:
 
     def catalog(self) -> Catalog:
         return load_catalog(self.applications_dir)
+
+    def settings(self) -> Settings:
+        return load_settings(self.applications_dir)
 
     def profiles(self) -> list[str]:
         return list_profiles(self.profiles_dir)

@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: rust-nightly
 name: "Rust Nightly"
+kind: Toolchain
 description: "Rust nightly toolchain"
 tags: [programming, rust]
 dependencies: [rustup]

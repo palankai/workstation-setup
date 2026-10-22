@@ -24,11 +24,32 @@ pnpm --dir ui dev                  # UI with hot reload, proxies /api to :8765
 uv run pytest
 ```
 
+## Catalog
+
+A folder under `applications/` is an application when its `README.md` frontmatter has `stereotype: application`;
+its subfolders aren't searched further. Any other folder (with or without a plain `README.md`) is just for
+organising and is searched for more applications. Folders never affect what the UI shows; ids must be unique.
+
+Each application needs `id`, `name` and `kind`. `kind` is a free-text title (`CLI Tool`, `Desktop App`, …);
+the list of kinds is whatever the applications declare.
+
+Optional flags (default `false`): `fundamental` (always installed), `deprecated` (badge), `trial` (badge) and
+`archived`: kept for reference, hidden from searches unless the query has `is:archived` or the profile would install it.
+
+`applications/settings.yaml` holds catalog-wide settings. `searches` are saved searches shown in the sidebar,
+after the built-in `Fundamentals`, `Deprecated`, `Trial` and `Archived`:
+
+```yaml
+searches:
+  - name: Rust
+    query: "#rust"
+```
+
 ## Search
 
 Each word must match: exact/prefix matches on id and name rank first, then tags and description words,
 then fzf-style subsequences (`slvsrch` → `ag-silver-searcher`) and typos (`pyhton`).
-`#rust` or `tag:rust` filters by tag.
+`#rust` or `tag:rust` filters by tag, `kind:cli` by kind, `is:fundamental`, `is:deprecated`, `is:archived`, `is:trial` by flag.
 
 ## Profiles
 

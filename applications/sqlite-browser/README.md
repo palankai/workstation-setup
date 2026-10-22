@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: sqlite-browser
 name: "DB Browser for SQLite"
+kind: Desktop App
 description: "DB Browser for SQLite, browser for SQLite databases"
-tags: [dev, database, sql, gui]
+tags: [dev, database, sql]
 dependencies: []
 homepage: https://sqlitebrowser.org/
 legacy: components/dev/sqlite-browser

@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: zed-editor
 name: "Zed"
+kind: Desktop App
 description: "Zed, multiplayer code editor"
-tags: [dev, editor, ai, gui]
+tags: [dev, editor, ai]
 dependencies: []
 homepage: https://zed.dev/
 legacy: components/dev/zed

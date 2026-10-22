@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: java-openjdk
 name: "OpenJDK"
+kind: Toolchain
 description: "OpenJDK, Java development kit"
 tags: [programming, java]
 dependencies: []

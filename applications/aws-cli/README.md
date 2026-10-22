@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: aws-cli
 name: "AWS CLI"
+kind: CLI Tool
 description: "AWS CLI, official Amazon AWS command-line interface, with config linked"
-tags: [cloud, aws, cli]
+tags: [cloud, aws]
 dependencies: []
 homepage: https://aws.amazon.com/cli/
 legacy: components/cloud/aws-cli

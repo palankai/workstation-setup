@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: sublime-text
 name: "Sublime Text"
+kind: Desktop App
 description: "Sublime Text, text editor for code, markup and prose"
-tags: [dev, editor, gui]
+tags: [dev, editor]
 dependencies: []
 homepage: https://www.sublimetext.com/
 legacy: components/dev/sublime

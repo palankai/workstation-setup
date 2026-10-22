@@ -1,0 +1,17 @@
+# Settings for the whole applications catalog.
+
+# Saved searches, listed after the built-in Fundamentals, Deprecated, Trial and Archived.
+# A query uses the search box syntax: words, #tag, kind:<kind>, is:fundamental.
+searches:
+  - name: AI
+    query: "#ai"
+  - name: Cloud
+    query: "#cloud"
+  - name: Secrets
+    query: "#secrets"
+  - name: Rust
+    query: "#rust"
+  - name: Embedded
+    query: "#embedded"
+  - name: Creative
+    query: "#creative"

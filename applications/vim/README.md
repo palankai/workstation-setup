@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: vim
 name: "Vim"
+kind: CLI Tool
 description: "Vim config and temp folders (vim itself comes with linux-compatibility)"
-tags: [fundamental, shell, editor]
+tags: [shell, editor]
 dependencies: [linux-compatibility]
 fundamental: true
 order: 60

@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: nvm-node-version-manager
 name: "nvm"
+kind: Toolchain
 description: "nvm, Node.js version manager"
 tags: [programming, javascript, node, version-manager]
 dependencies: []

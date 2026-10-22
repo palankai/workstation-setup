@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: linux-compatibility
 name: "Linux Compatibility"
+kind: CLI Tool
 description: "Linux Compatibility, GNU coreutils and friends, linked into ~/opt/gnubin and ~/opt/gnuman"
-tags: [fundamental, shell, gnu, cli]
+tags: [shell, gnu]
 dependencies: []
 fundamental: true
 order: 20

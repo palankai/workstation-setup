@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: zlib
 name: "zlib"
+kind: Library
 description: "zlib, lossless data-compression library"
-tags: [tools, library, build, compression]
+tags: [tools, build, compression]
 dependencies: []
 homepage: https://zlib.net/
 legacy: components/tools/zlib

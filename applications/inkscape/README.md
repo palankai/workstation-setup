@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: inkscape
 name: "Inkscape"
+kind: Desktop App
 description: "Inkscape, vector graphics editor"
-tags: [creative, design, gui]
+tags: [creative, design]
 dependencies: []
 homepage: https://inkscape.org/
 legacy: components/creative/inkscape

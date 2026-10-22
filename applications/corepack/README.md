@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: corepack
 name: "Corepack"
+kind: Toolchain
 description: "Corepack, bridge between Node projects and their package managers"
 tags: [programming, javascript, node]
 dependencies: []

@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: envchain
 name: "envchain"
+kind: CLI Tool
 description: "envchain, keep credentials in the keychain, expose as env vars"
-tags: [fundamental, security, secrets, cli]
+tags: [security, secrets]
 dependencies: []
 fundamental: true
 order: 60

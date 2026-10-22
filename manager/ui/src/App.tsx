@@ -1,7 +1,7 @@
-import { AlertTriangle, Boxes, Loader2, RotateCcw, Save, Search, X } from 'lucide-react'
+import { AlertTriangle, Boxes, LayoutGrid, List, Loader2, RotateCcw, Save, Search, X } from 'lucide-react'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { api, type Application, type Profile } from './api'
-import { AppCard } from './components/AppCard'
+import { api, type Application, type Profile, type SavedSearch } from './api'
+import { AppCard, AppRow } from './components/AppCard'
 import { DetailPanel } from './components/DetailPanel'
 import { search } from './search'
 import { difference, impliedBy } from './selection'
@@ -15,6 +15,18 @@ const VIEWS: { id: View; label: string }[] = [
   { id: 'changes', label: 'Changes' },
 ]
 
+type Layout = 'grid' | 'list'
+
+const LAYOUT_KEY = 'workstation-manager.layout'
+
+function storedLayout(): Layout {
+  try {
+    return localStorage.getItem(LAYOUT_KEY) === 'list' ? 'list' : 'grid'
+  } catch {
+    return 'grid'
+  }
+}
+
 function initialProfile() {
   return new URLSearchParams(window.location.search).get('profile')
 }
@@ -22,12 +34,15 @@ function initialProfile() {
 export default function App() {
   const [apps, setApps] = useState<Application[]>([])
   const [profiles, setProfiles] = useState<string[]>([])
+  const [searches, setSearches] = useState<SavedSearch[]>([])
   const [profileName, setProfileName] = useState<string | null>(initialProfile)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [draft, setDraft] = useState<Set<string>>(new Set())
   const [query, setQuery] = useState('')
   const [view, setView] = useState<View>('all')
+  const [layout, setLayout] = useState<Layout>(storedLayout)
   const [activeTags, setActiveTags] = useState<Set<string>>(new Set())
+  const [activeKind, setActiveKind] = useState<string | null>(null)
   const [detailId, setDetailId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -35,10 +50,11 @@ export default function App() {
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    Promise.all([api.applications(), api.profiles()])
-      .then(([apps, profiles]) => {
+    Promise.all([api.applications(), api.profiles(), api.settings()])
+      .then(([apps, profiles, settings]) => {
         setApps(apps.sort((a, b) => a.name.localeCompare(b.name)))
         setProfiles(profiles)
+        setSearches(settings.searches)
         setProfileName((current) => (current && profiles.includes(current) ? current : profiles[0] ?? null))
       })
       .catch((e: Error) => setError(e.message))
@@ -86,10 +102,24 @@ export default function App() {
     [view, installs, changeOf],
   )
 
-  const matching = useMemo(() => search(apps, query).filter(inView), [apps, query, inView])
-  const visible = useMemo(
+  const installed = useCallback((app: Application) => installs(app.id), [installs])
+  const matching = useMemo(() => search(apps, query, installed).filter(inView), [apps, query, installed, inView])
+  const tagged = useMemo(
     () => matching.filter((app) => [...activeTags].every((tag) => app.tags.includes(tag))),
     [matching, activeTags],
+  )
+  const visible = useMemo(
+    () => (activeKind ? tagged.filter((app) => app.kind === activeKind) : tagged),
+    [tagged, activeKind],
+  )
+  const kindCounts = useMemo(() => {
+    const counts = new Map([...new Set(apps.map((app) => app.kind))].sort().map((kind) => [kind, 0]))
+    for (const app of tagged) counts.set(app.kind, (counts.get(app.kind) ?? 0) + 1)
+    return [...counts]
+  }, [apps, tagged])
+  const searchCounts = useMemo(
+    () => new Map(searches.map(({ query }) => [query, search(apps, query, installed).length])),
+    [apps, searches, installed],
   )
   const tagCounts = useMemo(() => {
     const counts = new Map<string, number>()
@@ -99,14 +129,14 @@ export default function App() {
   }, [visible, activeTags])
 
   const viewCounts = useMemo(() => {
-    const searched = search(apps, query)
+    const searched = search(apps, query, installed)
     return {
       all: searched.length,
       selected: searched.filter((app) => installs(app.id)).length,
       available: searched.filter((app) => !installs(app.id)).length,
       changes: added.length + removed.length,
     }
-  }, [apps, query, installs, added, removed])
+  }, [apps, query, installed, installs, added, removed])
   const installCount = draft.size + fundamentals.size + implied.size
 
   const toggle = useCallback((id: string) => {
@@ -180,6 +210,14 @@ export default function App() {
     return () => clearTimeout(timer)
   }, [toast])
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(LAYOUT_KEY, layout)
+    } catch {
+      // Storage unavailable; layout just won't persist
+    }
+  }, [layout])
+
   const closeDetail = useCallback(() => setDetailId(null), [])
 
   return (
@@ -197,15 +235,58 @@ export default function App() {
 
         <section>
           <SidebarTitle>Profile</SidebarTitle>
+          <div className="flex items-center gap-2">
+            <select
+              value={profileName ?? ''}
+              onChange={(e) => switchProfile(e.target.value)}
+              className="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            >
+              {profiles.map((name) => (
+                <option key={name}>{name}</option>
+              ))}
+            </select>
+            {profile && <Count>{installCount}</Count>}
+          </div>
+        </section>
+
+        <section>
+          <SidebarTitle>Kind</SidebarTitle>
           <div className="space-y-0.5">
-            {profiles.map((name) => (
-              <SidebarButton key={name} active={name === profileName} onClick={() => switchProfile(name)}>
-                <span>{name}</span>
-                {name === profile?.name && <Count>{installCount}</Count>}
+            {kindCounts.map(([kind, count]) => (
+              <SidebarButton
+                key={kind}
+                active={activeKind === kind}
+                onClick={() => setActiveKind((current) => (current === kind ? null : kind))}
+              >
+                <span>{kind}</span>
+                <Count>{count}</Count>
               </SidebarButton>
             ))}
           </div>
         </section>
+
+        {searches.length > 0 && (
+          <section>
+            <SidebarTitle>Searches</SidebarTitle>
+            <div className="space-y-0.5">
+              {searches.map((saved) => {
+                const active = query.trim() === saved.query.trim()
+                return (
+                  <SidebarButton
+                    key={saved.name}
+                    active={active}
+                    onClick={() => setQuery(active ? '' : saved.query)}
+                  >
+                    <span title={saved.query} className={saved.builtin ? 'italic' : undefined}>
+                      {saved.name}
+                    </span>
+                    <Count>{searchCounts.get(saved.query)}</Count>
+                  </SidebarButton>
+                )
+              })}
+            </div>
+          </section>
+        )}
 
         <section>
           <SidebarTitle>Show</SidebarTitle>
@@ -233,7 +314,7 @@ export default function App() {
           </section>
         )}
 
-        <section className="min-h-0">
+        <section>
           <div className="flex items-center justify-between">
             <SidebarTitle>Tags</SidebarTitle>
             {activeTags.size > 0 && (
@@ -290,7 +371,7 @@ export default function App() {
                     e.currentTarget.blur()
                   }
                 }}
-                placeholder="Fuzzy search name, id or description · #tag to filter by tag"
+                placeholder="Fuzzy search name, id or description · #tag · kind:cli · is:archived"
                 className="w-full rounded-xl border border-zinc-300 bg-white py-2.5 pr-20 pl-10 text-sm shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-zinc-700 dark:bg-zinc-900"
               />
               {query ? (
@@ -312,6 +393,15 @@ export default function App() {
             <span>
               {visible.length} of {apps.length} applications
             </span>
+            {activeKind && (
+              <button
+                type="button"
+                onClick={() => setActiveKind(null)}
+                className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-1.5 py-0.5 text-white dark:bg-indigo-500"
+              >
+                {activeKind} <X className="size-3" />
+              </button>
+            )}
             {[...activeTags].map((tag) => (
               <button
                 key={tag}
@@ -322,6 +412,14 @@ export default function App() {
                 {tag} <X className="size-3" />
               </button>
             ))}
+            <div className="ml-auto flex rounded-lg border border-zinc-200 bg-white p-0.5 dark:border-zinc-700 dark:bg-zinc-900">
+              <LayoutButton active={layout === 'grid'} title="Cards" onClick={() => setLayout('grid')}>
+                <LayoutGrid className="size-3.5" />
+              </LayoutButton>
+              <LayoutButton active={layout === 'list'} title="Compact list" onClick={() => setLayout('list')}>
+                <List className="size-3.5" />
+              </LayoutButton>
+            </div>
           </div>
         </div>
 
@@ -343,23 +441,32 @@ export default function App() {
           ) : visible.length === 0 ? (
             <p className="py-24 text-center text-sm text-zinc-500">No applications match.</p>
           ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {visible.map((app) => (
-                <AppCard
-                  key={app.id}
-                  app={app}
-                  activeTags={activeTags}
-                  state={{
-                    selected: draft.has(app.id),
-                    locked: fundamentals.has(app.id),
-                    implied: implied.get(app.id) ?? [],
-                    change: changeOf(app.id),
-                  }}
-                  onToggle={() => toggle(app.id)}
-                  onDetails={() => setDetailId(app.id)}
-                  onTag={toggleTag}
-                />
-              ))}
+            <div
+              className={
+                layout === 'list'
+                  ? 'divide-y divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800'
+                  : 'grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3'
+              }
+            >
+              {visible.map((app) => {
+                const Item = layout === 'list' ? AppRow : AppCard
+                return (
+                  <Item
+                    key={app.id}
+                    app={app}
+                    activeTags={activeTags}
+                    state={{
+                      selected: draft.has(app.id),
+                      locked: fundamentals.has(app.id),
+                      implied: implied.get(app.id) ?? [],
+                      change: changeOf(app.id),
+                    }}
+                    onToggle={() => toggle(app.id)}
+                    onDetails={() => setDetailId(app.id)}
+                    onTag={toggleTag}
+                  />
+                )
+              })}
             </div>
           )}
         </div>
@@ -455,4 +562,32 @@ function SidebarButton({
 
 function Count({ children }: { children: ReactNode }) {
   return <span className="text-xs tabular-nums text-zinc-400">{children}</span>
+}
+
+function LayoutButton({
+  active,
+  title,
+  onClick,
+  children,
+}: {
+  active: boolean
+  title: string
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      className={[
+        'rounded-md p-1 transition',
+        active
+          ? 'bg-zinc-100 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100'
+          : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200',
+      ].join(' ')}
+    >
+      {children}
+    </button>
+  )
 }

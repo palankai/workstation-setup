@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: gemini-cli
 name: "Gemini CLI"
+kind: CLI Tool
 description: "Gemini CLI, interact with Google Gemini AI models from the command-line"
-tags: [ai, cli, agent, google]
+tags: [ai, agent, google]
 dependencies: []
 homepage: https://geminicli.com
 legacy: components/ai/gemini

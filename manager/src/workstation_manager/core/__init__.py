@@ -2,6 +2,7 @@
 
 from .catalog import Application, Catalog, CatalogError, Step, load_catalog
 from .profiles import InlineEntry, Profile, ProfileError, list_profiles, load_profile
+from .settings import SavedSearch, Settings, load_settings
 from .workspace import ProfileState, Workspace, WorkspaceError
 
 __all__ = [
@@ -12,10 +13,13 @@ __all__ = [
     "Profile",
     "ProfileError",
     "ProfileState",
+    "SavedSearch",
+    "Settings",
     "Step",
     "Workspace",
     "WorkspaceError",
     "list_profiles",
     "load_catalog",
     "load_profile",
+    "load_settings",
 ]

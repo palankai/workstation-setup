@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: tmux
 name: "tmux"
+kind: CLI Tool
 description: "tmux, terminal multiplexer, config linked"
-tags: [fundamental, shell, terminal, cli]
+tags: [shell, terminal]
 dependencies: []
 fundamental: true
 order: 60

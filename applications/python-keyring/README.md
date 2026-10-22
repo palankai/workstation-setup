@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: python-keyring
 name: "keyring"
+kind: CLI Tool
 description: "keyring, access the system keyring from Python/CLI"
-tags: [fundamental, security, secrets, python, cli]
+tags: [security, secrets, python]
 dependencies: []
 fundamental: true
 order: 60

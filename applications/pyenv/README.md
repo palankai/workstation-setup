@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: pyenv
 name: "pyenv"
+kind: Toolchain
 description: "pyenv, Python version manager with virtualenv plugins"
 tags: [programming, python, version-manager]
 dependencies: []

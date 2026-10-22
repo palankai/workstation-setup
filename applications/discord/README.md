@@ -1,8 +1,10 @@
 ---
+stereotype: application
 id: discord
 name: "Discord"
+kind: Desktop App
 description: "Discord, voice and text chat software"
-tags: [chat, gui]
+tags: [chat]
 dependencies: []
 homepage: https://discord.com/
 legacy: components/chat/discord

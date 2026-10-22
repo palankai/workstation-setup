@@ -1,6 +1,8 @@
 ---
+stereotype: application
 id: anaconda
 name: "Anaconda"
+kind: Toolchain
 description: "Anaconda, Python and R distribution for scientific computing"
 tags: [programming, python, data-science]
 dependencies: []
