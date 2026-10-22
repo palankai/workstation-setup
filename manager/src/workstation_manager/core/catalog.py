@@ -10,6 +10,8 @@ from ruamel.yaml import YAML, YAMLError
 README = "README.md"
 FRONTMATTER_DELIMITER = "---"
 APPLICATION_STEREOTYPE = "application"
+# Flags the UI can switch; false is the default, so it's written by removing the line
+EDITABLE_FLAGS = ("deprecated", "archived")
 DEFAULT_ORDER = 100
 
 StepKind = Literal["brewfile", "run", "once"]
@@ -200,17 +202,37 @@ def find_steps(folder: Path) -> tuple[Step, ...]:
     return tuple(steps)
 
 
+def set_flag(readme: Path, flag: str, value: bool) -> None:
+    """Edits only the flag's line in the frontmatter, keeping everything else as written."""
+    if flag not in EDITABLE_FLAGS:
+        raise CatalogError(f"'{flag}' can't be changed, expected one of {', '.join(EDITABLE_FLAGS)}")
+    lines = readme.read_text().splitlines(keepends=True)
+    end = frontmatter_end(readme, lines)
+    pattern = re.compile(rf"^{flag}\s*:")
+    existing = next((i for i in range(1, end) if pattern.match(lines[i])), None)
+    if existing is not None:
+        del lines[existing]
+        end -= 1
+    if value:
+        lines.insert(end, f"{flag}: true\n")
+    readme.write_text("".join(lines))
+
+
+def frontmatter_end(readme: Path, lines: list[str]) -> int:
+    """Index of the closing delimiter line."""
+    for end, line in enumerate(lines[1:], start=1):
+        if line.strip() == FRONTMATTER_DELIMITER:
+            return end
+    raise CatalogError(f"{readme}: unterminated frontmatter")
+
+
 def split_frontmatter(readme: Path) -> tuple[dict, str]:
     """Returns an empty mapping when the README has no frontmatter."""
     text = readme.read_text()
     lines = text.splitlines(keepends=True)
     if not lines or lines[0].strip() != FRONTMATTER_DELIMITER:
         return {}, text
-    for end, line in enumerate(lines[1:], start=1):
-        if line.strip() == FRONTMATTER_DELIMITER:
-            break
-    else:
-        raise CatalogError(f"{readme}: unterminated frontmatter")
+    end = frontmatter_end(readme, lines)
     try:
         meta = YAML(typ="safe").load("".join(lines[1:end])) or {}
     except YAMLError as e:

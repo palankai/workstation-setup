@@ -1,5 +1,5 @@
-import { Check, ExternalLink, Link2, Lock, Plus, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Archive, Check, ExternalLink, Link2, Lock, OctagonAlert, Plus, X } from 'lucide-react'
+import { type ReactNode, useEffect, useState } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { api, type Application, type ApplicationDetail } from '../api'
@@ -15,6 +15,7 @@ interface Props {
   impliedBy: string[]
   onToggle: () => void
   onOpen: (id: string) => void
+  onUpdate: (app: Application) => void
   onClose: () => void
 }
 
@@ -31,7 +32,7 @@ function readmeBody(readme: string, app: Application) {
     .join('\n\n')
 }
 
-export function DetailPanel({ id, apps, selected, locked, impliedBy, onToggle, onOpen, onClose }: Props) {
+export function DetailPanel({ id, apps, selected, locked, impliedBy, onToggle, onOpen, onUpdate, onClose }: Props) {
   const [loaded, setLoaded] = useState<{ id: string; detail?: ApplicationDetail; error?: string }>()
   const detail = loaded?.id === id ? loaded.detail : undefined
   const error = loaded?.id === id ? loaded.error : undefined
@@ -53,6 +54,16 @@ export function DetailPanel({ id, apps, selected, locked, impliedBy, onToggle, o
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  const [flagError, setFlagError] = useState<string>()
+  const setFlag = (flag: 'deprecated' | 'archived', value: boolean) =>
+    api
+      .updateFlags(id, { [flag]: value })
+      .then((updated) => {
+        setFlagError(undefined)
+        onUpdate(updated)
+      })
+      .catch((e: Error) => setFlagError(e.message))
 
   const app = apps.get(id)
   if (!app) return null
@@ -107,6 +118,22 @@ export function DetailPanel({ id, apps, selected, locked, impliedBy, onToggle, o
                 <ExternalLink className="size-4" /> Homepage
               </a>
             )}
+            <FlagButton
+              active={app.deprecated}
+              icon={<OctagonAlert className="size-4" />}
+              label={app.deprecated ? 'Deprecated' : 'Deprecate'}
+              title={app.deprecated ? 'Undeprecate' : 'Mark as deprecated'}
+              activeClass="border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-500/40 dark:bg-orange-500/15 dark:text-orange-300"
+              onClick={() => void setFlag('deprecated', !app.deprecated)}
+            />
+            <FlagButton
+              active={app.archived}
+              icon={<Archive className="size-4" />}
+              label={app.archived ? 'Archived' : 'Archive'}
+              title={app.archived ? 'Unarchive' : 'Archive: hide from searches unless is:archived'}
+              activeClass="border-zinc-400 bg-zinc-100 text-zinc-700 dark:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-200"
+              onClick={() => void setFlag('archived', !app.archived)}
+            />
             <span className="ml-auto text-right font-mono text-xs text-zinc-400">
               applications/{app.folder}
               <span className="block" title="Install order among apps whose dependencies are met; lower goes first">
@@ -114,6 +141,8 @@ export function DetailPanel({ id, apps, selected, locked, impliedBy, onToggle, o
               </span>
             </span>
           </div>
+
+          {flagError && <p className="text-sm text-rose-600">{flagError}</p>}
 
           {!selected && !locked && impliedBy.length > 0 && (
             <p className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
@@ -147,6 +176,40 @@ export function DetailPanel({ id, apps, selected, locked, impliedBy, onToggle, o
         </div>
       </aside>
     </div>
+  )
+}
+
+function FlagButton({
+  active,
+  icon,
+  label,
+  title,
+  activeClass,
+  onClick,
+}: {
+  active: boolean
+  icon: ReactNode
+  label: string
+  title: string
+  activeClass: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-pressed={active}
+      onClick={onClick}
+      className={[
+        'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition',
+        active
+          ? activeClass
+          : 'border-zinc-200 text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-700 dark:hover:text-zinc-200',
+      ].join(' ')}
+    >
+      {icon}
+      {label}
+    </button>
   )
 }
 

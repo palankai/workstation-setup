@@ -110,6 +110,11 @@ export const api = {
     return response.text()
   },
   history: (id: string) => request<HistoryStep[]>(`/api/applications/${encodeURIComponent(id)}/history`),
+  updateFlags: (id: string, flags: Partial<Pick<Application, 'deprecated' | 'archived'>>) =>
+    request<Application>(`/api/applications/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(flags),
+    }),
   profiles: () => request<string[]>('/api/profiles'),
   profile: (name: string) =>
     request<Profile>(`/api/profiles/${encodeURIComponent(name)}`),

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from workstation_manager.core import CatalogError, ProfileError, Workspace
+from workstation_manager.core import CatalogError, ProfileError, Workspace, set_flag
 
 PROFILE = """\
 applications:
@@ -140,6 +140,22 @@ def test_invalid_flag_is_rejected(workspace: Workspace):
     write_app(workspace.root, "bad", "bad", extra="trial: maybe\n")
     with pytest.raises(CatalogError, match="'trial' must be true or false"):
         workspace.catalog()
+
+
+def test_set_flag_edits_only_its_line(workspace: Workspace):
+    readme = workspace.catalog().get("jq").path / "README.md"
+    original = readme.read_text()
+    set_flag(readme, "deprecated", True)
+    set_flag(readme, "archived", True)
+    catalog = workspace.catalog()
+    assert catalog.get("jq").deprecated and catalog.get("jq").archived
+    set_flag(readme, "archived", True)
+    assert readme.read_text().count("archived: true") == 1
+    set_flag(readme, "deprecated", False)
+    set_flag(readme, "archived", False)
+    assert readme.read_text() == original
+    with pytest.raises(CatalogError, match="can't be changed"):
+        set_flag(readme, "fundamental", True)
 
 
 def test_fundamental_needs_the_field_not_a_tag(workspace: Workspace):

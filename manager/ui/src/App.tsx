@@ -235,6 +235,10 @@ export default function App() {
   }, [layout])
 
   const closeDetail = useCallback(() => setDetailId(null), [])
+  const updateApp = useCallback(
+    (updated: Application) => setApps((current) => current.map((app) => (app.id === updated.id ? updated : app))),
+    [],
+  )
 
   return (
     <div className="flex min-h-screen">
@@ -610,6 +614,7 @@ export default function App() {
           impliedBy={implied.get(detailId) ?? []}
           onToggle={() => toggle(detailId)}
           onOpen={setDetailId}
+          onUpdate={updateApp}
           onClose={closeDetail}
         />
       )}

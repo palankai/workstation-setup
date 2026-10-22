@@ -10,7 +10,8 @@ from pathlib import Path
 from .core import CatalogError, ProfileError, Workspace, WorkspaceError
 from .core.runs import RUNS, RunLog, list_runs, load_run
 from .core.state import State, StateError, default_state_dir
-from .executor.report import format_run, summary_line
+from .core.query import search
+from .executor.report import format_run, format_search, summary_line
 from .executor.update import Executor, Plan, PlanError, format_plan, make_plan
 
 UI_DIST = Path(__file__).resolve().parents[2] / "ui" / "dist"
@@ -78,6 +79,15 @@ def main(argv: list[str] | None = None) -> None:
         "--open", action="store_true", help="open the run report in the web UI afterwards"
     )
 
+    search = commands.add_parser(
+        "search",
+        help="list applications, one line each",
+        description="Every word must appear in the id, name, description or tags; "
+        "#tag, kind:<kind> and is:<flag> filter. ✓ marks what the profile installs.",
+    )
+    search.add_argument("query", nargs="*")
+    search.add_argument("--profile", help="default: $WORKSTATION or ~/.workstation-setup-config")
+
     once = commands.add_parser("once", help="once step records on this machine")
     once_commands = once.add_subparsers(dest="once_command", required=True)
     once_commands.add_parser("list", help="show recorded once steps")
@@ -103,6 +113,8 @@ def main(argv: list[str] | None = None) -> None:
             run_server(workspace, args.host, args.port, args.ui, None if args.no_open else path)
         elif args.command in ("plan", "update"):
             sys.exit(run_update(workspace, state_dir, args, command))
+        elif args.command == "search":
+            run_search(workspace, args)
         elif args.command == "once":
             run_once(workspace, State(state_dir), args)
         elif args.command == "runs":
@@ -177,6 +189,19 @@ def show_report(workspace: Workspace, run_id: str) -> None:
         run_server(workspace, HOST, PORT, UI_DIST, path)
     else:
         webbrowser.open(url + path)
+
+
+def run_search(workspace: Workspace, args: argparse.Namespace) -> None:
+    catalog = workspace.catalog()
+    try:
+        installed = set(workspace.state(resolve_profile(args.profile), catalog).install_order)
+    except ProfileError:
+        if args.profile:
+            raise
+        installed = set()
+    found = search(catalog, args.query, keep=installed)
+    lines = format_search(found, installed, sys.stdout.isatty())
+    print("\n".join(lines) if lines else "No applications match.")
 
 
 def run_once(workspace: Workspace, state: State, args: argparse.Namespace) -> None:

@@ -19,6 +19,10 @@ def test_api(workspace):  # noqa: F811
     assert response.json()["inline"][0]["label"] == "VSCode"
     assert client.put("/api/profiles/dev", json={"selected": ["nope"]}).status_code == 422
 
+    response = client.patch("/api/applications/jq", json={"deprecated": True})
+    assert (response.json()["deprecated"], response.json()["archived"]) == (True, False)
+    assert client.patch("/api/applications/jq", json={"deprecated": False}).json()["deprecated"] is False
+
 
 def test_runs_api(workspace, tmp_path):  # noqa: F811
     from workstation_manager.core.runs import RUNS, RunLog, StepResult

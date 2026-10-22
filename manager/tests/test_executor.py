@@ -4,7 +4,8 @@ from pathlib import Path
 import pytest
 
 from workstation_manager.core import CatalogError, Workspace
-from workstation_manager.core.query import parse_query, select
+from workstation_manager.core.query import parse_query, search, select
+from workstation_manager.executor.report import format_search
 from workstation_manager.core.runs import RUNS, RunLog, clean_output, list_runs
 from workstation_manager.core.state import State
 from workstation_manager.executor.update import Executor, Plan, PlanError, make_plan
@@ -51,6 +52,22 @@ def test_select_matches_kind_prefix_and_hides_archived(workspace: Workspace):  #
     assert select(catalog, parse_query(["kind:desktop"])) == ["slack"]
     assert select(catalog, parse_query(["kind:desktop"]), keep={"old"}) == ["old", "slack"]
     assert select(catalog, parse_query(["is:archived"])) == ["old"]
+
+
+def test_search_needs_every_word_and_hides_archived(workspace: Workspace):  # noqa: F811
+    write_app(workspace.root, "slack", "slack", kind="Desktop App", extra="description: Team chat\n")
+    write_app(workspace.root, "skype", "skype", kind="Desktop App", extra="description: Chat\narchived: true\n")
+    catalog = workspace.catalog()
+    assert [a.id for a in search(catalog, ["chat"])] == ["slack"]
+    assert [a.id for a in search(catalog, ["chat", "team", "kind:desktop"])] == ["slack"]
+    assert [a.id for a in search(catalog, ["chat"], keep={"skype"})] == ["skype", "slack"]
+    assert [a.id for a in search(catalog, ["is:archived"])] == ["skype"]
+
+
+def test_search_lines_mark_installed_and_show_tags(workspace: Workspace):  # noqa: F811
+    write_app(workspace.root, "slack", "slack", extra='description: "Slack, team chat"\ntags: [chat]\n')
+    lines = format_search([workspace.catalog().get("slack")], {"slack"}, color=False)
+    assert lines == ["✓ slack  CLI Tool  Team chat  #chat"]
 
 
 def test_plan_defaults_to_whole_profile(workspace: Workspace, state: State):  # noqa: F811

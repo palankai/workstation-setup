@@ -36,6 +36,7 @@ the list of kinds is whatever the applications declare.
 
 Optional flags (default `false`): `fundamental` (always installed), `deprecated` (badge), `trial` (badge) and
 `archived`: kept for reference, hidden from searches unless the query has `is:archived` or the profile would install it.
+`deprecated` and `archived` can be switched in the UI's application panel, which edits just that frontmatter line.
 
 `applications/settings.yaml` holds catalog-wide settings. `searches` are saved searches shown in the sidebar,
 after the built-in `Fundamentals`, `Deprecated`, `Trial` and `Archived`:
@@ -74,6 +75,7 @@ ws update fd --force         # also applications the profile doesn't install
 ws update jq --no-deps       # without dependencies
 ws update --open             # afterwards, open the report in the web UI (serves it if not running)
 ws runs; ws report [RUN]     # past runs; results and failed output
+ws search chat '#ai'         # one line per application; ✓ marks what the profile installs
 ws once list; ws once reset ID [STEP]
 ```
 

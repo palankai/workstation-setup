@@ -5,11 +5,13 @@ from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 
 from ..core import (
+    EDITABLE_FLAGS,
     Application,
     CatalogError,
     ProfileError,
     ProfileState,
     Workspace,
+    set_flag,
 )
 from ..core.runs import clean_output, list_runs, load_run, output_file
 from ..core.state import default_state_dir
@@ -65,6 +67,11 @@ class SavedSearchView(BaseModel):
 
 class SettingsView(BaseModel):
     searches: list[SavedSearchView]
+
+
+class FlagsUpdate(BaseModel):
+    deprecated: bool | None = None
+    archived: bool | None = None
 
 
 class SelectionUpdate(BaseModel):
@@ -140,6 +147,15 @@ def create_app(
             steps=[StepView(file=s.file, kind=s.kind) for s in application.steps],
             files=files,
         )
+
+    @app.patch("/api/applications/{id}")
+    def update_flags(id: str, update: FlagsUpdate) -> ApplicationSummary:
+        readme = get_application(id).path / "README.md"
+        for flag in EDITABLE_FLAGS:
+            value = getattr(update, flag)
+            if value is not None:
+                set_flag(readme, flag, value)
+        return summary(workspace.catalog().get(id))
 
     @app.get("/api/applications/{id}/files/{path:path}")
     def application_file(id: str, path: str) -> FileResponse:

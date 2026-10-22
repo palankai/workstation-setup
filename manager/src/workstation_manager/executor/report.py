@@ -1,5 +1,8 @@
+import shutil
 from datetime import datetime
 from pathlib import Path
+
+from ..core import Application
 
 from ..core.runs import RUNS, clean_output
 
@@ -71,3 +74,40 @@ def format_run(
 
     lines += ["", f"Logs: {state_dir / RUNS / run['id']}"]
     return "\n".join(lines)
+
+
+def short_description(application: Application) -> str:
+    """Descriptions start with the name for search; drop it on a line that shows the id."""
+    prefix = f"{application.name}, "
+    rest = application.description.removeprefix(prefix)
+    return rest[:1].upper() + rest[1:] if rest != application.description else rest
+
+
+def format_search(apps: list[Application], installed: set[str], color: bool) -> list[str]:
+    """One line per application; the description is cut to fit the terminal."""
+    width = shutil.get_terminal_size().columns
+    id_width = max((len(a.id) for a in apps), default=0)
+    kind_width = max((len(a.kind) for a in apps), default=0)
+
+    def paint(text: str, code: str) -> str:
+        return f"\x1b[{code}m{text}\x1b[0m" if color else text
+
+    lines = []
+    for a in apps:
+        mark = "✓" if a.id in installed else " "
+        labels = [flag for flag in ("deprecated", "archived", "trial") if getattr(a, flag)]
+        tags = [f"#{tag}" for tag in a.tags]
+        suffix = " ".join(labels + tags)
+        room = width - len(f"{mark} {a.id:<{id_width}}  {a.kind:<{kind_width}}  ")
+        room -= len(suffix) + 2 if suffix else 0
+        description = short_description(a)
+        if len(description) > room:
+            description = description[: room - 1] + "…" if room > 1 else ""
+        line = (
+            f"{paint(mark, '32')} {paint(f'{a.id:<{id_width}}', '1')}  "
+            f"{paint(f'{a.kind:<{kind_width}}', '2')}  {description}"
+        )
+        if suffix:
+            line += "  " + " ".join([paint(l, "33") for l in labels] + [paint(t, "36") for t in tags])
+        lines.append(line)
+    return lines

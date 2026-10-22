@@ -69,3 +69,22 @@ def select(catalog: Catalog, query: Query, keep: Collection[str] = ()) -> list[s
             if (not a.archived or show_archived or a.id in keep) and matches(a, query)
         ]
     return list(dict.fromkeys(selected))
+
+
+def search(catalog: Catalog, terms: list[str], keep: Collection[str] = ()) -> list[Application]:
+    """Like the UI search box, minus fuzzy matching: every word must appear in the id,
+    name, description or tags, and every filter must match."""
+    query = parse_query(terms)
+    words = [word.lower() for word in query.ids]
+    show_archived = "archived" in query.flags
+
+    def text(application: Application) -> str:
+        return " ".join([application.id, application.name, application.description, *application.tags]).lower()
+
+    return [
+        a
+        for a in catalog
+        if (not a.archived or show_archived or a.id in keep)
+        and matches(a, query)
+        and all(word in text(a) for word in words)
+    ]
