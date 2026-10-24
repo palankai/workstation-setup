@@ -13,6 +13,7 @@ from .core.state import State, StateError, default_state_dir
 from .core.query import search
 from .executor.report import format_run, format_search, summary_line
 from .executor.update import Executor, Plan, PlanError, format_plan, make_plan
+from .generate import generate_uninstall
 from .migrate import migrate
 
 UI_DIST = Path(__file__).resolve().parents[2] / "ui" / "dist"
@@ -157,6 +158,17 @@ def main(argv: list[str] | None = None) -> None:
     migrate_command.add_argument("--profile", help="default: $WORKSTATION or ~/.workstation-setup-config")
     migrate_command.add_argument("-n", "--dry-run", action="store_true", help="only show what it would do")
 
+    generate = commands.add_parser(
+        "generate-uninstall",
+        help="write uninstall steps for applications installed by Brewfiles alone",
+        description="Writes 90-uninstall.sh into applications whose only steps are Brewfiles of brew, "
+        "cask and tap lines: it uninstalls their formulae and casks (not taps). Regenerates files it "
+        "wrote before; leaves hand-written uninstall steps and packages shared with other "
+        "applications alone.",
+    )
+    generate.add_argument("ids", nargs="*", metavar="ID", help="default: every application")
+    generate.add_argument("-n", "--dry-run", action="store_true", help="only show what it would do")
+
     runs = commands.add_parser("runs", help="list recent update runs")
     runs.add_argument("-n", "--limit", type=int, default=20)
 
@@ -191,6 +203,9 @@ def main(argv: list[str] | None = None) -> None:
             profile = resolve_profile(args.profile)
             lines = migrate(workspace, State(state_dir), profile, Path.home(), args.dry_run)
             print("\n".join(lines) if lines else "Nothing to migrate")
+        elif args.command == "generate-uninstall":
+            lines = generate_uninstall(workspace.catalog(), args.ids, args.dry_run)
+            print("\n".join(lines) if lines else "Nothing to generate")
         elif args.command == "runs":
             for run in list_runs(state_dir)[: args.limit]:
                 print(summary_line(run))
