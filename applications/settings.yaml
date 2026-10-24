@@ -15,3 +15,5 @@ searches:
     query: "#embedded"
   - name: Creative
     query: "#creative"
+  - name: Agentic
+    query: "#agentic"

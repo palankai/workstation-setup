@@ -43,6 +43,8 @@ applications:
   - $ref: pyenv
   - $ref: rustup
   - $ref: signal-messenger
+  - $ref: skill-refining-issues
+  - $ref: skill-working-issues
   - $ref: slack
   - $ref: sqlite-browser
   - $ref: sublime-text

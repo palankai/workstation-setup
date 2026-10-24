@@ -20,3 +20,5 @@ Claude Code, Anthropic's agentic coding CLI, with hooks, status line and setting
 
 Status line script (`config/statusline-command.sh`) needs `jq`.
 Settings are linked from `sensitive/targets/$WORKSTATION/dotfiles/.claude/settings.json`.
+Skills in `skills/<name>/` are linked into `~/.claude/skills/<name>` on every machine; the
+`agentic-apps` skill there points agents at `applications/agentic-apps/README.md`.
