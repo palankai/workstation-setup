@@ -1,0 +1,19 @@
+---
+stereotype: application
+id: python-keyring
+name: "keyring"
+kind: CLI Tool
+description: "keyring, access the system keyring from Python/CLI"
+tags: [security, secrets, python]
+dependencies: []
+fundamental: true
+order: 60
+homepage: https://github.com/jaraco/keyring
+legacy: fundamentals/30-essentials/keyring
+---
+
+# keyring
+
+keyring, access the system keyring from Python/CLI.
+
+<https://github.com/jaraco/keyring>

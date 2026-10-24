@@ -1,0 +1,1 @@
+echo "🚨 THIS SCRIPT SHOULD NOT BE RUN MORE THAN ONCE! 🚨"

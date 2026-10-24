@@ -1,0 +1,3 @@
+brew "minimal-racket"
+# cask "racket" # It doesn't play nice
+

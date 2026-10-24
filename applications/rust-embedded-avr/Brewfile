@@ -1,0 +1,5 @@
+# Arduino related
+tap "osx-cross/avr"
+brew "avr-binutils"
+brew "avr-gcc"
+brew "avrdude"

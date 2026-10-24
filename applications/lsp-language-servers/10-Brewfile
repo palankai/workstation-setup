@@ -1,0 +1,8 @@
+brew "terraform-ls"
+brew "pyright"
+brew "jq-lsp"
+brew "yaml-language-server"
+brew "docker-language-server"
+brew "typescript-language-server"
+brew "tailwindcss-language-server"
+cask "kotlin-lsp"
