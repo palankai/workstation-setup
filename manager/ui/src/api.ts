@@ -119,6 +119,7 @@ export const api = {
       body: JSON.stringify(flags),
     }),
   profiles: () => request<string[]>('/api/profiles'),
+  machine: () => request<{ profile: string | null }>('/api/machine'),
   profile: (name: string) =>
     request<Profile>(`/api/profiles/${encodeURIComponent(name)}`),
   saveProfile: (name: string, selected: string[], uninstall: string[]) =>

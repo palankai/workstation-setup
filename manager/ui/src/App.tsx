@@ -35,6 +35,8 @@ const initialParam = (name: string) => () => new URLSearchParams(window.location
 export default function App() {
   const [apps, setApps] = useState<Application[]>([])
   const [profiles, setProfiles] = useState<string[]>([])
+  // This machine's profile, as `ws update` resolves it; opened when the URL names none
+  const [machineProfile, setMachineProfile] = useState<string | null>(null)
   const [searches, setSearches] = useState<SavedSearch[]>([])
   const [profileName, setProfileName] = useState<string | null>(initialParam('profile'))
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -56,13 +58,15 @@ export default function App() {
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    Promise.all([api.applications(), api.profiles(), api.settings(), api.runs()])
-      .then(([apps, profiles, settings, runs]) => {
+    Promise.all([api.applications(), api.profiles(), api.settings(), api.runs(), api.machine()])
+      .then(([apps, profiles, settings, runs, machine]) => {
+        const own = machine.profile && profiles.includes(machine.profile) ? machine.profile : null
+        setMachineProfile(own)
         setApps(apps.sort((a, b) => a.name.localeCompare(b.name)))
         setProfiles(profiles)
         setSearches(settings.searches)
         setRuns(runs)
-        setProfileName((current) => (current && profiles.includes(current) ? current : profiles[0] ?? null))
+        setProfileName((current) => (current && profiles.includes(current) ? current : own ?? profiles[0] ?? null))
       })
       .catch((e: Error) => setError(e.message))
   }, [])
@@ -335,11 +339,22 @@ export default function App() {
               className="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
             >
               {profiles.map((name) => (
-                <option key={name}>{name}</option>
+                <option key={name} value={name}>
+                  {name === machineProfile ? `${name} (this machine)` : name}
+                </option>
               ))}
             </select>
             {profile && <Count>{installCount}</Count>}
           </div>
+          {machineProfile && profileName !== machineProfile && (
+            <button
+              type="button"
+              onClick={() => switchProfile(machineProfile)}
+              className="mt-1.5 text-left text-xs text-amber-700 hover:underline dark:text-amber-400"
+            >
+              Not this machine's profile · switch to {machineProfile}
+            </button>
+          )}
         </section>
 
         <section>

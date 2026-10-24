@@ -91,8 +91,12 @@ def _hidden(path: Path) -> bool:
 
 
 def create_app(
-    workspace: Workspace, static_dir: Path | None = None, state_dir: Path | None = None
+    workspace: Workspace,
+    static_dir: Path | None = None,
+    state_dir: Path | None = None,
+    machine_profile: str | None = None,
 ) -> FastAPI:
+    """`machine_profile` is this machine's profile (as `ws update` resolves it); the UI opens it by default."""
     app = FastAPI(title="Workstation Manager")
     state_dir = state_dir or default_state_dir()
 
@@ -217,6 +221,10 @@ def create_app(
     def profiles() -> list[str]:
         return workspace.profiles()
 
+    @app.get("/api/machine")
+    def machine() -> dict[str, str | None]:
+        return {"profile": machine_profile}
+
     @app.get("/api/profiles/{name}")
     def profile(name: str) -> ProfileView:
         try:
@@ -248,11 +256,16 @@ def create_app(
     if static_dir and static_dir.is_dir():
         index = static_dir / "index.html"
 
+        assets = (static_dir / "assets").resolve()
+
         @app.get("/{path:path}", include_in_schema=False)
         def spa(path: str) -> FileResponse:
             file = (static_dir / path).resolve()
-            if path and file.is_relative_to(static_dir.resolve()) and file.is_file():
-                return FileResponse(file)
-            return FileResponse(index)
+            if path and file.is_relative_to(static_dir.resolve()) and file.is_file() and file != index.resolve():
+                # Built assets have content hashes in their names, so they never change
+                cache = "public, max-age=31536000, immutable" if file.is_relative_to(assets) else "no-cache"
+                return FileResponse(file, headers={"Cache-Control": cache})
+            # Always revalidated: a cached index.html would keep loading the previous build
+            return FileResponse(index, headers={"Cache-Control": "no-cache"})
 
     return app

@@ -434,4 +434,8 @@ def run_server(
     print(f"Workspace: {workspace.root}\nServing:   {url}")
     if open_path is not None:
         threading.Timer(1.0, webbrowser.open, [url + open_path]).start()
-    uvicorn.run(create_app(workspace, ui), host=host, port=port, log_level="warning")
+    try:
+        machine_profile = resolve_profile(None)
+    except ProfileError:
+        machine_profile = None
+    uvicorn.run(create_app(workspace, ui, machine_profile=machine_profile), host=host, port=port, log_level="warning")

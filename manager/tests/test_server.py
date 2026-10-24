@@ -49,3 +49,20 @@ def test_runs_api(workspace, tmp_path):  # noqa: F811
     history = client.get("/api/applications/jq/history").json()
     assert [(h["run"], h["step"]) for h in history] == [(log.id, "10-run.sh")]
     assert client.get("/api/applications/bat/history").json() == []
+
+
+def test_machine_profile(workspace):  # noqa: F811
+    assert TestClient(create_app(workspace, machine_profile="dev")).get("/api/machine").json() == {"profile": "dev"}
+    assert TestClient(create_app(workspace)).get("/api/machine").json() == {"profile": None}
+
+
+def test_index_is_revalidated_and_hashed_assets_are_immutable(workspace, tmp_path):  # noqa: F811
+    """A cached index.html would keep loading the previous build's script after a rebuild."""
+    ui = tmp_path / "ui"
+    (ui / "assets").mkdir(parents=True)
+    (ui / "index.html").write_text('<script src="/assets/index-abc123.js"></script>')
+    (ui / "assets" / "index-abc123.js").write_text("")
+    client = TestClient(create_app(workspace, ui))
+    for path in ("/", "/index.html", "/some/route"):
+        assert client.get(path).headers["cache-control"] == "no-cache"
+    assert "immutable" in client.get("/assets/index-abc123.js").headers["cache-control"]
