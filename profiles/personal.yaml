@@ -21,7 +21,6 @@ applications:
   - $ref: firebase-cli
   - $ref: freecad
   - $ref: gcloud-cli
-  - $ref: gemini-cli
   - $ref: ghostty
   - $ref: github-copilot-cli
   - $ref: github-speckit
