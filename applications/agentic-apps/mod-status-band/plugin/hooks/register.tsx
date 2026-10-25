@@ -103,10 +103,46 @@ const limitName = (kind: string) =>
 
 // When keep-warm stops: the settings' hours after the last reply, or after it
 // was switched on by hand; null while it is off.
-const warmDeadline = (w: StatusBandWarm, s: StatusBandSettings, replyAt: number | null) => {
+/** When the current 5h window resets, or null when unknown. */
+const fiveHourReset = (u: StatusBandUsage | null) => {
+  const l = u?.limits.find(x => x.kind === 'five_hour')
+  const r = l?.resetsAt ? Date.parse(l.resetsAt) : NaN
+  return Number.isNaN(r) ? null : r
+}
+
+/**
+ * Until when keep-warm runs, or null when it is off. Left to the default it also
+ * stops at the 5h reset, so a ping never opens a new 5h window; switched on by
+ * hand it runs the full hours.
+ */
+const warmDeadline = (w: StatusBandWarm, s: StatusBandSettings, replyAt: number | null, reset: number | null) => {
   if (w.mode === 'off' || (w.mode === 'auto' && !s.isWarmByDefault)) return null
   const base = Math.max(replyAt ?? 0, w.mode === 'on' ? w.from : 0)
-  return base > 0 ? base + s.warmHours * HOUR : null
+  if (base === 0) return null
+  const until = base + s.warmHours * HOUR
+  if (w.mode === 'on') return until
+  return reset === null ? null : Math.min(until, reset)
+}
+
+/**
+ * The switch's label: ♨ warm, ☕ not; ⏳ while it follows the default, which
+ * stops at the 5h reset; then the time it keeps warm until.
+ */
+const switchLabel = (w: StatusBandWarm, s: StatusBandSettings, deadline: number | null, t: number, offset: number) => {
+  const isDefault = w.mode === 'auto' && s.isWarmByDefault
+  const mark = isDefault ? '⏳' : ''
+  if (deadline === null || deadline <= t) return ` ☕${mark}`
+  return ` ♨${mark} ${localTime(deadline, offset, deadline - t > 20 * HOUR)}`
+}
+
+/** A limit as it stands at `t`: percentage used, pace colour, when it runs out, when it resets. */
+const limitNow = (l: StatusBandLimit, t: number) => {
+  const reset = l.resetsAt ? Date.parse(l.resetsAt) : NaN
+  const left = Number.isNaN(reset) ? null : reset - t
+  // a window whose reset has passed starts again at 0
+  const percent = left !== null && left <= 0 ? 0 : Math.round(l.percentUsed)
+  const p = left !== null && left > 0 ? pace(percent, left, windowOf(l.kind), t) : null
+  return { reset, left, percent, color: p?.color ?? ('success' as Color), outAt: p?.outAt }
 }
 
 // ── laying out the band ─────────────────────────────────────────────────────
@@ -273,6 +309,11 @@ async function setCacheAt($: EngineInterface, at: number) {
   await $.store.set(cacheKey(await $.session.id()), at)
 }
 
+/** The switch cycles: until the 5h reset (the default), the full hours, off. */
+async function cycleWarm($: EngineInterface, w: StatusBandWarm) {
+  await setWarm($, w.mode === 'auto' ? { mode: 'on', from: await $.clock.now() } : w.mode === 'on' ? { mode: 'off' } : { mode: 'auto' })
+}
+
 async function setWarm($: EngineInterface, w: StatusBandWarm) {
   await update($, warm, () => w)
   await $.store.set(warmKey(await $.session.id()), w)
@@ -305,7 +346,7 @@ async function openSettings($: EngineInterface) {
 async function keepWarm($: EngineInterface) {
   const t = await $.clock.now()
   const w = await read($, warm)
-  const deadline = warmDeadline(w, await read($, settings), await read($, lastReplyAt))
+  const deadline = warmDeadline(w, await read($, settings), await read($, lastReplyAt), fiveHourReset(await read($, usage)))
   const at = await read($, cacheAt)
   if (deadline === null || t >= deadline || at === null) return
   // Left alone, a cache that has gone cold stays cold; switched on by hand, it is warmed again.
@@ -415,7 +456,7 @@ export const register: Register = on => {
       <Box flexDirection="column" gap={1}>
         <Text bold>☕ Keep the prompt cache warm</Text>
         <Box flexDirection="column">
-          <Text>In every new session</Text>
+          <Text>In every new session, until the 5h window resets</Text>
           <Box flexDirection="row" gap={1}>
             <Button key="default-on" label="On" {...pick(s.isWarmByDefault)} onPress={() => setSettings($, { isWarmByDefault: true })} />
             <Button key="default-off" label="Off" {...pick(!s.isWarmByDefault)} onPress={() => setSettings($, { isWarmByDefault: false })} />
@@ -450,8 +491,72 @@ export const register: Register = on => {
         <Text dimColor>
           While the session is idle, a tiny request goes out about every 55 minutes so the 1-hour cache never
           expires. Each one reads the whole cached conversation: it costs cache-read tokens and counts a little
-          towards your usage limits. In the band, ♨ switches it off for that session and ☕ switches it on.
+          towards your usage limits. Left to the default it stops when the 5h window resets, so it never opens a
+          new one. The switch beside the cache (♨⏳ the default, ♨ the full hours, ☕ off) cycles through them for
+          that session.
         </Text>
+      </Box>
+    )
+  })
+
+  // ── the footer ──
+  //
+  // A short cache readout and the keep-warm switch beside the prompt footer's
+  // mode labels, so they stay in sight while a question holds the band.
+
+  on('ui.render', { component: 'SessionMode' }, async ($, e) => {
+    const { Box, Text, Button } = $.ui.resolve(e)
+    const t = (await read($, now)) || (await $.clock.now())
+    const offset = await read($, utcOffset)
+    const at = await read($, cacheAt)
+    const ping = await read($, lastPing)
+    const cfg = await read($, settings)
+    const u = await read($, usage)
+    const w = await read($, warm)
+    const deadline = warmDeadline(w, cfg, await read($, lastReplyAt), fiveHourReset(u))
+    const isWarm = deadline !== null && deadline > t
+    const modes = e.props.modes.join(' & ')
+
+    let readout: Run = ['💬', 'subtle']
+    if (at !== null) {
+      const left = at + CACHE_TTL - t
+      const icon = left <= 0 ? '🧊' : left < 15 * MINUTE ? '🌡️' : '🔥'
+      const c: Color = left <= 0 ? 'subtle' : left < 5 * MINUTE ? 'error' : left < 15 * MINUTE ? 'warning' : 'success'
+      readout = [`${icon} ${duration(t - at)}`, c]
+    }
+    const warmLabel = switchLabel(w, cfg, deadline, t, offset)
+
+    return (
+      <Box key="footer" flexDirection="row">
+        {modes ? <Text dimColor>{`${modes} · `}</Text> : ''}
+        <Text color={readout[1]}>{readout[0]}</Text>
+        <Button key="footer-warm" plain onPress={async () =>
+          cycleWarm($, w)
+        }>
+          <Text color={isWarm ? 'claude' : 'subtle'}>{` ${warmLabel.trim().split(' ')[0]}`}</Text>
+          {isWarm && ping && !ping.isOk ? <Text color="warning">⚠</Text> : ''}
+        </Button>
+        {u ? (
+          <Text>
+            <Text>{' 🧠'}</Text>
+            {u.contextPercent === undefined ? (
+              <Text color="subtle">–%</Text>
+            ) : (
+              <Text color={level(u.contextPercent, cfg.bands)}>{`${u.contextPercent}%`}</Text>
+            )}
+            {u.limits.map(l => {
+              const { percent, color } = limitNow(l, t)
+              return (
+                <Text>
+                  <Text>{` ${limitName(l.kind).icon}`}</Text>
+                  <Text color={color}>{`${percent}%`}</Text>
+                </Text>
+              )
+            })}
+          </Text>
+        ) : (
+          ''
+        )}
       </Box>
     )
   })
@@ -474,7 +579,8 @@ export const register: Register = on => {
     const ping = await read($, lastPing)
     const cfg = await read($, settings)
     const lv = (p: number) => level(p, cfg.bands)
-    const deadline = warmDeadline(await read($, warm), cfg, await read($, lastReplyAt))
+    const w = await read($, warm)
+    const deadline = warmDeadline(w, cfg, await read($, lastReplyAt), fiveHourReset(u))
     const isWarm = deadline !== null && deadline > t
 
     const draw = (runs: Run[]) => runs.map(([text, color, bold]) => <Text color={color} bold={bold}>{text}</Text>)
@@ -492,7 +598,7 @@ export const register: Register = on => {
         tail: [[` ${localTime(at, offset, t - at > 20 * HOUR)}`, 'subtle']],
       }
     })()
-    const warmLabel = isWarm ? ` ♨ ${localTime(deadline, offset, deadline - t > 20 * HOUR)}` : ' ☕'
+    const warmLabel = switchLabel(w, cfg, deadline, t, offset)
     const failed = isWarm && ping && !ping.isOk ? ' ⚠' : ''
 
     const segments: Segment[] = [cache]
@@ -505,18 +611,13 @@ export const register: Register = on => {
       })
       for (const l of u.limits) {
         const n = limitName(l.kind)
-        const reset = l.resetsAt ? Date.parse(l.resetsAt) : NaN
-        const left = Number.isNaN(reset) ? null : reset - t
-        // a window whose reset has passed starts again at 0
-        const percent = left !== null && left <= 0 ? 0 : Math.round(l.percentUsed)
-        const p = left !== null && left > 0 ? pace(percent, left, windowOf(l.kind), t) : null
-        const color = p?.color ?? 'success'
+        const { reset, left, percent, color, outAt } = limitNow(l, t)
         segments.push({
           head: [[`${n.icon} `], [n.label, undefined, true]],
           bar: { percent, style: 'solid', color },
           tail: [
             [` ${percent}%`, color],
-            ...(p?.outAt ? ([[` ⚠ out ${localTime(p.outAt, offset, isOtherDay(p.outAt, t, offset))}`, color]] as Run[]) : []),
+            ...(outAt ? ([[` ⚠ out ${localTime(outAt, offset, isOtherDay(outAt, t, offset))}`, color]] as Run[]) : []),
             ...(left !== null && left > 0
               ? ([
                   [
@@ -567,7 +668,7 @@ export const register: Register = on => {
           </Text>
           {i === 0 ? (
             <Button key="warm-toggle" plain onPress={async () =>
-              setWarm($, isWarm ? { mode: 'off' } : { mode: 'on', from: await $.clock.now() })
+              cycleWarm($, w)
             }>
               <Text color={isWarm ? 'claude' : 'subtle'}>{warmLabel}</Text>
               {failed ? <Text color="warning">{failed}</Text> : ''}

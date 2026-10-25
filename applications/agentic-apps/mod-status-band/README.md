@@ -13,7 +13,7 @@ dependencies: [claude-code, git]
 A coloured, two-row band above Claude Code's prompt, in the terminal and the desktop app.
 
 ```
-🔥 3m ago ██████████░░ 21:14 ♨ 05:14   🧠 ███░░░░░░░░░ 27% of 1M   ⏳ 5h █░░░░░░░░░░░ 9% ↻ 42m 21:00   📅 7d ░░░░░░░░░░░░ 1% ↻ Sun 11:00
+🔥 3m ago ██████████░░ 21:14 ♨⏳ 21:56   🧠 ███░░░░░░░░░ 27% of 1M   ⏳ 5h █░░░░░░░░░░░ 9% ↻ 42m 21:00   📅 7d ░░░░░░░░░░░░ 1% ↻ Sun 11:00
 📂 ~/opt/workstation-setup                                                                      ⎇ master ✚1 …1 ⚙
 ```
 
@@ -48,16 +48,27 @@ The session's folder on the left; on the right the git branch with ✖ conflicts
 ✚ modified, … untracked (✔ when clean), ⚑ stashes, ⇡ ahead, ⇣ behind and ⊘ no upstream,
 then ⚙ for the settings. Git is read after every reply and every minute.
 
+## Footer: cache and switch
+
+The prompt footer, where Claude Code lists modes such as `focus`, also shows the cache's
+icon and age, the keep-warm switch as its icon alone, and the context and limits as bare
+percentages in their colours: `🔥 12m ♨⏳ 🧠27% ⏳38% 📅1%`. It stays there while a question
+takes the band's place.
+
 ## Keep-warm
 
 The prompt cache lives for an hour after the last request. Keep-warm sends a tiny request
 over the cached conversation about every 55 minutes while the session is idle, so the cache
 never expires and the next prompt does not pay to write it again.
 
-- On by default, for 8 hours after the last reply; each new reply starts the hours again.
-- ♨ shows the time it keeps the cache warm until; click it to switch keep-warm off for that
-  session. ☕ means it is off; click it to switch it on, which warms a cold cache again too.
-- Left alone, a cache that has already gone cold stays cold.
+- On by default, for 8 hours after the last reply but never past the current 5h window's
+  reset: a ping after it would open a new 5h window. Each new reply starts the hours again.
+  With no 5h window known, the default sends nothing.
+- The switch shows the time it keeps the cache warm until, and cycles for that session:
+  - **♨⏳** the default, until the 5h reset (☕⏳ once that has passed);
+  - **♨** the full hours, past the 5h reset; it also warms a cold cache again;
+  - **☕** off.
+- Left to the default, a cache that has already gone cold stays cold.
 - ⚠ next to ♨ means the last ping failed; it is retried after 5 minutes.
 - Each ping reads the whole cached conversation: it costs cache-read tokens and counts a
   little towards the usage limits.
@@ -67,7 +78,7 @@ never expires and the next prompt does not pay to write it again.
 ⚙ in the band, or `/status-band`, opens a pane. The settings apply to every session and
 are kept in Claude Code's plugin store.
 
-- Keep-warm on or off by default in new sessions.
+- Keep-warm on (until the 5h reset) or off by default in new sessions.
 - How long to keep warm after the last reply: 2, 4, 8 or 12 hours.
 - The colour bands of the context: each edge moves in 5% steps, kept in order; Reset
   restores 25%, 50%, 75%.
@@ -87,7 +98,7 @@ are kept in Claude Code's plugin store.
   session is an hour off until the next one.
 
 The band steps aside while Claude Code shows something of its own above the prompt, such as
-a question to answer.
+a question to answer; the footer still shows the cache and the switch then.
 
 ## Working on it
 
