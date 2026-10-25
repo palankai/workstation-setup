@@ -69,7 +69,7 @@ FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
 # "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
 # or set a custom format using the strftime function format specifications,
 # see 'man strftime' for details.
-# HIST_STAMPS="mm/dd/yyyy"
+HIST_STAMPS="yyyy-mm-dd"  # history shows "2026-10-25 16:35"
 
 # Would you like to use another custom folder than $ZSH/custom?
 ZSH_CUSTOM="$WORKSTATION_INSTALLATION_PATH/dotfiles/zsh_custom"
@@ -82,6 +82,13 @@ ZSH_CUSTOM="$WORKSTATION_INSTALLATION_PATH/dotfiles/zsh_custom"
 plugins=(git aws)
 
 source $ZSH/oh-my-zsh.sh
+
+# History: after oh-my-zsh and macOS's /etc/zshrc, which both set their own sizes.
+# Oh-my-zsh already turns on extended_history, share_history, hist_ignore_space.
+HISTSIZE=200000
+SAVEHIST=200000
+HISTORY_IGNORE='(ls|ll|cd|pwd|bg|fg|exit|clear)'  # kept out of the file, not the session
+setopt hist_ignore_all_dups hist_reduce_blanks
 
 # User configuration
 

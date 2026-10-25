@@ -37,12 +37,6 @@ fi
 # Other env variables ######################
 export EDITOR=vim
 
-export HISTSIZE=100000 # bash history will save this many commands
-export HISTFILESIZE=${HISTSIZE} # bash will remember this many commands
-export HISTCONTROL=ignoredups # ignore duplicate commands
-export HISTIGNORE="[   ]*:&:bg:fg:exit" # Ignore some controlling instructions
-export HISTTIMEFORMAT="[%Y-%m-%d - %H:%M:%S] " # timestamps
-
 # This for installed openssl by brew; being able to use for compile/build
 
 # TODO Need to check this on M1
