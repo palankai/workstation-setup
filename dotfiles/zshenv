@@ -23,12 +23,8 @@ fi
 # fi
 
 #####################################################################
-# This needs to be the end in this order (remote then local)!       #
+# This needs to be the end: local overrides                         #
 #####################################################################
-
-if [ -f $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/zshenv ]; then
-    source $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/zshenv
-fi
 
 if [ -f $HOME/.zshenv_local ]
 then

@@ -36,21 +36,10 @@ path=($^path(N-/))
 export MANPATH="$HOME/opt/gnuman:$HOMEBREW_PREFIX/man${MANPATH+:$MANPATH}"
 export LIBRARY_PATH="$HOMEBREW_PREFIX/lib${LIBRARY_PATH+:$LIBRARY_PATH}"
 
-export AWS_FUZZ_USER="csaba.palankai"
-export AWS_FUZZ_PRIVATE_IP='True'
-export AWS_MIN_TTL=72000
-export AWS_VAULT_PROMPT=osascript
-export AWS_VAULT_KEYCHAIN_NAME=login
-
 export EDITOR=vim
 export PAGER=less
 export LESS=-R
 export LESS_TERMCAP_md=$'\E[01;36m'
-
-
-if [ -f $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/zprofile ]; then
-    source $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/zprofile
-fi
 
 if [ -f ~/.zprofile_local ]; then
       source ~/.zprofile_local

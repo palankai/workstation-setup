@@ -1,7 +1,5 @@
 export KEYID=0x4C4A8C7E5C4575B7
 
-ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/zprofile $HOME/.zprofile
-
 ln -sf $WORKSTATION_INSTALLATION_PATH/sensitive/targets/${WORKSTATION}/dotfiles/ssh_config $HOME/.ssh/config
 
 ln -sf $WORKSTATION_INSTALLATION_PATH/dotfiles/gitignore_global $HOME/.gitignore_global

@@ -15,7 +15,3 @@ legacy: components/tools/zlib
 zlib, lossless data-compression library.
 
 <https://zlib.net/>
-
-## Notes
-
-`zshrc` holds LDFLAGS/CPPFLAGS exports (not sourced automatically).

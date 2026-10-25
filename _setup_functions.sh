@@ -21,7 +21,7 @@ function ensure_local_file {
 
     # SELECT workstation profile
     if ! test_line_exists $PROFILE_FILE "WORKSTATION="; then
-        local WORKSTATION=$(menu "Select installation profile" personal maxilux freetrade quit)
+        local WORKSTATION=$(menu "Select installation profile" personal freetrade quit)
         if [[ $WORKSTATION == "quit" ]]; then
             echo "bye"
             exit 1
@@ -360,6 +360,22 @@ _insert_line_after() {
 
 export -f _insert_line_after
 
+
+# An application's own zshrc lines: link its `zshrc` file where dotfiles/zshrc sources it.
+# Call from a run step; call unlink_zshrc_snippet from its uninstall step.
+ZSHRC_SNIPPETS="$HOME/.config/zsh/zshrc.d"
+
+function link_zshrc_snippet() {
+  mkdir -p "$ZSHRC_SNIPPETS"
+  ln -sfn "$APP_DIR/zshrc" "$ZSHRC_SNIPPETS/$APP_ID.zsh"
+}
+export -f link_zshrc_snippet
+
+function unlink_zshrc_snippet() {
+  local link="$ZSHRC_SNIPPETS/$APP_ID.zsh"
+  if [ -L "$link" ]; then rm "$link"; fi
+}
+export -f unlink_zshrc_snippet
 
 function ensure_zprofile_source() {
   local file="${1:-$HOME/.zprofile}"

@@ -18,4 +18,4 @@ Corepack, bridge between Node projects and their package managers.
 
 ## Notes
 
-`zshrc` holds aliases routing yarn/pnpm/npm through corepack (not sourced automatically).
+`zshrc` holds aliases routing yarn/pnpm/npm through corepack; `20-run.sh` links it into the shell.

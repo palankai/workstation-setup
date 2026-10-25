@@ -15,7 +15,3 @@ legacy: components/tools/bzip2
 bzip2, high-quality data compressor.
 
 <https://sourceware.org/bzip2/>
-
-## Notes
-
-`zshrc` holds LDFLAGS/CPPFLAGS exports (not sourced automatically).

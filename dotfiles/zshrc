@@ -130,6 +130,13 @@ export GPG_TTY=$TTY           # gpg asks for the passphrase in this terminal
 autoload zmv
 
 source $WORKSTATION_INSTALLATION_PATH/dotfiles/functions.sh
+
+# Installed applications' own lines (linked by their run steps, see link_zshrc_snippet)
+for snippet in ~/.config/zsh/zshrc.d/*.zsh(N); do
+    source $snippet
+done
+unset snippet
+
 if [ -f $WORKSTATION_INSTALLATION_PATH/sensitive/profiles/$WORKSTATION.sh ]; then
     source $WORKSTATION_INSTALLATION_PATH/sensitive/profiles/$WORKSTATION.sh
 fi
@@ -148,12 +155,8 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 
 
 #####################################################################
-# This needs to be the end in this order (remote then local)!       #
+# This needs to be the end: local overrides                         #
 #####################################################################
-
-if [ -f $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/zshrc ]; then
-    source $WORKSTATION_INSTALLATION_PATH/sensitive/targets/$WORKSTATION/dotfiles/zshrc
-fi
 
 if [ -f $HOME/.zshrc_local ]; then
     . $HOME/.zshrc_local
