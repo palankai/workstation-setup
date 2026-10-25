@@ -1,5 +1,8 @@
 source ~/.workstation-setup-config
 
+# PATH and FPATH keep only the first copy of each folder
+typeset -U path fpath
+
 # Rust / CARGO
 if [ -f $HOME/.cargo/env ]
 then
