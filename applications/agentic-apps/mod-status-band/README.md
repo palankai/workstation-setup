@@ -3,14 +3,15 @@ stereotype: application
 id: mod-status-band
 name: "Status Band"
 kind: Claude Mod
-description: "Two-row band above the prompt: prompt cache with keep-warm, context, 5h/7d limits, folder and git status"
+description: "Footer readout and a two-row band above the prompt: prompt cache with keep-warm, context, 5h/7d limits, folder and git status"
 tags: [agentic, mod]
 dependencies: [claude-code, git]
 ---
 
 # Status Band
 
-A coloured, two-row band above Claude Code's prompt, in the terminal and the desktop app.
+A compact readout in the prompt footer and a coloured, two-row band above the prompt, in the
+terminal and the desktop app. The band is hidden until you click ▴ in the footer.
 
 ```
 🔥 3m ago ██████████░░ 21:14 ♨⏳ 21:56   🧠 ███░░░░░░░░░ 27% of 1M   ⏳ 5h █░░░░░░░░░░░ 9% ↻ 42m 21:00   📅 7d ░░░░░░░░░░░░ 1% ↻ Sun 11:00
@@ -52,8 +53,10 @@ then ⚙ for the settings. Git is read after every reply and every minute.
 
 The prompt footer, where Claude Code lists modes such as `focus`, also shows the cache's
 icon and age, the keep-warm switch as its icon alone, and the context and limits as bare
-percentages in their colours: `🔥 12m ♨⏳ 🧠27% ⏳38% 📅1%`. It stays there while a question
+percentages in their colours: `▴ 🔥 12m ♨⏳ 🧠27% ⏳38% 📅1%`. It stays there while a question
 takes the band's place.
+
+▴ shows the band and ▾ hides it; the choice holds for every session. The band starts hidden.
 
 ## Keep-warm
 

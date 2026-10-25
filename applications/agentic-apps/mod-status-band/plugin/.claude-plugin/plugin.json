@@ -1,6 +1,6 @@
 {
   "name": "status-band",
-  "version": "0.7.0",
-  "description": "Two-row band above the prompt: prompt cache with keep-warm, context, 5h/7d limits, folder and git status",
+  "version": "0.8.0",
+  "description": "Footer readout and a two-row band above the prompt: prompt cache with keep-warm, context, 5h/7d limits, folder and git status",
   "types": "./types/index.d.ts"
 }

@@ -46,6 +46,8 @@ type World = {
 // Stands in for the engine: the clock, the session, the processes and the store.
 const engine = (on: On, w: World) => {
   const counts = { forks: 0 }
+  // the band tests want it shown; hidden is the default
+  if (!w.store.has('bandShown')) w.store.set('bandShown', true)
   on('clock.now', () => ({ value: w.clock() }))
   on('clock.every', () => ({ value: undefined }))
   on('session.id', () => ({ value: 'abc-123' }))
@@ -300,7 +302,7 @@ test('the footer keeps the cache, the switch, the context and the limits in sigh
   for (const surface of ['terminal', 'desktop'] as const) {
     const footer = await $.ui.mount({ plugin: 'status-band', component: 'SessionMode', surface, props: { modes: ['focus'] } } as never)
     const text = async () => (await footer.find({ type: 'Box' }))?.text ?? ''
-    expect(await text()).toBe('focus · 🔥 0m ♨⏳ 🧠17% ⏳38% 📅83%')
+    expect(await text()).toBe('focus · ▾ 🔥 0m ♨⏳ 🧠17% ⏳38% 📅83%')
     await footer.press({ key: 'footer-warm' })
     expect(await text()).toMatch(/🔥 0m ♨ 🧠/)
     await footer.press({ key: 'footer-warm' })
@@ -310,4 +312,39 @@ test('the footer keeps the cache, the switch, the context and the limits in sigh
     expect(w.store.get('warm:abc-123')).toEqual({ mode: 'auto' })
     await footer.unmount()
   }
+})
+
+test('the band is hidden by default; the footer\'s ▴/▾ button shows and hides it', async ($, on) => {
+  const w: World = { clock: () => NOW, rateLimits: LIMITS, contextTokens: 170_000, transcriptLine: '', store: new Map([['bandShown', false]]) }
+  engine(on, w)
+  w.store.delete('bandShown')
+  // the engine's own drawing, which the hidden band hands over to: nothing
+  on('ui.render', ($, e) => {
+    const { Text } = $.ui.resolve(e)
+    return <Text>engine</Text>
+  })
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  await $.turn.complete(TURN)
+
+  const band = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  const bandText = async () => (await band.find({ type: 'Box' }))?.text ?? ''
+  expect(await bandText()).not.toMatch(/📂/)
+
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const footer = await $.ui.mount({ plugin: 'status-band', component: 'SessionMode', surface, props: { modes: [] } } as never)
+    await footer.press({ key: 'footer-band' })
+    expect(await bandText()).toMatch(/📂 ~\/opt\/workstation-setup/)
+    expect(w.store.get('bandShown')).toBe(true)
+    expect((await footer.find({ type: 'Box' }))?.text).toMatch(/^▾ /)
+    await footer.press({ key: 'footer-band' })
+    expect((await footer.find({ type: 'Box' }))?.text).toMatch(/^▴ /)
+    expect(await bandText()).not.toMatch(/📂/)
+    // the switch leaves the band alone
+    await footer.press({ key: 'footer-warm' })
+    expect(await bandText()).not.toMatch(/📂/)
+    await footer.press({ key: 'footer-warm' })
+    await footer.press({ key: 'footer-warm' })
+    await footer.unmount()
+  }
+  await band.unmount()
 })

@@ -47,6 +47,8 @@ declare module 'claude-code' {
       settings: StatusBandSettings
       lastPing: StatusBandPing | null
       utcOffsetMinutes: number
+      /** Whether the band above the prompt shows; toggled from the footer. */
+      isBandShown: boolean
     }
   }
 }

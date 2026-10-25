@@ -25,10 +25,12 @@ const warm = atom({ plugin: 'status-band', key: 'warm' } as const, { mode: 'auto
 const settings = atom({ plugin: 'status-band', key: 'settings' } as const, DEFAULT_SETTINGS)
 const lastPing = atom({ plugin: 'status-band', key: 'lastPing' } as const, null)
 const utcOffset = atom({ plugin: 'status-band', key: 'utcOffsetMinutes' } as const, 0)
+const isBandShown = atom({ plugin: 'status-band', key: 'isBandShown' } as const, false)
 
 // What survives a restart lives in $.store: the settings and the limits for the
 // whole account, the cache time and keep-warm choice per session.
 const SETTINGS_KEY = 'settings'
+const BAND_KEY = 'bandShown'
 const LIMITS_KEY = 'limits'
 const cacheKey = (id: string) => `cacheAt:${id}`
 const warmKey = (id: string) => `warm:${id}`
@@ -314,6 +316,13 @@ async function cycleWarm($: EngineInterface, w: StatusBandWarm) {
   await setWarm($, w.mode === 'auto' ? { mode: 'on', from: await $.clock.now() } : w.mode === 'on' ? { mode: 'off' } : { mode: 'auto' })
 }
 
+/** Shows or hides the band above the prompt, in every session. */
+async function toggleBand($: EngineInterface) {
+  const isShown = !(await read($, isBandShown))
+  await update($, isBandShown, () => isShown)
+  await $.store.set(BAND_KEY, isShown)
+}
+
 async function setWarm($: EngineInterface, w: StatusBandWarm) {
   await update($, warm, () => w)
   await $.store.set(warmKey(await $.session.id()), w)
@@ -396,6 +405,8 @@ export const register: Register = on => {
     const id = await $.session.id()
     const s = (await $.store.get(SETTINGS_KEY)) as Partial<StatusBandSettings> | undefined
     await update($, settings, () => ({ ...DEFAULT_SETTINGS, ...s }))
+    const shown = (await $.store.get(BAND_KEY)) === true
+    await update($, isBandShown, () => shown)
     const w = (await $.store.get(warmKey(id))) as StatusBandWarm | undefined
     await update($, warm, () => w ?? { mode: 'auto' })
 
@@ -516,6 +527,7 @@ export const register: Register = on => {
     const deadline = warmDeadline(w, cfg, await read($, lastReplyAt), fiveHourReset(u))
     const isWarm = deadline !== null && deadline > t
     const modes = e.props.modes.join(' & ')
+    const shown = await read($, isBandShown)
 
     let readout: Run = ['💬', 'subtle']
     if (at !== null) {
@@ -529,7 +541,10 @@ export const register: Register = on => {
     return (
       <Box key="footer" flexDirection="row">
         {modes ? <Text dimColor>{`${modes} · `}</Text> : ''}
-        <Text color={readout[1]}>{readout[0]}</Text>
+        <Button key="footer-band" plain onPress={() => toggleBand($)}>
+          <Text color="subtle">{shown ? '▾' : '▴'}</Text>
+        </Button>
+        <Text color={readout[1]}>{` ${readout[0]}`}</Text>
         <Button key="footer-warm" plain onPress={async () =>
           cycleWarm($, w)
         }>
@@ -567,7 +582,7 @@ export const register: Register = on => {
   // all one length that uses up the row. Row 2: the folder left, git right.
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
-    if (e.props.hasSurvey) return next(e)
+    if (e.props.hasSurvey || !(await read($, isBandShown))) return next(e)
 
     const { Box, Text, Button } = $.ui.resolve(e)
     const t = (await read($, now)) || (await $.clock.now())
