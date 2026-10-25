@@ -33,6 +33,7 @@ applications:
   - $ref: ledger-wallet
   - $ref: lsp-language-servers
   - $ref: macos-settings
+  - $ref: mod-status-band
   - $ref: nodejs
   - $ref: nvm-node-version-manager
   - $ref: obs-studio
