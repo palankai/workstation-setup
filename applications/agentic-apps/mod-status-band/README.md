@@ -14,7 +14,7 @@ A compact readout in the prompt footer and a coloured, two-row band above the pr
 terminal and the desktop app. The band is hidden until you click ▴ in the footer.
 
 ```
-🔥 3m ago ██████████░░ 21:14 ♨⏳ 21:56   🧠 ███░░░░░░░░░ 27% of 1M   ⏳ 5h █░░░░░░░░░░░ 9% ↻ 42m 21:00   📅 7d ░░░░░░░░░░░░ 1% ↻ Sun 11:00
+🔥 3m ago ██████████░░ 21:14 ☕ 21:56   🧠 ███░░░░░░░░░ 27% of 1M   ⏳ 5h █░░░░░░░░░░░ 9% ↻ 42m 21:00   📅 7d ░░░░░░░░░░░░ 1% ↻ Sun 11:00
 📂 ~/opt/workstation-setup                                                                      ⎇ master ✚1 …1 ⚙
 ```
 
@@ -53,7 +53,7 @@ then ⚙ for the settings. Git is read after every reply and every minute.
 
 The prompt footer, where Claude Code lists modes such as `focus`, also shows the cache's
 icon and age, the keep-warm switch as its icon alone, and the context and limits as bare
-percentages in their colours: `▴ 🔥 12m ♨⏳ 🧠27% ⏳38% 📅1%`. It stays there while a question
+percentages in their colours: `▴ 🔥 12m ☕ 🧠27% ⏳38% 📅1%`. It stays there while a question
 takes the band's place.
 
 ▴ shows the band and ▾ hides it; the choice holds for every session. The band starts hidden.
@@ -68,11 +68,14 @@ never expires and the next prompt does not pay to write it again.
   reset: a ping after it would open a new 5h window. Each new reply starts the hours again.
   With no 5h window known, the default sends nothing.
 - The switch shows the time it keeps the cache warm until, and cycles for that session:
-  - **♨⏳** the default, until the 5h reset (☕⏳ once that has passed);
+  - **☕** the default, until the 5h reset;
   - **♨** the full hours, past the 5h reset; it also warms a cold cache again;
-  - **☕** off.
+  - **🚫** off.
+
+  **💤** means it is on but waiting: the 5h window or the hours have run out, and the next
+  reply starts it again.
 - Left to the default, a cache that has already gone cold stays cold.
-- ⚠ next to ♨ means the last ping failed; it is retried after 5 minutes.
+- ⚠ next to ☕ or ♨ means the last ping failed; it is retried after 5 minutes.
 - Each ping reads the whole cached conversation: it costs cache-read tokens and counts a
   little towards the usage limits.
 

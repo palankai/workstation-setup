@@ -111,7 +111,7 @@ test('two rows: cache, context and limits with bars; then folder and git', async
     expect(text).toMatch(/🧠 █+░+ 17% of 1M/)
     expect(text).toMatch(/⏳ 5h █+░+ 38% ↻ 2h10m 15:10/)
     expect(text).toMatch(/📅 7d █+░* 83% ⚠ out Mon 03:44 ↻ Thu 13:00/)
-    expect(text).toMatch(/💬 no reply yet ☕⏳/)
+    expect(text).toMatch(/💬 no reply yet 💤/)
     expect(text).not.toMatch(/hover|click/)
     const bars = text.match(/█+░*|░+/g) ?? []
     expect(bars).toHaveLength(3) // no reply yet: no cache bar
@@ -141,7 +141,7 @@ test('after a restart: last reply from the transcript, limits from the store', a
   expect(text).toMatch(/17% of 1M/)
   expect(text).toMatch(/⏳ 5h (█+░+ )?38%/)
   // left to the default, keep-warm stops at the 5h reset
-  expect(text).toMatch(/🔥 20m ago (█+░+ )?12:40 ♨⏳ 15:10/)
+  expect(text).toMatch(/🔥 20m ago (█+░+ )?12:40 ☕ 15:10/)
   await ui.unmount()
 })
 
@@ -156,21 +156,21 @@ test('keep warm runs until the 5h reset by default; the switch cycles full hours
   const ui = await $.ui.mount({ ...BAND, surface: 'desktop', props: { ...BAND.props, bodyColumns: 200 } })
   const text = async () => (await ui.find({ type: 'Box' }))?.text ?? ''
   // the 5h window resets at 15:10, before the 8 hours are up
-  expect(await text()).toMatch(/🔥 0m ago █+ 13:00 ♨⏳ 15:10/)
+  expect(await text()).toMatch(/🔥 0m ago █+ 13:00 ☕ 15:10/)
 
   await ui.press({ key: 'warm-toggle' })
   expect(await text()).toMatch(/13:00 ♨ 21:00/)
   expect(w.store.get('warm:abc-123')).toEqual({ mode: 'on', from: NOW })
 
   await ui.press({ key: 'warm-toggle' })
-  expect(await text()).toMatch(/13:00 ☕(?!⏳)/)
+  expect(await text()).toMatch(/13:00 🚫/)
   expect(w.store.get('warm:abc-123')).toEqual({ mode: 'off' })
 
   // back to the default an hour on: the cache is due, the 5h window still open
   clock = NOW + 56 * 60_000
   await ui.press({ key: 'warm-toggle' })
   expect(counts.forks).toBe(1)
-  expect(await text()).toMatch(/🔥 0m ago █+ 13:56 ♨⏳ 15:10/)
+  expect(await text()).toMatch(/🔥 0m ago █+ 13:56 ☕ 15:10/)
   expect(w.store.get('cacheAt:abc-123')).toBe(clock)
 
   await ui.unmount()
@@ -191,7 +191,7 @@ test('left to the default, a ping goes out while the 5h window is open', async (
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   expect(counts.forks).toBe(1)
   const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
-  expect((await ui.find({ type: 'Box' }))?.text).toMatch(/🔥 0m ago .*♨⏳ 13:30/)
+  expect((await ui.find({ type: 'Box' }))?.text).toMatch(/🔥 0m ago .*☕ 13:30/)
   await ui.unmount()
 })
 
@@ -200,7 +200,7 @@ test('left to the default, no ping goes out once the 5h window has reset', async
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   expect(counts.forks).toBe(0)
   const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
-  expect((await ui.find({ type: 'Box' }))?.text).toMatch(/56m ago .*☕⏳/)
+  expect((await ui.find({ type: 'Box' }))?.text).toMatch(/56m ago .*💤/)
   await ui.unmount()
 })
 
@@ -225,7 +225,7 @@ test('the settings pane changes the default and the hours for every session', as
   }
 
   const band = await $.ui.mount({ ...BAND, surface: 'desktop' })
-  expect((await band.find({ type: 'Box' }))?.text).toMatch(/♨⏳ 15:00/)
+  expect((await band.find({ type: 'Box' }))?.text).toMatch(/☕ 15:00/)
 
   const pane = await $.ui.mount({
     plugin: 'status-band',
@@ -235,7 +235,7 @@ test('the settings pane changes the default and the hours for every session', as
     props: { title: 'Status band', isFocused: false, bodyColumns: 60, placement: 'dock', scroll: { offset: 0, bodyRows: 20 }, view: {} },
   })
   await pane.press({ key: 'default-off' })
-  expect((await band.find({ type: 'Box' }))?.text).toMatch(/13:00 ☕(?!⏳)/)
+  expect((await band.find({ type: 'Box' }))?.text).toMatch(/13:00 🚫/)
   await pane.unmount()
   await band.unmount()
 })
@@ -302,11 +302,11 @@ test('the footer keeps the cache, the switch, the context and the limits in sigh
   for (const surface of ['terminal', 'desktop'] as const) {
     const footer = await $.ui.mount({ plugin: 'status-band', component: 'SessionMode', surface, props: { modes: ['focus'] } } as never)
     const text = async () => (await footer.find({ type: 'Box' }))?.text ?? ''
-    expect(await text()).toBe('focus · ▾ 🔥 0m ♨⏳ 🧠17% ⏳38% 📅83%')
+    expect(await text()).toBe('focus · ▾ 🔥 0m ☕ 🧠17% ⏳38% 📅83%')
     await footer.press({ key: 'footer-warm' })
     expect(await text()).toMatch(/🔥 0m ♨ 🧠/)
     await footer.press({ key: 'footer-warm' })
-    expect(await text()).toMatch(/🔥 0m ☕ 🧠/)
+    expect(await text()).toMatch(/🔥 0m 🚫 🧠/)
     expect(w.store.get('warm:abc-123')).toEqual({ mode: 'off' })
     await footer.press({ key: 'footer-warm' })
     expect(w.store.get('warm:abc-123')).toEqual({ mode: 'auto' })

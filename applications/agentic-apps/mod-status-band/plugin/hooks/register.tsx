@@ -127,14 +127,14 @@ const warmDeadline = (w: StatusBandWarm, s: StatusBandSettings, replyAt: number 
 }
 
 /**
- * The switch's label: ♨ warm, ☕ not; ⏳ while it follows the default, which
- * stops at the 5h reset; then the time it keeps warm until.
+ * The switch's label, then the time it keeps warm until: ☕ the default, until
+ * the 5h reset; ♨ the full hours, past it; 💤 either one waiting for the next
+ * reply; 🚫 off.
  */
 const switchLabel = (w: StatusBandWarm, s: StatusBandSettings, deadline: number | null, t: number, offset: number) => {
-  const isDefault = w.mode === 'auto' && s.isWarmByDefault
-  const mark = isDefault ? '⏳' : ''
-  if (deadline === null || deadline <= t) return ` ☕${mark}`
-  return ` ♨${mark} ${localTime(deadline, offset, deadline - t > 20 * HOUR)}`
+  if (w.mode === 'off' || (w.mode === 'auto' && !s.isWarmByDefault)) return ' 🚫'
+  if (deadline === null || deadline <= t) return ' 💤'
+  return ` ${w.mode === 'on' ? '♨' : '☕'} ${localTime(deadline, offset, deadline - t > 20 * HOUR)}`
 }
 
 /** A limit as it stands at `t`: percentage used, pace colour, when it runs out, when it resets. */
@@ -503,7 +503,7 @@ export const register: Register = on => {
           While the session is idle, a tiny request goes out about every 55 minutes so the 1-hour cache never
           expires. Each one reads the whole cached conversation: it costs cache-read tokens and counts a little
           towards your usage limits. Left to the default it stops when the 5h window resets, so it never opens a
-          new one. The switch beside the cache (♨⏳ the default, ♨ the full hours, ☕ off) cycles through them for
+          new one. The switch beside the cache (☕ the default, ♨ the full hours, 🚫 off) cycles through them for
           that session.
         </Text>
       </Box>
