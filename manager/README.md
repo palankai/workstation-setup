@@ -163,7 +163,7 @@ combine("~/.claude/CLAUDE.md", app_file("instructions/user.md"),
 ```
 
 `combine` joins the sources with a blank line between them. A missing source fails the file, unless it's
-`optional`. The output starts with a header naming the sources and the sha256 of the rest. It's rewritten only
+`optional`; with every source optional and missing, nothing is written. The output starts with a header naming the sources and the sha256 of the rest. It's rewritten only
 while that hash still matches: a file edited since, one without the header (hand-written) and a symlink are
 refused, and `ws generate --overwrite` replaces them, keeping the old one as `<name>.bak`. `ws generate -n` only
 says what it would write. A refusal doesn't stop the step's other files; the step fails at the end, so it shows

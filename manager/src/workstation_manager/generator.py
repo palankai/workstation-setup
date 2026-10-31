@@ -63,6 +63,9 @@ def combine(output: str | Path, *sources: Source | str | Path) -> bool:
     parts = [s if isinstance(s, Source) else Source(Path(s)) for s in sources]
     if missing := [str(s.path) for s in parts if not s.optional and not s.path.is_file()]:
         return _fail(target, f"missing source {', '.join(missing)}")
+    if not any(s.path.is_file() for s in parts):
+        # Every source is optional and missing: nothing to say, and an existing file is left alone
+        return _say(target, "skipped, no sources")
     texts = [s.path.read_text().strip("\n") for s in parts if s.path.is_file()]
     body = "\n\n".join(t for t in texts if t) + "\n"
     used = [_shown(s.path) for s in parts if s.path.is_file()]

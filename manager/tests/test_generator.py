@@ -16,6 +16,7 @@ from workstation_manager.generator import app_file, combine, profile_file
 combine("{out}/a.md", app_file("shared.md"), profile_file("part.md", optional=True))
 combine("{out}/b.conf", app_file("shared.md"), profile_file("missing.md"))
 combine("{out}/c.md", app_file("shared.md"))
+combine("{out}/d.md", app_file("none.md", optional=True))
 """
 
 
@@ -50,6 +51,8 @@ def test_generate_writes_combined_files_and_fails_on_missing_source(generating, 
     assert body == "# Shared\n\nBritish English.\n\nPersonal bit.\n"
     assert not (out / "b.conf").exists()
     assert (out / "c.md").is_file()  # a failure doesn't stop the step's other files
+    assert not (out / "d.md").exists()  # every source optional and missing
+    assert "out/d.md: skipped, no sources" in output
 
 
 def test_generate_refuses_edited_files_unless_overwrite(generating, capsys):
