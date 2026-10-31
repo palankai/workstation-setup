@@ -251,11 +251,11 @@ def create_app(
         except (CatalogError, UninstallError) as e:
             raise HTTPException(422, str(e)) from None
 
-    @app.post("/api/profiles/{name}/keep")
-    def keep(name: str, update: ApplicationIds) -> ProfileView:
-        """Takes applications off the uninstall list."""
+    @app.post("/api/profiles/{name}/clear")
+    def clear(name: str, update: ApplicationIds) -> ProfileView:
+        """Takes uninstalled applications off the uninstall list, and forgets their options."""
         try:
-            return profile_view(workspace.keep(name, update.ids))
+            return profile_view(workspace.clear(name, update.ids))
         except ProfileError as e:
             raise HTTPException(404, str(e)) from None
         except CatalogError as e:

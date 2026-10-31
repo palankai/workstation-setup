@@ -75,7 +75,7 @@ export function RunReport({ id, runs, apps, onSelectRun, onOpenApp, onProfileUpd
   const clear = (ids: string[]) =>
     profile &&
     api
-      .keep(profile.name, ids)
+      .clear(profile.name, ids)
       .then((updated) => {
         setClearError(undefined)
         setProfile(updated)

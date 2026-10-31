@@ -146,6 +146,19 @@ class Workspace:
         state = self.state(name, catalog)
         return self.save_profile(name, state.selected, state.uninstall, {**state.options, catalog.get(id).id: options})
 
+    def clear(self, name: str, ids: list[str]) -> ProfileState:
+        """Takes uninstalled applications off the list, and forgets their options."""
+        catalog = self.catalog()
+        for id in ids:
+            catalog.get(id)
+        state = self.state(name, catalog)
+        return self.save_profile(
+            name,
+            state.selected,
+            [id for id in state.uninstall if id not in ids],
+            {id: chosen for id, chosen in state.options.items() if id not in ids},
+        )
+
     def keep(self, name: str, ids: list[str]) -> ProfileState:
         """Takes applications off the uninstall list; they stay unselected."""
         catalog = self.catalog()

@@ -347,3 +347,18 @@ def test_options_in_the_profile_file_are_checked(workspace: Workspace):
         workspace.state("dev")
     path.write_text(path.read_text().replace("jq: [nope]", "gone: [server]"))
     assert workspace.state("dev").missing == ["gone"]
+
+
+def test_clearing_forgets_options_but_keeping_does_not(workspace: Workspace):
+    declare_options(workspace)
+    declare_options(workspace, "fd")
+    workspace.set_options("dev", "jq", ["server"])
+    workspace.set_options("dev", "fd", ["fast"])
+    workspace.update_selection("dev", ["fd"])
+    workspace.mark_uninstall("dev", ["jq", "fd"])
+    # Marked: the uninstall steps still get them
+    assert workspace.state("dev").options == {"fd": ["fast"], "jq": ["server"]}
+    workspace.keep("dev", ["fd"])
+    state = workspace.clear("dev", ["jq"])
+    assert state.uninstall == []
+    assert state.options == {"fd": ["fast"]}

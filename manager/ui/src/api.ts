@@ -133,8 +133,8 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ selected, uninstall, options }),
     }),
-  keep: (name: string, ids: string[]) =>
-    request<Profile>(`/api/profiles/${encodeURIComponent(name)}/keep`, {
+  clear: (name: string, ids: string[]) =>
+    request<Profile>(`/api/profiles/${encodeURIComponent(name)}/clear`, {
       method: 'POST',
       body: JSON.stringify({ ids }),
     }),

@@ -253,13 +253,14 @@ export default function App() {
     }
   }
 
-  /** The run report cleared apps from the saved list; unsaved marks stay. */
+  /** The run report cleared apps from the saved list, with their options; other unsaved changes stay. */
   const profileUpdated = useCallback(
     (updated: Profile) => {
       if (updated.name !== profile?.name) return
       const cleared = new Set(difference(savedMarked, new Set(updated.uninstall)))
       setProfile(updated)
       setMarked((current) => new Set([...current].filter((id) => !cleared.has(id))))
+      setOptions((current) => Object.fromEntries(Object.entries(current).filter(([id]) => !cleared.has(id))))
     },
     [profile, savedMarked],
   )

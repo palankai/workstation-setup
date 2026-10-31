@@ -380,7 +380,7 @@ def offer_clear(workspace: Workspace, profile: str, ids: list[str]) -> None:
     except EOFError:
         answer = ""
     if answer.strip().lower() in ("y", "yes"):
-        workspace.keep(profile, ids)
+        workspace.clear(profile, ids)
         print(f"Cleared from the uninstall list: {', '.join(ids)}")
 
 
@@ -451,7 +451,7 @@ def run_uninstall(workspace: Workspace, state_dir: Path, args: argparse.Namespac
             raise UninstallError("--clear takes no ids; ws keep ID takes single applications off")
         marked = workspace.state(profile).uninstall
         if done := uninstalled(state_dir, profile, marked):
-            workspace.keep(profile, done)
+            workspace.clear(profile, done)
             print(f"Cleared from the uninstall list: {', '.join(done)}")
         if pending := [id for id in marked if id not in done]:
             print(f"Still marked, not uninstalled yet: {', '.join(pending)}")

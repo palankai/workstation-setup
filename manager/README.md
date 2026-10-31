@@ -93,8 +93,9 @@ options:
 
 Its steps (install and uninstall) get them as `APP_OPTIONS`, space-separated and empty when none are on, and act
 on them themselves: `case " $APP_OPTIONS " in *" server "*) ... ;; esac`. Nothing happens when one is switched
-off unless a step does it. An option the application doesn't declare is an error; options of applications
-the profile doesn't install are kept. `ws option ID` lists them, `ws option ID OPT...` (`--off`) switches them,
+off unless a step does it. An option the application doesn't declare is an error. Deselecting or marking for
+uninstall keeps the options (uninstall steps get them too); clearing the application from the uninstall list
+forgets them, `ws keep` doesn't. `ws option ID` lists them, `ws option ID OPT...` (`--off`) switches them,
 and the app panel has a checkbox each, saved like the selection. Plans, the run report and `run.json` show
 the options each application ran with.
 
