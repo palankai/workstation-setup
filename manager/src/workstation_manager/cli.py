@@ -14,7 +14,8 @@ from .core.state import State, StateError, default_state_dir
 from .core.query import search
 from .executor.report import format_run, format_search, summary_line, write_html_report
 from .executor.update import Executor, Plan, PlanError, format_plan, make_plan
-from .generate import generate_uninstall
+from .generator import DRY_RUN, OVERWRITE
+from .scaffold import scaffold_uninstall
 from .migrate import migrate
 
 UI_DIST = Path(__file__).resolve().parents[2] / "ui" / "dist"
@@ -102,6 +103,20 @@ def main(argv: list[str] | None = None) -> None:
         f"{CLEANUP_KEEP} (like ws cleanup)",
     )
 
+    generate = commands.add_parser(
+        "generate",
+        parents=[selection],
+        help="write the files installed applications generate (their *generate.py steps)",
+        description="Runs only the *generate.py steps, which update also runs. A generated file "
+        "carries a header with a hash; one edited since, hand-written or a symlink is refused.",
+    )
+    generate.add_argument("-n", "--dry-run", action="store_true", help="only show what it would write")
+    generate.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="replace edited and hand-written files too, keeping each as <name>.bak",
+    )
+
     search = commands.add_parser(
         "search",
         help="list applications, one line each",
@@ -170,16 +185,16 @@ def main(argv: list[str] | None = None) -> None:
     migrate_command.add_argument("--profile", help="default: $WORKSTATION or ~/.workstation-setup-config")
     migrate_command.add_argument("-n", "--dry-run", action="store_true", help="only show what it would do")
 
-    generate = commands.add_parser(
-        "generate-uninstall",
+    scaffold = commands.add_parser(
+        "scaffold-uninstall",
         help="write uninstall steps for applications installed by Brewfiles alone",
         description="Writes 90-uninstall.sh into applications whose only steps are Brewfiles of brew, "
         "cask and tap lines: it uninstalls their formulae and casks (not taps). Regenerates files it "
         "wrote before; leaves hand-written uninstall steps and packages shared with other "
         "applications alone.",
     )
-    generate.add_argument("ids", nargs="*", metavar="ID", help="default: every application")
-    generate.add_argument("-n", "--dry-run", action="store_true", help="only show what it would do")
+    scaffold.add_argument("ids", nargs="*", metavar="ID", help="default: every application")
+    scaffold.add_argument("-n", "--dry-run", action="store_true", help="only show what it would do")
 
     runs = commands.add_parser("runs", help="list recent update runs")
     runs.add_argument("-n", "--limit", type=int, default=20)
@@ -225,7 +240,7 @@ def main(argv: list[str] | None = None) -> None:
         if args.command == "serve":
             path = f"/?run={args.report}" if args.report else "/"
             run_server(workspace, args.host, args.port, args.ui, None if args.no_open else path)
-        elif args.command in ("plan", "update"):
+        elif args.command in ("plan", "update", "generate"):
             sys.exit(run_update(workspace, state_dir, args, command))
         elif args.command == "search":
             run_search(workspace, args)
@@ -243,9 +258,9 @@ def main(argv: list[str] | None = None) -> None:
             profile = resolve_profile(args.profile)
             lines = migrate(workspace, State(state_dir), profile, Path.home(), args.dry_run)
             print("\n".join(lines) if lines else "Nothing to migrate")
-        elif args.command == "generate-uninstall":
-            lines = generate_uninstall(workspace.catalog(), args.ids, args.dry_run)
-            print("\n".join(lines) if lines else "Nothing to generate")
+        elif args.command == "scaffold-uninstall":
+            lines = scaffold_uninstall(workspace.catalog(), args.ids, args.dry_run)
+            print("\n".join(lines) if lines else "Nothing to scaffold")
         elif args.command == "runs":
             for run in list_runs(state_dir)[: args.limit]:
                 print(summary_line(run))
@@ -283,19 +298,26 @@ def run_update(
 ) -> int:
     state = State(state_dir)
     profile = resolve_profile(args.profile)
+    generate = args.command == "generate"
     if getattr(args, "brew_only", False):
         if args.query or args.no_brew:
             raise PlanError("--brew-only can't be combined with a query or --no-brew")
         plan = Plan(profile, [], full=True)
     else:
-        plan = make_plan(workspace, state, profile, args.query, args.force, args.no_deps)
+        only = "generate" if generate else None
+        plan = make_plan(workspace, state, profile, args.query, args.force, args.no_deps, only)
     if args.command == "plan":
         print(format_plan(plan))
         return 0
     log = RunLog(state_dir / RUNS, profile, command)
-    executor = Executor(
-        workspace.root, state, log, brew=not args.no_brew, fail_fast=args.fail_fast
-    )
+    if generate:
+        env = {DRY_RUN: "1"} if args.dry_run else {}
+        env |= {OVERWRITE: "1"} if args.overwrite else {}
+        executor = Executor(workspace.root, state, log, brew=False, env=env)
+    else:
+        executor = Executor(
+            workspace.root, state, log, brew=not args.no_brew, fail_fast=args.fail_fast
+        )
     try:
         status = executor.execute(plan)
     except KeyboardInterrupt:
@@ -306,9 +328,9 @@ def run_update(
     print()
     print(format_run(log.data, state_dir, problems_only=True))
     print_html_report(workspace, state_dir, log.data)
-    if args.cleanup:
+    if getattr(args, "cleanup", False):
         run_cleanup(state_dir, CLEANUP_KEEP, CLEANUP_DAYS, protect=[log.id])
-    if args.open:
+    if getattr(args, "open", False):
         show_report(workspace, log.id)
     elif done := log.data["uninstalled"]:
         offer_clear(workspace, profile, done)

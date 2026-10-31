@@ -14,7 +14,7 @@ export interface Application {
   folder: string
 }
 
-export type StepKind = 'brewfile' | 'run' | 'once' | 'uninstall'
+export type StepKind = 'brewfile' | 'run' | 'once' | 'uninstall' | 'generate'
 
 export interface Step {
   file: string

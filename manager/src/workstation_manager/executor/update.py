@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
-from ..core import Application, Step, Workspace
+from ..core import Application, Step, StepKind, Workspace
 from ..core.query import parse_query, select
 from ..core.runs import RunLog, RunStatus, StepResult
 from ..core.state import State, file_sha256, now
@@ -54,10 +54,12 @@ def make_plan(
     terms: list[str],
     force: bool = False,
     no_deps: bool = False,
+    only: StepKind | None = None,
 ) -> Plan:
     """Applications the profile installs, narrowed by terms; dependencies are included
     unless no_deps, and applications outside the profile only with force.
-    Matching applications marked for uninstall are uninstalled instead."""
+    Matching applications marked for uninstall are uninstalled instead.
+    With `only`, just that kind of step: no brew, no uninstalls, applications without one left out."""
     catalog = workspace.catalog()
     profile_state = workspace.state(profile, catalog)
     install = profile_state.install_order
@@ -85,6 +87,10 @@ def make_plan(
         ordered = catalog.resolve(matched)
         ids = [id for id in ordered if id in set(matched)] if no_deps else ordered
     removals = [id for id in reversed(catalog.resolve(removals)) if id in set(removals)]
+    if only:
+        apps = [plan_application(catalog.get(id), state) for id in ids]
+        apps = [PlannedApp(a.application, tuple(p for p in a.steps if p.step.kind == only)) for a in apps]
+        return Plan(profile, [a for a in apps if a.steps], full=False)
     return Plan(
         profile,
         [plan_application(catalog.get(id), state) for id in ids],
@@ -154,7 +160,10 @@ class Executor:
         log: RunLog,
         brew: bool = True,
         fail_fast: bool = False,
+        env: dict[str, str] | None = None,
     ):
+        """`env` is added to every application step's environment."""
+        self.env = env or {}
         self.repo = repo
         self.state = state
         self.log = log
@@ -246,7 +255,13 @@ class Executor:
         return all(self._run_step(app, p.step) for p in steps)
 
     def _run_step(self, app: Application, step: Step) -> bool:
-        env = {"APP_ID": app.id, "APP_DIR": str(app.path), "WORKSTATION_PROFILE": self.log.data["profile"]}
+        env = {
+            **self.env,
+            "APP_ID": app.id,
+            "APP_DIR": str(app.path),
+            "WORKSTATION_PROFILE": self.log.data["profile"],
+            "WORKSTATION_ROOT": str(self.repo),
+        }
         file = app.path / step.file
         self._step(step.file)
         if step.kind == "brewfile":

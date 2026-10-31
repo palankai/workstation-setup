@@ -20,6 +20,10 @@ const STEP_LABELS: Record<StepKind, { label: string; className: string }> = {
     label: 'on uninstall',
     className: 'bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300',
   },
+  generate: {
+    label: 'generates files',
+    className: 'bg-violet-100 text-violet-800 dark:bg-violet-500/15 dark:text-violet-300',
+  },
 }
 
 export function Files({ detail }: { detail: ApplicationDetail }) {

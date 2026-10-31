@@ -1,6 +1,15 @@
 """Selection logic shared by the server and future CLI; no web dependencies."""
 
-from .catalog import EDITABLE_FLAGS, Application, Catalog, CatalogError, Step, load_catalog, set_flag
+from .catalog import (
+    EDITABLE_FLAGS,
+    Application,
+    Catalog,
+    CatalogError,
+    Step,
+    StepKind,
+    load_catalog,
+    set_flag,
+)
 from .profiles import InlineEntry, Profile, ProfileError, list_profiles, load_profile
 from .settings import SavedSearch, Settings, load_settings
 from .workspace import ProfileState, UninstallError, Workspace, WorkspaceError
@@ -17,6 +26,7 @@ __all__ = [
     "SavedSearch",
     "Settings",
     "Step",
+    "StepKind",
     "UninstallError",
     "Workspace",
     "WorkspaceError",
