@@ -1,0 +1,2 @@
+tap "surrealdb/tap"
+brew "surrealdb/tap/surreal-db"
