@@ -1,5 +1,8 @@
 source ~/.workstation-setup-config
 
+# The Workstation folder (Experiments, Git, Scripts, ...); skills read it to find their folders
+export WORK_HOME="$HOME/Workstation"
+
 # PATH and FPATH keep only the first copy of each folder
 typeset -U path fpath
 

@@ -45,6 +45,7 @@ applications:
   - $ref: pyenv
   - $ref: rustup
   - $ref: signal-messenger
+  - $ref: skill-experiment
   - $ref: skill-refining-issues
   - $ref: skill-working-issues
   - $ref: slack
