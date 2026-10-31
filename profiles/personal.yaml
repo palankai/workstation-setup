@@ -62,5 +62,3 @@ applications:
   - $ref: yarn
   - $ref: zed-editor
   - $ref: zlib
-uninstall:
-  - $ref: postgresql-17
