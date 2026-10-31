@@ -3,8 +3,10 @@
 import json
 import os
 import re
+import shutil
+from collections.abc import Collection
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Literal
 
@@ -116,6 +118,28 @@ def load_run(state_dir: Path, id: str) -> dict | None:
     if "/" in id or id.startswith(".") or not run_file.is_file():
         return None
     return json.loads(run_file.read_text())
+
+
+def prune_runs(
+    state_dir: Path, keep: int, days: int, protect: Collection[str] = (), dry_run: bool = False
+) -> list[str]:
+    """Deletes runs older than `days` days, except the latest `keep` runs and those in `protect`.
+    Returns the deleted run ids, latest first."""
+    runs_dir = state_dir / RUNS
+    cutoff = datetime.now(UTC) - timedelta(days=days)
+    removed = []
+    for index, run in enumerate(list_runs(state_dir)):
+        id = run["id"]
+        if index < keep or id in protect or datetime.fromisoformat(run["started"]) >= cutoff:
+            continue
+        # The id comes from run.json; only ever delete a folder directly inside runs/
+        directory = runs_dir / id
+        if "/" in id or id.startswith(".") or not (directory / RUN_FILE).is_file():
+            continue
+        if not dry_run:
+            shutil.rmtree(directory)
+        removed.append(id)
+    return removed
 
 
 def output_file(state_dir: Path, id: str, name: str) -> Path | None:

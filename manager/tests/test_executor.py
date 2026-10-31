@@ -237,7 +237,7 @@ def test_failed_uninstall_affects_nothing_else(workspace: Workspace, state: Stat
 
 
 def test_query_uninstalls_matching_marked_applications(workspace: Workspace, state: State):  # noqa: F811
-    script(workspace.catalog().get("fd").path, "90-uninstall.sh", "echo bye\n")
+    script(workspace.catalog().get("jq").path, "90-uninstall.sh", "echo bye\n")
     workspace.mark_uninstall("dev", ["fd"])
     plan = make_plan(workspace, state, "dev", ["fd", "bat"])
     assert [p.application.id for p in plan.uninstalls] == ["fd"]
@@ -250,3 +250,51 @@ def test_plan_rejects_uninstalling_what_is_installed(workspace: Workspace, state
     path.write_text(path.read_text() + "uninstall:\n  - $ref: bat\n")
     with pytest.raises(PlanError, match="still installed"):
         make_plan(workspace, state, "dev", [])
+
+
+def fake_run(runs_dir: Path, id: str, days_ago: float) -> None:
+    from datetime import UTC, datetime, timedelta
+
+    started = (datetime.now(UTC) - timedelta(days=days_ago)).isoformat(timespec="seconds")
+    (runs_dir / id).mkdir(parents=True)
+    run = {"id": id, "profile": "dev", "command": [], "started": started, "finished": started,
+           "status": "ok", "steps": []}
+    (runs_dir / id / "run.json").write_text(json.dumps(run))
+
+
+def test_prune_runs_keeps_latest_and_recent(tmp_path: Path):
+    from workstation_manager.core.runs import prune_runs
+
+    runs_dir = tmp_path / RUNS
+    # Latest first: two recent runs, then old ones
+    for id, days in [("a", 1), ("b", 3), ("c", 40), ("d", 50), ("e", 90)]:
+        fake_run(runs_dir, id, days)
+
+    assert prune_runs(tmp_path, keep=5, days=30) == []
+    assert prune_runs(tmp_path, keep=3, days=30, dry_run=True) == ["d", "e"]
+    assert (runs_dir / "d").is_dir()
+    # Old runs among the latest N stay; recent ones stay whatever N is
+    assert prune_runs(tmp_path, keep=1, days=2, protect=["c"]) == ["b", "d", "e"]
+    assert sorted(p.name for p in runs_dir.iterdir()) == ["a", "c"]
+    assert prune_runs(tmp_path, keep=0, days=0) == ["a", "c"]
+
+
+def test_html_report_embeds_run_outputs_and_names(
+    workspace: Workspace, state: State, tmp_path: Path  # noqa: F811
+):
+    from workstation_manager.executor.report import write_html_report
+
+    app = workspace.catalog().get("jq").path
+    script(app, "10-run.sh", "echo '</script><b>hi</b>'\n")
+    _, data = run(workspace, state, ["jq"])
+    template = tmp_path / "template.html"
+    template.write_text('<script id="run-data" type="application/json">__RUN_DATA__</script>')
+
+    path = write_html_report(data, state.directory, template, {"jq": "jq the JSON tool"})
+    assert path == state.directory / RUNS / data["id"] / "report.html"
+    html = path.read_text()
+    assert "</script><b>" not in html
+    embedded = json.loads(html.removeprefix(template.read_text().split("__")[0]).removesuffix("</script>"))
+    assert embedded["run"]["id"] == data["id"]
+    assert embedded["apps"] == {"jq": "jq the JSON tool"}
+    assert any("</script><b>hi</b>" in text for text in embedded["outputs"].values())

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from workstation_manager.cli import main
@@ -76,3 +78,26 @@ def test_uninstall_keep_and_clear(workspace: Workspace, capsys, tmp_path, monkey
     ws(workspace, "select", "bat", "--profile", "dev")
     with pytest.raises(SystemExit, match="Fundamental"):
         ws(workspace, "uninstall", "vim", "--profile", "dev")
+
+
+def test_update_writes_html_report_and_cleans_up(workspace: Workspace, capsys, tmp_path, monkeypatch):  # noqa: F811
+    from .test_executor import fake_run
+
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "state"))
+    runs_dir = tmp_path / "state" / "workstation-setup" / "runs"
+    fake_run(runs_dir, "old", 60)
+
+    with pytest.raises(SystemExit, match="0"):
+        ws(workspace, "update", "--no-brew", "--profile", "dev", "jq", "--cleanup")
+    out = capsys.readouterr().out
+    # The template is the committed UI build
+    (link,) = [line.removeprefix("Report: ") for line in out.splitlines() if line.startswith("Report: ")]
+    assert link.startswith("file://") and link.endswith("/report.html")
+    assert "__RUN_DATA__" not in Path(link.removeprefix("file://")).read_text()
+    assert "No runs to clean up" in out
+
+    ws(workspace, "cleanup", "--keep", "1", "-n")
+    assert "Would delete 1 run: old" in capsys.readouterr().out
+    ws(workspace, "cleanup", "--keep", "0", "--older-than", "0")
+    assert "Deleted 2 runs" in capsys.readouterr().out
+    assert list(runs_dir.iterdir()) == []

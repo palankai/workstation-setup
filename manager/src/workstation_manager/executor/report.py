@@ -1,5 +1,6 @@
+import json
 import shutil
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from datetime import datetime
 from pathlib import Path
 
@@ -8,6 +9,9 @@ from ..core import Application
 from ..core.runs import RUNS, clean_output
 
 ICONS = {"ok": "✓", "failed": "✗", "skipped": "-"}
+HTML_REPORT = "report.html"
+# In the UI's built report.html (ui/report.html), replaced with the run's data
+HTML_PLACEHOLDER = "__RUN_DATA__"
 
 
 def duration(start: str, end: str | None) -> str:
@@ -77,6 +81,26 @@ def format_run(
 
     lines += ["", f"Logs: {state_dir / RUNS / run['id']}"]
     return "\n".join(lines)
+
+
+def write_html_report(
+    run: dict, state_dir: Path, template: Path, names: Mapping[str, str]
+) -> Path:
+    """Writes the run's static report, the web UI's run report without its actions,
+    into the run folder; `template` is the UI's built report.html."""
+    run_dir = state_dir / RUNS / run["id"]
+    outputs = {}
+    for step in run["steps"]:
+        if step["output"] and (file := run_dir / step["output"]).is_file():
+            outputs[step["output"]] = clean_output(file.read_bytes())
+    apps = {step["app"] for step in run["steps"] if step["app"]}
+    data = {"run": run, "outputs": outputs, "apps": {id: names[id] for id in apps if id in names}}
+    # Escaped so step output can't close the <script> it's embedded in
+    embedded = json.dumps(data).replace("<", "\\u003c")
+    html = template.read_text().replace(HTML_PLACEHOLDER, embedded, 1)
+    path = run_dir / HTML_REPORT
+    path.write_text(html)
+    return path
 
 
 def short_description(application: Application) -> str:

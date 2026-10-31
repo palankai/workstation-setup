@@ -5,18 +5,24 @@ import sys
 import threading
 import urllib.request
 import webbrowser
+from collections.abc import Collection
 from pathlib import Path
 
 from .core import CatalogError, ProfileError, UninstallError, Workspace, WorkspaceError, set_flag
-from .core.runs import RUNS, RunLog, list_runs, load_run, uninstalled
+from .core.runs import RUNS, RunLog, list_runs, load_run, prune_runs, uninstalled
 from .core.state import State, StateError, default_state_dir
 from .core.query import search
-from .executor.report import format_run, format_search, summary_line
+from .executor.report import format_run, format_search, summary_line, write_html_report
 from .executor.update import Executor, Plan, PlanError, format_plan, make_plan
 from .generate import generate_uninstall
 from .migrate import migrate
 
 UI_DIST = Path(__file__).resolve().parents[2] / "ui" / "dist"
+# The static run report's template, built from the UI's RunReport (ui/report.html)
+REPORT_TEMPLATE = UI_DIST / "report.html"
+# ws cleanup: runs older than this many days go, except the latest few
+CLEANUP_DAYS = 30
+CLEANUP_KEEP = 5
 HOST = "127.0.0.1"
 PORT = 8765
 # The repository this package lives in, used when the cwd isn't inside one
@@ -88,6 +94,12 @@ def main(argv: list[str] | None = None) -> None:
     update.add_argument("--fail-fast", action="store_true", help="stop at the first failure")
     update.add_argument(
         "--open", action="store_true", help="open the run report in the web UI afterwards"
+    )
+    update.add_argument(
+        "--cleanup",
+        action="store_true",
+        help=f"afterwards, delete runs older than {CLEANUP_DAYS} days except the latest "
+        f"{CLEANUP_KEEP} (like ws cleanup)",
     )
 
     search = commands.add_parser(
@@ -176,6 +188,34 @@ def main(argv: list[str] | None = None) -> None:
     report.add_argument("run", nargs="?", help="run id (default: the latest)")
     report.add_argument("--app", help="only this application's steps")
     report.add_argument("--output", action="store_true", help="full output of every step shown")
+    report.add_argument(
+        "--html",
+        action="store_true",
+        help="(re)write the run's static HTML report and print its location instead",
+    )
+
+    cleanup = commands.add_parser(
+        "cleanup",
+        help="delete old runs",
+        description="Deletes runs older than --older-than days, but never the latest --keep runs: "
+        "with the defaults, a run goes once it's over 30 days old and five newer ones exist. "
+        "--keep 0 deletes by age alone, --older-than 0 keeps just the latest --keep.",
+    )
+    cleanup.add_argument(
+        "--keep",
+        type=int,
+        default=CLEANUP_KEEP,
+        metavar="N",
+        help=f"always keep the latest N runs (default: {CLEANUP_KEEP})",
+    )
+    cleanup.add_argument(
+        "--older-than",
+        type=int,
+        default=CLEANUP_DAYS,
+        metavar="DAYS",
+        help=f"delete runs started more than DAYS days ago (default: {CLEANUP_DAYS})",
+    )
+    cleanup.add_argument("-n", "--dry-run", action="store_true", help="only show what it would delete")
 
     command = sys.argv[1:] if argv is None else argv
     args = parser.parse_args(command)
@@ -210,7 +250,9 @@ def main(argv: list[str] | None = None) -> None:
             for run in list_runs(state_dir)[: args.limit]:
                 print(summary_line(run))
         elif args.command == "report":
-            run_report(state_dir, args)
+            run_report(workspace, state_dir, args)
+        elif args.command == "cleanup":
+            run_cleanup(state_dir, args.keep, args.older_than, args.dry_run)
     except (WorkspaceError, CatalogError, ProfileError, StateError, PlanError, UninstallError) as e:
         sys.exit(f"error: {e}")
     except KeyboardInterrupt:
@@ -259,14 +301,40 @@ def run_update(
     except KeyboardInterrupt:
         print("\nInterrupted")
         print(format_run(log.data, state_dir, problems_only=True))
+        print_html_report(workspace, state_dir, log.data)
         return 130
     print()
     print(format_run(log.data, state_dir, problems_only=True))
+    print_html_report(workspace, state_dir, log.data)
+    if args.cleanup:
+        run_cleanup(state_dir, CLEANUP_KEEP, CLEANUP_DAYS, protect=[log.id])
     if args.open:
         show_report(workspace, log.id)
     elif done := log.data["uninstalled"]:
         offer_clear(workspace, profile, done)
     return 0 if status == "ok" else 1
+
+
+def print_html_report(workspace: Workspace, state_dir: Path, run: dict) -> None:
+    if not REPORT_TEMPLATE.is_file():
+        print(f"No HTML report: no built UI in {UI_DIST} (pnpm --dir ui build)", file=sys.stderr)
+        return
+    names = {application.id: application.name for application in workspace.catalog()}
+    path = write_html_report(run, state_dir, REPORT_TEMPLATE, names)
+    print(f"Report: {path.as_uri()}")
+
+
+def run_cleanup(
+    state_dir: Path, keep: int, days: int, dry_run: bool = False, protect: Collection[str] = ()
+) -> None:
+    if keep < 0 or days < 0:
+        sys.exit("error: --keep and --older-than can't be negative")
+    removed = prune_runs(state_dir, keep, days, protect, dry_run)
+    if not removed:
+        print("No runs to clean up")
+        return
+    runs = f"{len(removed)} run{'s' if len(removed) != 1 else ''}"
+    print(f"{'Would delete' if dry_run else 'Deleted'} {runs}: {', '.join(removed)}")
 
 
 def offer_clear(workspace: Workspace, profile: str, ids: list[str]) -> None:
@@ -407,14 +475,17 @@ def run_once(workspace: Workspace, state: State, args: argparse.Namespace) -> No
         print(f"Reset: {', '.join(removed)}" if removed else "Nothing recorded")
 
 
-def run_report(state_dir: Path, args: argparse.Namespace) -> None:
+def run_report(workspace: Workspace, state_dir: Path, args: argparse.Namespace) -> None:
     if args.run:
         run = load_run(state_dir, args.run)
     else:
         run = next(iter(list_runs(state_dir)), None)
     if run is None:
         sys.exit("error: no such run")
-    print(format_run(run, state_dir, args.app, args.output))
+    if args.html:
+        print_html_report(workspace, state_dir, run)
+    else:
+        print(format_run(run, state_dir, args.app, args.output))
 
 
 def run_server(

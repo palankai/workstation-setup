@@ -89,7 +89,10 @@ ws update --brew-only        # only brew update, upgrade and cleanup
 ws update fd --force         # also applications the profile doesn't install
 ws update jq --no-deps       # without dependencies
 ws update --open             # afterwards, open the report in the web UI (serves it if not running)
+ws update --cleanup          # afterwards, delete old runs (as ws cleanup with its defaults)
 ws runs; ws report [RUN]     # past runs; results and failed output
+ws report --html [RUN]       # (re)write a run's static HTML report, print its file:// link
+ws cleanup [--keep N] [--older-than DAYS] [-n]  # delete runs older than DAYS (30), except the latest N (5)
 ws search chat '#ai'         # one line per application; ✓ marks what the profile installs
 ws select ID...; ws deselect ID...      # change the profile, like ticking a card (unselect works too)
 ws uninstall ID...; ws keep ID...       # mark for uninstall (deselects), or take off the list
@@ -115,6 +118,15 @@ Machine state lives in `~/.local/state/workstation-setup/` (or `$XDG_STATE_HOME`
 not rerun), and `runs/<id>/` keeps `run.json` plus every step's full terminal output. The UI's run report (sidebar
 "Last run report", or `/?run=<id>` / `/?run=latest`) lists one collapsible line per application and run-wide
 step, filterable by status.
+
+Every update also writes `runs/<id>/report.html` and prints its `file://` link: the same report, with the
+filters but without actions or the run picker, readable without the server. It's `ui/dist/report.html` (built from
+`ui/report.html` and the UI's `RunReport`, everything inlined) with the run, its step output and application names
+filled in, so it changes with the web UI's report.
+
+`ws cleanup` deletes a run once it's older than `--older-than` days and isn't among the latest `--keep` runs, so
+old runs survive when there are few, and recent ones whatever their number. `--keep 0` cleans by age alone,
+`--older-than 0` keeps only the latest N. Deleted runs no longer count for `ws uninstall --clear`.
 
 ## Install order
 

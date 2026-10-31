@@ -1,7 +1,8 @@
 import { Check, ChevronRight, Loader2, Minus, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { api, type HistoryStep, type RunStep, type StepStatus } from '../api'
 import { STATUS_TEXT, formatDuration, formatTime, secondsBetween } from '../runs'
+import { RunSourceContext } from '../source'
 
 export function StatusIcon({ status }: { status: StepStatus }) {
   const Icon = status === 'ok' ? Check : status === 'failed' ? X : Minus
@@ -12,14 +13,15 @@ export function StatusIcon({ status }: { status: StepStatus }) {
 export function StepOutput({ run, step }: { run: string; step: RunStep }) {
   const [output, setOutput] = useState<string>()
   const [error, setError] = useState<string>()
+  const source = useContext(RunSourceContext)
 
   useEffect(() => {
     if (!step.output) return
-    api
-      .runOutput(run, step.output)
+    source
+      .output(run, step.output)
       .then(setOutput)
       .catch((e: Error) => setError(e.message))
-  }, [run, step.output])
+  }, [source, run, step.output])
 
   if (!step.output) return step.reason ? <p className="px-3 py-2 text-sm text-zinc-500">{step.reason}</p> : null
   if (error) return <p className="p-3 text-sm text-rose-600">{error}</p>

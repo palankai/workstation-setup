@@ -1,7 +1,8 @@
 import { ArrowLeft, ChevronRight, ChevronsDownUp, ChevronsUpDown, ListX, Loader2, PanelRightOpen, RefreshCw } from 'lucide-react'
-import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useContext, useEffect, useMemo, useState } from 'react'
 import { api, type Application, type Profile, type Run, type RunSummary, type StepStatus } from '../api'
 import { STATUS_TEXT, formatDuration, formatTime, groupSteps, secondsBetween, type StepGroup } from '../runs'
+import { RunSourceContext } from '../source'
 import { StatusIcon, StepOutput } from './Runs'
 
 type Filter = 'all' | StepStatus
@@ -19,15 +20,16 @@ const BAR: Record<StepStatus, string> = {
   skipped: 'border-l-zinc-300 dark:border-l-zinc-600',
 }
 
+/** Without the callbacks (a static report) the matching controls are left out. */
 interface Props {
   id: string
-  runs: RunSummary[]
-  apps: Map<string, Application>
-  onSelectRun: (id: string) => void
-  onOpenApp: (id: string) => void
-  onProfileUpdated: (profile: Profile) => void
-  onReload: () => void
-  onClose: () => void
+  runs?: RunSummary[]
+  apps: ReadonlyMap<string, Pick<Application, 'name'>>
+  onSelectRun?: (id: string) => void
+  onOpenApp?: (id: string) => void
+  onProfileUpdated?: (profile: Profile) => void
+  onReload?: () => void
+  onClose?: () => void
 }
 
 export function RunReport({ id, runs, apps, onSelectRun, onOpenApp, onProfileUpdated, onReload, onClose }: Props) {
@@ -38,32 +40,33 @@ export function RunReport({ id, runs, apps, onSelectRun, onOpenApp, onProfileUpd
   const [clearError, setClearError] = useState<string>()
   const [filter, setFilter] = useState<Filter>('all')
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const source = useContext(RunSourceContext)
 
   useEffect(() => {
     let cancelled = false
-    api
+    source
       .run(id)
       .then((run) => !cancelled && setLoaded({ run }))
       .catch((e: Error) => !cancelled && setLoaded({ error: e.message }))
     return () => {
       cancelled = true
     }
-  }, [id, reload])
+  }, [source, id, reload])
 
   const run = loaded?.run
   const runProfile = run?.profile
 
   useEffect(() => {
-    if (!runProfile) return
+    if (!runProfile || !source.profile) return
     let cancelled = false
-    api
+    source
       .profile(runProfile)
       .then((p) => !cancelled && setProfile(p))
       .catch(() => !cancelled && setProfile(undefined))
     return () => {
       cancelled = true
     }
-  }, [runProfile, reload])
+  }, [source, runProfile, reload])
 
   const clearable = useMemo(
     () => (run?.uninstalled ?? []).filter((app) => profile?.uninstall.includes(app)),
@@ -76,7 +79,7 @@ export function RunReport({ id, runs, apps, onSelectRun, onOpenApp, onProfileUpd
       .then((updated) => {
         setClearError(undefined)
         setProfile(updated)
-        onProfileUpdated(updated)
+        onProfileUpdated?.(updated)
       })
       .catch((e: Error) => setClearError(e.message))
 
@@ -99,14 +102,17 @@ export function RunReport({ id, runs, apps, onSelectRun, onOpenApp, onProfileUpd
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={onClose}
-          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-        >
-          <ArrowLeft className="size-4" /> Applications
-        </button>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            <ArrowLeft className="size-4" /> Applications
+          </button>
+        )}
         <h1 className="mr-auto text-lg font-semibold">Run report</h1>
+        {runs && onSelectRun && (
         <select
           value={id}
           onChange={(e) => onSelectRun(e.target.value)}
@@ -118,17 +124,20 @@ export function RunReport({ id, runs, apps, onSelectRun, onOpenApp, onProfileUpd
             </option>
           ))}
         </select>
-        <button
-          type="button"
-          title="Reload"
-          onClick={() => {
-            onReload()
-            setReload((n) => n + 1)
-          }}
-          className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-        >
-          <RefreshCw className="size-4" />
-        </button>
+        )}
+        {onReload && (
+          <button
+            type="button"
+            title="Reload"
+            onClick={() => {
+              onReload()
+              setReload((n) => n + 1)
+            }}
+            className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          >
+            <RefreshCw className="size-4" />
+          </button>
+        )}
       </div>
 
       {loaded?.error && <p className="text-sm text-rose-600">{loaded.error}</p>}
@@ -207,7 +216,7 @@ export function RunReport({ id, runs, apps, onSelectRun, onOpenApp, onProfileUpd
                   name={group.app ? (apps.get(group.app)?.name ?? group.app) : group.label}
                   open={expanded.has(group.key)}
                   onToggle={() => toggle(group.key)}
-                  onOpenApp={group.app && apps.has(group.app) ? () => onOpenApp(group.app!) : undefined}
+                  onOpenApp={onOpenApp && group.app && apps.has(group.app) ? () => onOpenApp(group.app!) : undefined}
                   onClear={group.app && clearable.includes(group.app) ? () => void clear([group.app!]) : undefined}
                 />
               ))}
