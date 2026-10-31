@@ -305,3 +305,45 @@ def test_save_profile_keeps_unknown_refs_on_both_lists(workspace: Workspace):
     profile = workspace.profile("dev")
     assert profile.uninstall == ["fd", "gone"]
     assert workspace.state("dev").missing == ["gone"]
+
+
+def declare_options(workspace: Workspace, id: str = "jq") -> None:
+    readme = workspace.root / "applications" / id / "README.md"
+    readme.write_text(readme.read_text().replace("---\n\n", 'options:\n  server: "Start the server"\n  fast: Fast\n---\n\n', 1))
+
+
+def test_options_are_declared_by_applications(workspace: Workspace):
+    declare_options(workspace)
+    assert workspace.catalog().get("jq").options == {"server": "Start the server", "fast": "Fast"}
+    assert workspace.catalog().get("bat").options == {}
+    write_app(workspace.root, "bad", "bad", extra='options:\n  "with space": x\n')
+    with pytest.raises(CatalogError, match="'options' must map"):
+        workspace.catalog()
+
+
+def test_options_are_saved_in_the_profile_and_checked(workspace: Workspace):
+    declare_options(workspace)
+    state = workspace.set_options("dev", "jq", ["server"])
+    assert state.options == {"jq": ["server"]}
+    assert "options:\n  jq: [server]\n" in workspace.profile("dev").path.read_text()
+
+    # Selection changes keep them; an empty list removes the entry, and the key with it
+    workspace.update_selection("dev", ["bat"])
+    assert workspace.state("dev").options == {"jq": ["server"]}
+    workspace.set_options("dev", "jq", [])
+    assert "options" not in workspace.profile("dev").path.read_text()
+
+    with pytest.raises(CatalogError, match="'jq' has no option nope \\(it offers: server, fast\\)"):
+        workspace.set_options("dev", "jq", ["nope"])
+    with pytest.raises(CatalogError, match="'bat' has no option server \\(it offers: none\\)"):
+        workspace.set_options("dev", "bat", ["server"])
+
+
+def test_options_in_the_profile_file_are_checked(workspace: Workspace):
+    declare_options(workspace)
+    path = workspace.profile("dev").path
+    path.write_text(path.read_text() + "options:\n  jq: [nope]\n")
+    with pytest.raises(ProfileError, match="'jq' has no option nope"):
+        workspace.state("dev")
+    path.write_text(path.read_text().replace("jq: [nope]", "gone: [server]"))
+    assert workspace.state("dev").missing == ["gone"]

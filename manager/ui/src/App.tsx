@@ -43,6 +43,7 @@ export default function App() {
   const [draft, setDraft] = useState<Set<string>>(new Set())
   // The uninstall list being edited; saved together with the selection
   const [marked, setMarked] = useState<Set<string>>(new Set())
+  const [options, setOptions] = useState<Record<string, string[]>>({})
   const [query, setQuery] = useState('')
   const [view, setView] = useState<View>('all')
   const [layout, setLayout] = useState<Layout>(storedLayout)
@@ -82,6 +83,7 @@ export default function App() {
         setProfile(p)
         setDraft(new Set(p.selected))
         setMarked(new Set(p.uninstall))
+        setOptions(p.options)
       })
       .catch((e: Error) => setError(e.message))
   }, [profileName])
@@ -111,7 +113,12 @@ export default function App() {
   const removed = useMemo(() => difference(saved, draft), [draft, saved])
   const marking = useMemo(() => difference(marked, savedMarked), [marked, savedMarked])
   const unmarking = useMemo(() => difference(savedMarked, marked), [marked, savedMarked])
-  const changeCount = new Set([...added, ...removed, ...marking, ...unmarking]).size
+  const savedOptions = useMemo(() => profile?.options ?? {}, [profile])
+  const optionsChanged = useMemo(
+    () => changedOptions(options, savedOptions),
+    [options, savedOptions],
+  )
+  const changeCount = new Set([...added, ...removed, ...marking, ...unmarking, ...optionsChanged]).size
   const dirty = changeCount > 0
   const loading = !profile || profile.name !== profileName
 
@@ -119,9 +126,10 @@ export default function App() {
     (id: string) => {
       if (draft.has(id) !== saved.has(id)) return draft.has(id) ? 'added' : 'removed'
       if (marked.has(id) !== savedMarked.has(id)) return marked.has(id) ? 'marked' : 'kept'
+      if (optionsChanged.includes(id)) return 'options'
       return null
     },
-    [draft, saved, marked, savedMarked],
+    [draft, saved, marked, savedMarked, optionsChanged],
   )
 
   const inView = useCallback(
@@ -210,22 +218,30 @@ export default function App() {
     setSaving(true)
     try {
       const ordered = (ids: Set<string>) => apps.filter((app) => ids.has(app.id)).map((app) => app.id)
-      const updated = await api.saveProfile(profile.name, ordered(draft), ordered(marked))
+      const updated = await api.saveProfile(profile.name, ordered(draft), ordered(marked), options)
       setProfile(updated)
       setDraft(new Set(updated.selected))
       setMarked(new Set(updated.uninstall))
+      setOptions(updated.options)
       setToast(`Saved profiles/${updated.name}.yaml`)
     } catch (e) {
       setError((e as Error).message)
     } finally {
       setSaving(false)
     }
-  }, [apps, draft, marked, dirty, profile, saving])
+  }, [apps, draft, marked, options, dirty, profile, saving])
 
   const discard = () => {
     setDraft(new Set(saved))
     setMarked(new Set(savedMarked))
+    setOptions(savedOptions)
   }
+
+  const setOption = (id: string, option: string, on: boolean) =>
+    setOptions((current) => {
+      const chosen = (current[id] ?? []).filter((o) => o !== option)
+      return { ...current, [id]: on ? [...chosen, option] : chosen }
+    })
 
   /** Marking deselects; unmarking leaves the app unselected. */
   const setUninstall = (id: string, uninstall: boolean) => {
@@ -643,6 +659,11 @@ export default function App() {
                   <span className="font-medium text-zinc-600 dark:text-zinc-300">−{unmarking.length}</span>{' '}
                 </span>
               )}
+              {optionsChanged.length > 0 && (
+                <span className="text-zinc-500">
+                  · options <span className="font-medium text-violet-600 dark:text-violet-400">{optionsChanged.length}</span>{' '}
+                </span>
+              )}
               <span className="text-zinc-500">
                 unsaved in <span className="font-medium text-zinc-700 dark:text-zinc-200">{profile?.name}</span>
               </span>
@@ -688,6 +709,8 @@ export default function App() {
           locked={fundamentals.has(detailId)}
           impliedBy={implied.get(detailId) ?? []}
           marked={marked.has(detailId)}
+          options={options[detailId] ?? []}
+          onOption={(option, on) => setOption(detailId, option, on)}
           neededBy={impliedBy(byId, new Set([...fundamentals, ...draft].filter((id) => id !== detailId))).get(detailId) ?? []}
           onToggle={() => toggle(detailId)}
           onUninstall={(uninstall) => setUninstall(detailId, uninstall)}
@@ -698,6 +721,12 @@ export default function App() {
       )}
     </div>
   )
+}
+
+/** Applications whose options differ; order doesn't count, and none is the same as missing. */
+function changedOptions(a: Record<string, string[]>, b: Record<string, string[]>): string[] {
+  const key = (options?: string[]) => [...(options ?? [])].sort().join(' ')
+  return [...new Set([...Object.keys(a), ...Object.keys(b)])].filter((id) => key(a[id]) !== key(b[id]))
 }
 
 function SidebarTitle({ children }: { children: ReactNode }) {

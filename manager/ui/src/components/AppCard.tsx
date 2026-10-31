@@ -9,7 +9,7 @@ export type CardState = {
   // Marked for uninstall in the profile
   uninstall: boolean
   // Unsaved: selection added or removed, or uninstall marked or kept (taken off the list)
-  change: 'added' | 'removed' | 'marked' | 'kept' | null
+  change: 'added' | 'removed' | 'marked' | 'kept' | 'options' | null
 }
 
 type Variant = 'locked' | 'selected' | 'implied' | 'uninstall' | 'idle'
@@ -167,6 +167,7 @@ const CHANGE: Record<NonNullable<CardState['change']>, string> = {
   removed: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
   marked: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
   kept: 'bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300',
+  options: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
 }
 
 function Badges({ app, state }: { app: Application; state: CardState }) {

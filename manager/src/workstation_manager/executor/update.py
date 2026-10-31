@@ -1,5 +1,6 @@
 import os
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -35,6 +36,8 @@ class PlannedStep:
 class PlannedApp:
     application: Application
     steps: tuple[PlannedStep, ...]
+    # Switched on in the profile; the steps get them as APP_OPTIONS
+    options: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -65,6 +68,7 @@ def make_plan(
     install = profile_state.install_order
     installed = set(install)
     marked = profile_state.uninstall
+    options = profile_state.options
     if conflicts := [id for id in marked if id in installed]:
         raise PlanError(
             f"Marked for uninstall but still installed by profile '{profile}': "
@@ -87,24 +91,24 @@ def make_plan(
         ordered = catalog.resolve(matched)
         ids = [id for id in ordered if id in set(matched)] if no_deps else ordered
     removals = [id for id in reversed(catalog.resolve(removals)) if id in set(removals)]
+    apps = [plan_application(catalog.get(id), state, options.get(id, ())) for id in ids]
     if only:
-        apps = [plan_application(catalog.get(id), state) for id in ids]
-        apps = [PlannedApp(a.application, tuple(p for p in a.steps if p.step.kind == only)) for a in apps]
+        apps = [PlannedApp(a.application, tuple(p for p in a.steps if p.step.kind == only), a.options) for a in apps]
         return Plan(profile, [a for a in apps if a.steps], full=False)
     return Plan(
         profile,
-        [plan_application(catalog.get(id), state) for id in ids],
+        apps,
         full=not terms,
-        uninstalls=[plan_uninstall(catalog.get(id)) for id in removals],
+        uninstalls=[plan_uninstall(catalog.get(id), options.get(id, ())) for id in removals],
     )
 
 
-def plan_uninstall(application: Application) -> PlannedApp:
+def plan_uninstall(application: Application, options: Iterable[str] = ()) -> PlannedApp:
     steps = (PlannedStep(s) for s in application.steps if s.kind == "uninstall")
-    return PlannedApp(application, tuple(steps))
+    return PlannedApp(application, tuple(steps), tuple(options))
 
 
-def plan_application(application: Application, state: State) -> PlannedApp:
+def plan_application(application: Application, state: State, options: Iterable[str] = ()) -> PlannedApp:
     steps = []
     for step in application.steps:
         if step.kind == "uninstall":
@@ -119,7 +123,13 @@ def plan_application(application: Application, state: State) -> PlannedApp:
             else:
                 once = "changed"
         steps.append(PlannedStep(step, once))
-    return PlannedApp(application, tuple(steps))
+    return PlannedApp(application, tuple(steps), tuple(options))
+
+
+def title(planned: PlannedApp) -> str:
+    app = planned.application
+    options = f" · {', '.join(planned.options)}" if planned.options else ""
+    return f"{app.name} ({app.id}){options}"
 
 
 NO_UNINSTALL_STEPS = "no uninstall steps"
@@ -137,15 +147,13 @@ def format_plan(plan: Plan) -> str:
     if plan.full:
         lines.append("brew update, uninstalls, brew upgrade before; brew autoremove, cleanup after")
     for planned in plan.uninstalls:
-        app = planned.application
-        lines.append(f"==> Uninstall {app.name} ({app.id})")
+        lines.append(f"==> Uninstall {title(planned)}")
         for p in planned.steps:
             lines.append(f"    {p.step.file:<16} uninstall")
         if not planned.steps:
             lines.append(f"    {NO_UNINSTALL_STEPS}; stays on the list")
     for planned in plan.apps:
-        app = planned.application
-        lines.append(f"==> {app.name} ({app.id})")
+        lines.append(f"==> {title(planned)}")
         for p in planned.steps:
             note = ONCE_NOTES[p.once] if p.once else p.step.kind
             lines.append(f"    {p.step.file:<16} {note}")
@@ -181,6 +189,7 @@ class Executor:
         return status
 
     def _execute(self, plan: Plan) -> RunStatus:
+        self.log.set_options({p.application.id: list(p.options) for p in [*plan.uninstalls, *plan.apps] if p.options})
         # Failed applications, and those skipped because a dependency failed
         failed: set[str] = set()
         ok = True
@@ -226,17 +235,17 @@ class Executor:
         """Failures stay with the application: nothing else is skipped because of them.
         A successful uninstall forgets the once steps, so a reinstall runs them again."""
         app = planned.application
-        title = f"Uninstall {app.name} ({app.id})"
+        heading = f"Uninstall {title(planned)}"
         if not planned.steps:
-            self._header(title, f"skipped, {NO_UNINSTALL_STEPS}")
+            self._header(heading, f"skipped, {NO_UNINSTALL_STEPS}")
             timestamp = now()
             self.log.add(
                 StepResult(app.id, "*", "uninstall", "skipped", timestamp, timestamp, reason=NO_UNINSTALL_STEPS)
             )
             return True
-        self._header(title)
+        self._header(heading)
         for planned_step in planned.steps:
-            if not self._run_step(app, planned_step.step):
+            if not self._run_step(app, planned_step.step, planned.options):
                 return False
         self.state.reset_once(app.id)
         self.log.add_uninstalled(app.id)
@@ -251,14 +260,16 @@ class Executor:
         ]
         if not steps:
             return True
-        self._header(f"{app.name} ({app.id})")
-        return all(self._run_step(app, p.step) for p in steps)
+        self._header(title(planned))
+        return all(self._run_step(app, p.step, planned.options) for p in steps)
 
-    def _run_step(self, app: Application, step: Step) -> bool:
+    def _run_step(self, app: Application, step: Step, options: tuple[str, ...] = ()) -> bool:
         env = {
             **self.env,
             "APP_ID": app.id,
             "APP_DIR": str(app.path),
+            # Space-separated; empty when none are switched on
+            "APP_OPTIONS": " ".join(options),
             "WORKSTATION_PROFILE": self.log.data["profile"],
             "WORKSTATION_ROOT": str(self.repo),
         }

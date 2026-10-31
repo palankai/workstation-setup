@@ -57,8 +57,10 @@ def format_run(
         f"{run['started']} ({duration(run['started'], run['finished'])})",
         f"Command: {' '.join(run['command']) or '(all)'}",
         f"Steps: {counts['ok']} ok, {counts['failed']} failed, {counts['skipped']} skipped",
-        "",
     ]
+    if options := {id: chosen for id, chosen in (run.get("options") or {}).items() if app in (None, id)}:
+        lines.append("Options: " + "; ".join(f"{id} {', '.join(chosen)}" for id, chosen in options.items()))
+    lines.append("")
     if problems_only:
         steps = [s for s in steps if s["status"] != "ok"]
     for step in steps:

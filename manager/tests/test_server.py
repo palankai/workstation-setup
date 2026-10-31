@@ -66,3 +66,15 @@ def test_index_is_revalidated_and_hashed_assets_are_immutable(workspace, tmp_pat
     for path in ("/", "/index.html", "/some/route"):
         assert client.get(path).headers["cache-control"] == "no-cache"
     assert "immutable" in client.get("/assets/index-abc123.js").headers["cache-control"]
+
+
+def test_options_api(workspace):  # noqa: F811
+    readme = workspace.root / "applications" / "jq" / "README.md"
+    readme.write_text(readme.read_text().replace("---\n\n", "options:\n  server: Start the server\n---\n\n", 1))
+    client = TestClient(create_app(workspace))
+    assert client.get("/api/applications/jq").json()["options"] == {"server": "Start the server"}
+    saved = client.put("/api/profiles/dev", json={"selected": ["jq"], "options": {"jq": ["server"]}})
+    assert saved.json()["options"] == {"jq": ["server"]}
+    # Left out, they stay
+    assert client.put("/api/profiles/dev", json={"selected": ["jq"]}).json()["options"] == {"jq": ["server"]}
+    assert client.put("/api/profiles/dev", json={"selected": ["jq"], "options": {"jq": ["x"]}}).status_code == 422

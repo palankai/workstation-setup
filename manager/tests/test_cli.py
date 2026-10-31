@@ -101,3 +101,19 @@ def test_update_writes_html_report_and_cleans_up(workspace: Workspace, capsys, t
     ws(workspace, "cleanup", "--keep", "0", "--older-than", "0")
     assert "Deleted 2 runs" in capsys.readouterr().out
     assert list(runs_dir.iterdir()) == []
+
+
+def test_option_command(workspace: Workspace, capsys):  # noqa: F811
+    readme = workspace.root / "applications" / "jq" / "README.md"
+    readme.write_text(readme.read_text().replace("---\n\n", "options:\n  server: Start the server\n---\n\n", 1))
+    ws(workspace, "option", "jq", "--profile", "dev")
+    assert "[ ] server           Start the server" in capsys.readouterr().out
+    ws(workspace, "option", "jq", "server", "--profile", "dev")
+    assert "Switched on for jq in dev: server" in capsys.readouterr().out
+    ws(workspace, "option", "jq", "server", "--profile", "dev")
+    assert "Already on: server" in capsys.readouterr().out
+    assert workspace.state("dev").options == {"jq": ["server"]}
+    ws(workspace, "option", "jq", "server", "--off", "--profile", "dev")
+    assert workspace.state("dev").options == {}
+    with pytest.raises(SystemExit, match="'jq' has no option nope"):
+        ws(workspace, "option", "jq", "nope", "--profile", "dev")

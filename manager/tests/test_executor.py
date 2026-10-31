@@ -8,7 +8,7 @@ from workstation_manager.core.query import parse_query, search, select
 from workstation_manager.executor.report import format_search
 from workstation_manager.core.runs import RUNS, RunLog, clean_output, list_runs
 from workstation_manager.core.state import State
-from workstation_manager.executor.update import Executor, Plan, PlanError, make_plan
+from workstation_manager.executor.update import Executor, Plan, PlanError, format_plan, make_plan
 
 from .test_core import workspace, write_app  # noqa: F401
 
@@ -298,3 +298,19 @@ def test_html_report_embeds_run_outputs_and_names(
     assert embedded["run"]["id"] == data["id"]
     assert embedded["apps"] == {"jq": "jq the JSON tool"}
     assert any("</script><b>hi</b>" in text for text in embedded["outputs"].values())
+
+
+def test_steps_get_the_options_switched_on(workspace: Workspace, state: State):  # noqa: F811
+    readme = workspace.root / "applications" / "jq" / "README.md"
+    readme.write_text(readme.read_text().replace("---\n\n", "options:\n  server: Server\n  fast: Fast\n---\n\n", 1))
+    for id in ("jq", "bat"):
+        script(workspace.root / "applications" / id, "10-run.sh", 'echo "options=[$APP_OPTIONS]"\n')
+    workspace.set_options("dev", "jq", ["server", "fast"])
+
+    plan = make_plan(workspace, state, "dev", ["jq", "bat"])
+    assert "==> Jq (jq) · server, fast" in format_plan(plan)
+    status, data = run(workspace, state, ["jq", "bat"])
+    assert status == "ok"
+    assert data["options"] == {"jq": ["server", "fast"]}
+    outputs = {s["app"]: (state.directory / RUNS / data["id"] / s["output"]).read_text() for s in data["steps"]}
+    assert outputs == {"jq": "options=[server fast]\n", "bat": "options=[]\n"}

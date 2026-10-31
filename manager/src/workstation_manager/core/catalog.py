@@ -13,6 +13,8 @@ APPLICATION_STEREOTYPE = "application"
 # Flags the UI can switch; false is the default, so it's written by removing the line
 EDITABLE_FLAGS = ("deprecated", "archived")
 DEFAULT_ORDER = 100
+# Space-separated in APP_OPTIONS, so no spaces
+OPTION_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
 StepKind = Literal["brewfile", "run", "once", "uninstall", "generate"]
 STEP_KINDS: tuple[tuple[StepKind, re.Pattern[str]], ...] = (
@@ -57,6 +59,8 @@ class Application:
     trial: bool
     # Tie-breaker for install order once dependencies are met; lower goes first
     order: int
+    # Choices a profile can switch on, by id, with a label; steps get the chosen ones as APP_OPTIONS
+    options: dict[str, str]
     steps: tuple[Step, ...]
     path: Path
     body: str
@@ -179,6 +183,11 @@ def load_application(readme: Path, meta: dict, body: str) -> Application:
     order = meta.get("order", DEFAULT_ORDER)
     if not isinstance(order, int) or isinstance(order, bool):
         raise CatalogError(f"{readme}: 'order' must be an integer")
+    options = meta.get("options") or {}
+    if not isinstance(options, dict) or not all(
+        isinstance(k, str) and OPTION_RE.match(k) and isinstance(v, str) for k, v in options.items()
+    ):
+        raise CatalogError(f"{readme}: 'options' must map option ids (lowercase, digits, -) to labels")
     return Application(
         id=str(id),
         name=str(name),
@@ -189,6 +198,7 @@ def load_application(readme: Path, meta: dict, body: str) -> Application:
         homepage=meta.get("homepage"),
         **flags,
         order=order,
+        options=dict(options),
         steps=find_steps(readme.parent),
         path=readme.parent,
         body=body,

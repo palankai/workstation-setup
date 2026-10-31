@@ -32,6 +32,8 @@ class ApplicationSummary(BaseModel):
     trial: bool
     order: int
     folder: str
+    # Option id to label
+    options: dict[str, str]
 
 
 class StepView(BaseModel):
@@ -59,6 +61,8 @@ class ProfileView(BaseModel):
     missing: list[str]
     inline: list[InlineEntryView]
     install_order: list[str]
+    # Switched on, by application id
+    options: dict[str, list[str]]
 
 
 class SavedSearchView(BaseModel):
@@ -80,6 +84,8 @@ class SelectionUpdate(BaseModel):
     selected: list[str]
     # Left out, applications the selection installs just come off the list
     uninstall: list[str] | None = None
+    # Left out, the options stay as they are
+    options: dict[str, list[str]] | None = None
 
 
 class ApplicationIds(BaseModel):
@@ -115,6 +121,7 @@ def create_app(
             trial=application.trial,
             order=application.order,
             folder=str(application.path.relative_to(workspace.applications_dir)),
+            options=application.options,
         )
 
     def profile_view(state: ProfileState) -> ProfileView:
@@ -130,6 +137,7 @@ def create_app(
                 for e in state.profile.inline
             ],
             install_order=state.install_order,
+            options=state.options,
         )
 
     def get_application(id: str) -> Application:
@@ -236,8 +244,8 @@ def create_app(
     def update_profile(name: str, update: SelectionUpdate) -> ProfileView:
         try:
             if update.uninstall is None:
-                return profile_view(workspace.update_selection(name, update.selected))
-            return profile_view(workspace.save_profile(name, update.selected, update.uninstall))
+                return profile_view(workspace.update_selection(name, update.selected, update.options))
+            return profile_view(workspace.save_profile(name, update.selected, update.uninstall, update.options))
         except ProfileError as e:
             raise HTTPException(404, str(e)) from None
         except (CatalogError, UninstallError) as e:

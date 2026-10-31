@@ -58,6 +58,8 @@ class RunLog:
             "steps": [],
             # Applications whose uninstall steps all succeeded
             "uninstalled": [],
+            # Options switched on, by application id
+            "options": {},
         }
         self._write()
 
@@ -67,6 +69,10 @@ class RunLog:
 
     def add(self, result: StepResult) -> None:
         self.data["steps"].append(asdict(result))
+        self._write()
+
+    def set_options(self, options: dict[str, list[str]]) -> None:
+        self.data["options"] = options
         self._write()
 
     def add_uninstalled(self, app: str) -> None:

@@ -213,7 +213,12 @@ export function RunReport({ id, runs, apps, onSelectRun, onOpenApp, onProfileUpd
                   key={group.key}
                   run={run.id}
                   group={group}
-                  name={group.app ? (apps.get(group.app)?.name ?? group.app) : group.label}
+                  name={
+                    group.app
+                      ? (apps.get(group.app)?.name ?? group.app) +
+                        (run.options?.[group.app]?.length ? ` · ${run.options[group.app].join(', ')}` : '')
+                      : group.label
+                  }
                   open={expanded.has(group.key)}
                   onToggle={() => toggle(group.key)}
                   onOpenApp={onOpenApp && group.app && apps.has(group.app) ? () => onOpenApp(group.app!) : undefined}

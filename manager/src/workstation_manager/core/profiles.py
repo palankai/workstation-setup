@@ -11,6 +11,8 @@ REF = "$ref"
 SELECTION = "applications"
 # Applications to uninstall on every update, until they're cleared from the list
 UNINSTALL = "uninstall"
+# Options switched on, by application id
+OPTIONS = "options"
 SUFFIX = ".yaml"
 NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
 
@@ -56,6 +58,23 @@ class Profile:
     @property
     def uninstall(self) -> list[str]:
         return self._refs(UNINSTALL)
+
+    @property
+    def options(self) -> dict[str, list[str]]:
+        return {str(id): [str(o) for o in chosen or ()] for id, chosen in (self._document.get(OPTIONS) or {}).items()}
+
+    def set_options(self, options: dict[str, list[str]]) -> None:
+        """Applications without options are left out, and the key goes when nothing's left."""
+        mapping = CommentedMap()
+        for id in sorted(options):
+            if chosen := list(dict.fromkeys(options[id])):
+                sequence = CommentedSeq(chosen)
+                sequence.fa.set_flow_style()
+                mapping[id] = sequence
+        if mapping:
+            self._document[OPTIONS] = mapping
+        elif OPTIONS in self._document:
+            del self._document[OPTIONS]
 
     @property
     def inline(self) -> list[InlineEntry]:
@@ -181,4 +200,9 @@ def load_profile(root: Path, name: str) -> Profile:
         entries = document.get(key)
         if entries is not None and not isinstance(entries, CommentedSeq):
             raise ProfileError(f"{path}: '{key}' must be a list")
+    options = document.get(OPTIONS)
+    if options is not None and not (
+        isinstance(options, dict) and all(isinstance(v, list) or v is None for v in options.values())
+    ):
+        raise ProfileError(f"{path}: '{OPTIONS}' must map application ids to lists of options")
     return Profile(name, path, document)

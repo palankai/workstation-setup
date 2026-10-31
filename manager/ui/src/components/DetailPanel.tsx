@@ -16,6 +16,9 @@ interface Props {
   marked: boolean
   // What else being installed needs this app, so it can't be uninstalled
   neededBy: string[]
+  // Switched on in the draft profile
+  options: string[]
+  onOption: (option: string, on: boolean) => void
   onToggle: () => void
   onUninstall: (uninstall: boolean) => void
   onOpen: (id: string) => void
@@ -44,6 +47,8 @@ export function DetailPanel({
   impliedBy,
   marked,
   neededBy,
+  options,
+  onOption,
   onToggle,
   onUninstall,
   onOpen,
@@ -182,6 +187,26 @@ export function DetailPanel({
             <p className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
               <Link2 className="size-4" /> Installed anyway as a dependency of {impliedBy.join(', ')}
             </p>
+          )}
+
+          {Object.keys(app.options).length > 0 && (
+            <section>
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Options</h3>
+              <div className="space-y-1.5">
+                {Object.entries(app.options).map(([option, label]) => (
+                  <label key={option} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={options.includes(option)}
+                      onChange={(e) => onOption(option, e.target.checked)}
+                      className="size-4 rounded border-zinc-300 accent-indigo-600"
+                    />
+                    {label}
+                    <span className="font-mono text-xs text-zinc-400">{option}</span>
+                  </label>
+                ))}
+              </div>
+            </section>
           )}
 
           <Relations title="Depends on" ids={app.dependencies} apps={apps} onOpen={onOpen} />

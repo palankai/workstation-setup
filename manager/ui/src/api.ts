@@ -12,6 +12,8 @@ export interface Application {
   trial: boolean
   order: number
   folder: string
+  /** Option id to label; a profile switches them on */
+  options: Record<string, string>
 }
 
 export type StepKind = 'brewfile' | 'run' | 'once' | 'uninstall' | 'generate'
@@ -41,6 +43,8 @@ export interface Profile {
   missing: string[]
   inline: InlineEntry[]
   install_order: string[]
+  /** Switched on, by application id */
+  options: Record<string, string[]>
 }
 
 export interface SavedSearch {
@@ -80,6 +84,8 @@ export interface Run extends RunSummary {
   steps: RunStep[]
   /** Missing in runs from before uninstall existed */
   uninstalled?: string[]
+  /** Options switched on, by application id; missing in runs from before options existed */
+  options?: Record<string, string[]>
 }
 
 export interface HistoryStep extends RunStep {
@@ -122,10 +128,10 @@ export const api = {
   machine: () => request<{ profile: string | null }>('/api/machine'),
   profile: (name: string) =>
     request<Profile>(`/api/profiles/${encodeURIComponent(name)}`),
-  saveProfile: (name: string, selected: string[], uninstall: string[]) =>
+  saveProfile: (name: string, selected: string[], uninstall: string[], options: Record<string, string[]>) =>
     request<Profile>(`/api/profiles/${encodeURIComponent(name)}`, {
       method: 'PUT',
-      body: JSON.stringify({ selected, uninstall }),
+      body: JSON.stringify({ selected, uninstall, options }),
     }),
   keep: (name: string, ids: string[]) =>
     request<Profile>(`/api/profiles/${encodeURIComponent(name)}/keep`, {

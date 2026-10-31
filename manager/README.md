@@ -74,6 +74,30 @@ It's in the repository, so every machine on the profile uninstalls them, and ent
 - Once uninstalled, clear it: from the run report (per application or all), `ws uninstall --clear` (those whose
   last uninstall succeeded), or the prompt after `ws update`.
 
+### Options
+
+An application can offer options, declared in its frontmatter with a label each (ids are lowercase letters,
+digits and `-`):
+
+```yaml
+options:
+  server: "Start the server (brew services)"
+```
+
+They're off unless the profile switches them on, under `options:` by application id:
+
+```yaml
+options:
+  postgresql-18: [server]
+```
+
+Its steps (install and uninstall) get them as `APP_OPTIONS`, space-separated and empty when none are on, and act
+on them themselves: `case " $APP_OPTIONS " in *" server "*) ... ;; esac`. Nothing happens when one is switched
+off unless a step does it. An option the application doesn't declare is an error; options of applications
+the profile doesn't install are kept. `ws option ID` lists them, `ws option ID OPT...` (`--off`) switches them,
+and the app panel has a checkbox each, saved like the selection. Plans, the run report and `run.json` show
+the options each application ran with.
+
 ## Update (executor)
 
 `bin/ws` runs the manager from anywhere (symlink it into `~/.local/bin`). The profile comes from `--profile`,
@@ -97,6 +121,7 @@ ws search chat '#ai'         # one line per application; ✓ marks what the prof
 ws select ID...; ws deselect ID...      # change the profile, like ticking a card (unselect works too)
 ws uninstall ID...; ws keep ID...       # mark for uninstall (deselects), or take off the list
 ws uninstall --clear                    # take off the list what uninstalled successfully
+ws option ID [OPT...] [--off]           # list an application's options, or switch them on (off)
 ws deprecate|undeprecate ID...          # set or clear the flag, like the app panel's buttons
 ws archive|unarchive ID...
 ws once list; ws once reset ID [STEP]
@@ -111,8 +136,8 @@ A successful one forgets its once steps, so a reinstall runs them again. Brewfil
 `*.sh` steps are sourced by bash like the old generated scripts did: `set -e`, with
 `~/.workstation-setup-config`, `_config.sh` and `_setup_functions.sh` sourced first. `*.py` steps run with the
 manager's interpreter and the repository on `PYTHONPATH`, so they can import `workstation_manager.helpers` and `lib`.
-Ctrl-C stops the whole run: the current step gets SIGINT, then SIGTERM and SIGKILL if it doesn't exit. Steps run in their application folder with `APP_ID`, `APP_DIR` and
-`WORKSTATION_PROFILE` set.
+Ctrl-C stops the whole run: the current step gets SIGINT, then SIGTERM and SIGKILL if it doesn't exit. Steps run in their application folder with `APP_ID`, `APP_DIR`, `APP_OPTIONS` (see Options),
+`WORKSTATION_PROFILE` and `WORKSTATION_ROOT` set.
 
 Machine state lives in `~/.local/state/workstation-setup/` (or `$XDG_STATE_HOME`), never in the repository:
 `state.yaml` records once steps (time and sha256 of the script that ran; a changed script is flagged by `plan`,

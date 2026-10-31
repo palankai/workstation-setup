@@ -159,6 +159,16 @@ def main(argv: list[str] | None = None) -> None:
         parents=[profile_option],
         help="take applications off the uninstall list, without selecting them",
     )
+    option = commands.add_parser(
+        "option",
+        help="switch an application's options on or off in the profile; without options, list them",
+        description="Options are the choices an application's README declares under `options:`. "
+        "Its steps get the ones switched on as APP_OPTIONS, space-separated.",
+    )
+    option.add_argument("id")
+    option.add_argument("options", nargs="*", metavar="option")
+    option.add_argument("--off", action="store_true", help="switch them off")
+    option.add_argument("--profile", help="default: $WORKSTATION or ~/.workstation-setup-config")
     application_ids = argparse.ArgumentParser(add_help=False)
     application_ids.add_argument("ids", nargs="+", metavar="id")
     for name, (flag, value) in FLAG_COMMANDS.items():
@@ -250,6 +260,8 @@ def main(argv: list[str] | None = None) -> None:
             run_uninstall(workspace, state_dir, args)
         elif args.command == "keep":
             run_keep(workspace, args)
+        elif args.command == "option":
+            run_option(workspace, args)
         elif args.command in FLAG_COMMANDS:
             run_flag(workspace, args)
         elif args.command == "once":
@@ -470,6 +482,33 @@ def run_keep(workspace: Workspace, args: argparse.Namespace) -> None:
         print(f"No longer marked for uninstall in {profile}: {', '.join(changed)}")
     if unchanged := [id for id in ids if id not in marked]:
         print(f"Not marked for uninstall: {', '.join(unchanged)}")
+
+
+def run_option(workspace: Workspace, args: argparse.Namespace) -> None:
+    profile = resolve_profile(args.profile)
+    application = workspace.catalog().get(args.id)
+    current = workspace.state(profile).options.get(application.id, [])
+    if not args.options:
+        if not application.options:
+            print(f"{application.id} has no options")
+        for name, label in application.options.items():
+            print(f"[{'x' if name in current else ' '}] {name:<16} {label}")
+        return
+    wanted = list(dict.fromkeys(args.options))
+    if unknown := [o for o in wanted if o not in application.options]:
+        offered = ", ".join(application.options) or "none"
+        raise CatalogError(f"'{application.id}' has no option {', '.join(unknown)} (it offers: {offered})")
+    if args.off:
+        changed = [o for o in wanted if o in current]
+        updated = [o for o in current if o not in wanted]
+    else:
+        changed = [o for o in wanted if o not in current]
+        updated = [*current, *changed]
+    if changed:
+        workspace.set_options(profile, application.id, updated)
+        print(f"Switched {'off' if args.off else 'on'} for {application.id} in {profile}: {', '.join(changed)}")
+    if unchanged := [o for o in wanted if o not in changed]:
+        print(f"Already {'off' if args.off else 'on'}: {', '.join(unchanged)}")
 
 
 def run_flag(workspace: Workspace, args: argparse.Namespace) -> None:
