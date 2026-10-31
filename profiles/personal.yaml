@@ -38,6 +38,7 @@ applications:
   - $ref: nvm-node-version-manager
   - $ref: obs-studio
   - $ref: obsidian
+  - $ref: official-surreal-db
   - $ref: pipx
   - $ref: pnpm
   - $ref: postgresql-18
@@ -62,3 +63,5 @@ applications:
   - $ref: yarn
   - $ref: zed-editor
   - $ref: zlib
+options:
+  postgresql-18: [server]
