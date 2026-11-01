@@ -1,0 +1,5 @@
+{
+  "name": "worker-agents",
+  "version": "0.1.0",
+  "description": "Slim subagent types for coordinated work: few tools, so each agent starts with a small context"
+}

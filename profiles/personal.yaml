@@ -40,6 +40,7 @@ applications:
   - $ref: obsidian
   - $ref: official-surreal-db
   - $ref: pipx
+  - $ref: plugin-worker-agents
   - $ref: pnpm
   - $ref: postgresql-18
   - $ref: pyenv
