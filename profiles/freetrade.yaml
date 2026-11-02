@@ -14,7 +14,6 @@ applications:
   - $ref: firebase-cli
   - $ref: fzf-fuzzy-finder
   - $ref: gcloud-cli
-  - $ref: gemini-cli
   - $ref: ghostty
   - $ref: github-copilot-cli
   - $ref: github-desktop
@@ -24,6 +23,7 @@ applications:
   - $ref: jq-json-processor
   - $ref: lima-guest-agents
   - $ref: miller-csv
+  - $ref: mod-status-band
   - $ref: nodejs
   - $ref: nvm-node-version-manager
   - $ref: obsidian
